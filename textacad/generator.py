@@ -14,8 +14,13 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from dataclasses import dataclass, field
+from typing import Callable
+
 from .config import Settings, get_settings
-from .prompts import SYSTEM_PROMPT, first_request
+from .params import ParamsError, extract_params
+from .prompts import SYSTEM_PROMPT, first_request, fix_request
+from .sandbox import RunResult, run_code
 
 
 class ClaudeError(RuntimeError):
@@ -133,3 +138,111 @@ def extract_code(answer: str) -> str:
 def generate_code(description: str, settings: Settings | None = None) -> str:
     """One request: description -> CadQuery code (not executed yet)."""
     return extract_code(ask_claude(first_request(description), settings))
+
+
+# ---------------------------------------------------------------------------
+# Generate + run + self-correct loop
+# ---------------------------------------------------------------------------
+
+MAX_ATTEMPTS = 3
+
+
+@dataclass
+class Attempt:
+    number: int
+    code: str
+    error: str | None = None          # None = this attempt worked
+
+
+@dataclass
+class GenerationResult:
+    ok: bool
+    description: str
+    code: str | None = None
+    params: dict | None = None
+    run: RunResult | None = None
+    attempts: list[Attempt] = field(default_factory=list)
+
+    @property
+    def last_error(self) -> str | None:
+        return self.attempts[-1].error if self.attempts else None
+
+
+# on_progress(attempt_number, max_attempts, message) lets the UI show where we are.
+ProgressFn = Callable[[int, int, str], None]
+
+
+def _problems(code: str, run: RunResult) -> str | None:
+    """Return an error message for Claude, or None if the part is acceptable."""
+    if not run.ok:
+        return run.error
+    info = run.info
+    msgs = []
+    if info.get("expected_bbox") is None:
+        msgs.append("The variable EXPECTED_BBOX = (size_x, size_y, size_z) is missing.")
+    if info["n_solids"] != 1:
+        msgs.append(
+            f"`result` contains {info['n_solids']} separate solids; it must be ONE solid. "
+            "Make sure all pieces touch/overlap and are joined with union()."
+        )
+    if not info["is_valid"]:
+        msgs.append(
+            "The resulting solid is not valid (OpenCascade BRepCheck failed). "
+            "Avoid fillets/chamfers on tiny or tangent edges and coincident faces."
+        )
+    return "\n".join(msgs) or None
+
+
+def generate_part(
+    description: str,
+    max_attempts: int = MAX_ATTEMPTS,
+    on_progress: ProgressFn | None = None,
+    settings: Settings | None = None,
+) -> GenerationResult:
+    """Ask Claude for code, run it, and send errors back until it works.
+
+    Errors from Claude itself (CLI not installed, no network...) are raised as
+    ClaudeError: retrying would not help.
+    """
+    settings = settings or get_settings()
+    progress = on_progress or (lambda *_: None)
+    result = GenerationResult(ok=False, description=description)
+    code: str | None = None
+    error: str | None = None
+
+    for n in range(1, max_attempts + 1):
+        if n == 1:
+            progress(n, max_attempts, "Demanant el codi a Claude...")
+            message = first_request(description)
+        else:
+            progress(n, max_attempts, "Demanant a Claude que corregeixi l'error...")
+            message = fix_request(description, code, error, n, max_attempts)
+
+        code = extract_code(ask_claude(message, settings))
+        attempt = Attempt(number=n, code=code)
+        result.attempts.append(attempt)
+
+        try:
+            params = extract_params(code)
+        except (ParamsError, SyntaxError) as exc:
+            error = f"Problem with the PARAMS dictionary: {exc}"
+            attempt.error = error
+            progress(n, max_attempts, "PARAMS incorrecte.")
+            continue
+
+        progress(n, max_attempts, "Executant el codi CadQuery...")
+        run = run_code(code, timeout=settings.exec_timeout)
+        error = _problems(code, run)
+        attempt.error = error
+
+        last = n == max_attempts
+        # A part that runs but has a quality problem is kept on the last attempt:
+        # the checks will show the warning to the user.
+        if error is None or (run.ok and last):
+            result.ok, result.code, result.params, result.run = True, code, params, run
+            progress(n, max_attempts, "Fet!" if error is None else "Fet, amb avisos.")
+            return result
+        progress(n, max_attempts, "Error: " + error.strip().splitlines()[-1][:200])
+
+    result.code = code
+    return result

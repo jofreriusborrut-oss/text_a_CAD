@@ -33,24 +33,40 @@ def main() -> int:
     if args.code:
         code = args.code.read_text(encoding="utf-8")
         name = args.code.stem
+        print("Executant el codi CadQuery (procés separat)...")
+        res = run_code(code)
     elif args.description:
-        from textacad.generator import generate_code
+        from textacad.generator import ClaudeError, generate_part
 
-        print("Demanant el codi a Claude...")
-        code = generate_code(args.description)
         name = _slug(args.description)
+        try:
+            gen = generate_part(
+                args.description,
+                on_progress=lambda n, total, msg: print(f"[Intent {n}/{total}] {msg}"),
+            )
+        except ClaudeError as exc:
+            print(f"\nNo s'ha pogut parlar amb Claude:\n{exc}")
+            return 2
+        code, res = gen.code, gen.run
+        if not gen.ok:
+            print(f"\nNo s'ha aconseguit una peça vàlida en {len(gen.attempts)} intents.")
+            print("Últim error:\n" + (gen.last_error or ""))
+            if code:
+                out = args.out or PROJECT_DIR / "sortida" / name
+                out.mkdir(parents=True, exist_ok=True)
+                (out / "code_fallit.py").write_text(code, encoding="utf-8")
+                print(f"El codi de l'últim intent és a {out / 'code_fallit.py'}")
+            return 1
     else:
         ap.error("Give a description or --code FILE")
+
+    if not res.ok:
+        print("\nERROR:\n" + res.error)
+        return 1
 
     out = args.out or PROJECT_DIR / "sortida" / name
     out.mkdir(parents=True, exist_ok=True)
     (out / "code.py").write_text(code, encoding="utf-8")
-
-    print("Executant el codi CadQuery (procés separat)...")
-    res = run_code(code)
-    if not res.ok:
-        print("\nERROR:\n" + res.error)
-        return 1
 
     shutil.copy(res.step_path, out / f"{name}.step")
     shutil.copy(res.stl_path, out / f"{name}.stl")

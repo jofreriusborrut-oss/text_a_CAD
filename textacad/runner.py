@@ -78,6 +78,12 @@ def run(job_dir: Path) -> dict:
 
 def main() -> None:
     job_dir = Path(sys.argv[1])
+    # Loading CadQuery/OpenCascade can be slow the first time (DLLs, antivirus).
+    # We tell sandbox.py when it is loaded, so the time limit only counts the
+    # generated code, not this start-up.
+    import cadquery  # noqa: F401
+
+    (job_dir / "ready").touch()
     try:
         out = run(job_dir)
     except BaseException:  # noqa: BLE001 - we want to report *everything* to Claude
