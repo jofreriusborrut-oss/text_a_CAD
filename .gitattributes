@@ -1,2 +1,3 @@
-# Windows batch files need CRLF line endings
-*.bat text eol=crlf
+# Windows batch files: store them exactly as they are (CRLF line endings),
+# also when downloaded directly from GitHub.
+*.bat -text
