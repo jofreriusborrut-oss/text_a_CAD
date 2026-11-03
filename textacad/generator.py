@@ -243,6 +243,7 @@ def generate_part(
             progress(n, max_attempts, "Fet!" if error is None else "Fet, amb avisos.")
             return result
         progress(n, max_attempts, "Error: " + error.strip().splitlines()[-1][:200])
+        run.cleanup()
 
     result.code = code
     return result

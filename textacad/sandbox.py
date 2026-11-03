@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,11 @@ class RunResult:
     @property
     def stl_path(self) -> Path:
         return self.job_dir / "part.stl"
+
+    def cleanup(self) -> None:
+        """Delete the temporary folder (call it after reading the files)."""
+        if self.job_dir and self.job_dir.exists():
+            shutil.rmtree(self.job_dir, ignore_errors=True)
 
 
 def run_code(code: str, timeout: int | None = None, job_dir: Path | None = None) -> RunResult:

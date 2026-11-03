@@ -7,7 +7,7 @@ their values (for the sliders) without touching the rest of the script.
 from __future__ import annotations
 
 import ast
-import pprint
+import json
 
 REQUIRED_KEYS = ("value", "unit", "min", "max")
 
@@ -80,9 +80,20 @@ def apply_values(code: str, values: dict[str, float]) -> str:
 
     tree = ast.parse(code)
     node = _find_params_node(tree)
-    lines = code.splitlines(keepends=True)
-    # Character offsets of the PARAMS statement inside the source.
+    # ast gives column offsets in UTF-8 *bytes* (accents take 2 bytes), so we
+    # cut the source as bytes to find where the PARAMS statement starts/ends.
+    lines = code.encode("utf-8").splitlines(keepends=True)
     start = sum(len(l) for l in lines[: node.lineno - 1]) + node.col_offset
     end = sum(len(l) for l in lines[: node.end_lineno - 1]) + node.end_col_offset
-    new_block = "PARAMS = " + pprint.pformat(params, sort_dicts=False, width=100)
-    return code[:start] + new_block + code[end:]
+    raw = code.encode("utf-8")
+    return (raw[:start] + format_params(params).encode("utf-8") + raw[end:]).decode("utf-8")
+
+
+def format_params(params: dict) -> str:
+    """Write PARAMS as Python source, one parameter per line (like Claude does)."""
+    lines = ["PARAMS = {"]
+    for name, spec in params.items():
+        # JSON numbers and strings are also valid Python literals.
+        lines.append(f"    {json.dumps(name)}: {json.dumps(spec, ensure_ascii=False)},")
+    lines.append("}")
+    return "\n".join(lines)

@@ -40,3 +40,10 @@ def test_missing_keys():
 def test_no_params():
     with pytest.raises(ParamsError):
         extract_params("x = 1")
+
+
+def test_apply_with_accents_on_the_same_line():
+    code = 'PARAMS = {"a": {"value": 1, "unit": "mm", "min": 0, "max": 9, "label": "Diàmetre àèò"}}  # fi\nx = 1\n'
+    new = apply_values(code, {"a": 5})
+    assert new.endswith("}  # fi\nx = 1\n")
+    assert extract_params(new)["a"]["value"] == 5

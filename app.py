@@ -11,6 +11,7 @@ import streamlit as st
 
 from textacad.config import get_settings
 from textacad.generator import ClaudeError, generate_part
+from textacad.regenerate import regenerate
 from textacad.viewer import show_stl
 
 st.set_page_config(page_title="Text a CAD", page_icon="⚙️", layout="wide")
@@ -29,16 +30,26 @@ EXAMPLE = (
 # the history later.
 
 def _part_from_generation(gen) -> dict:
-    return {
+    part = {
         "id": int(time.time() * 1000),
         "description": gen.description,
-        "code": gen.code,
-        "params": gen.params,
+        "base_code": gen.code,          # code as written by Claude
+        "code": gen.code,               # code with the current slider values
+        "params": gen.params,           # PARAMS as written by Claude
+        "values": {k: v["value"] for k, v in gen.params.items()},
         "info": gen.run.info,
         "stl": gen.run.stl_path.read_bytes(),
         "step": gen.run.step_path.read_bytes(),
         "attempts": [{"number": a.number, "error": a.error} for a in gen.attempts],
     }
+    gen.run.cleanup()
+    return part
+
+
+# Same code + same values -> same result: Streamlit remembers it (no recompute).
+@st.cache_data(show_spinner=False, max_entries=200)
+def _regenerate_cached(code: str, values: tuple) -> dict:
+    return regenerate(code, dict(values))
 
 
 def _file_name(description: str) -> str:
@@ -82,27 +93,69 @@ def run_generation(description: str) -> None:
 # Result
 # ---------------------------------------------------------------------------
 
+def _slider(part: dict, name: str, spec: dict) -> float:
+    unit = spec.get("unit", "")
+    label = spec.get("label") or name
+    key = f"p_{part['id']}_{name}"
+    if unit == "count":
+        return st.slider(f"{label}", int(spec["min"]), int(spec["max"]),
+                         int(part["values"][name]), step=1, key=key)
+    lo, hi = float(spec["min"]), float(spec["max"])
+    step = 0.1 if hi - lo <= 50 else 0.5
+    return st.slider(f"{label} ({unit})", lo, hi, float(part["values"][name]),
+                     step=step, key=key, format="%.1f")
+
+
+def parameter_panel(part: dict) -> None:
+    """One slider per PARAMS entry. Moving one rebuilds the part locally."""
+    st.subheader("Paràmetres")
+    st.caption("Mou un control i la peça es regenera a l'ordinador, sense tornar a cridar Claude.")
+    values = {name: _slider(part, name, spec) for name, spec in part["params"].items()}
+
+    if st.button("↺ Valors originals", use_container_width=True):
+        for name in part["params"]:
+            st.session_state.pop(f"p_{part['id']}_{name}", None)
+        values = {k: v["value"] for k, v in part["params"].items()}
+
+    if values == part["values"]:
+        return
+    with st.spinner("Regenerant la peça…"):
+        out = _regenerate_cached(part["base_code"], tuple(sorted(values.items())))
+    if out["ok"]:
+        part.update(values=values, code=out["code"], info=out["info"],
+                    stl=out["stl"], step=out["step"])
+        part.pop("regen_error", None)
+    else:
+        part["regen_error"] = out["error"]
+    st.rerun()       # redraw the viewer and the data with the new part
+
+
 def show_part(part: dict) -> None:
     info = part["info"]
     name = _file_name(part["description"])
 
-    col_view, col_side = st.columns([3, 1], gap="large")
+    col_view, col_params = st.columns([5, 2], gap="large")
+    with col_params:
+        parameter_panel(part)
     with col_view:
+        if part.get("regen_error"):
+            st.warning("Aquesta combinació de valors no genera una peça vàlida; "
+                       "es mostra l'última que funcionava.")
+            with st.expander("Detall de l'error"):
+                st.code(part["regen_error"], language="text")
         show_stl(part["stl"])
         st.caption("Gira amb el botó esquerre, desplaça amb el dret i fes zoom amb la roda.")
 
-    with col_side:
-        st.subheader("Descàrregues")
-        st.download_button("⬇️ STEP (per a SolidWorks)", part["step"], f"{name}.step",
-                           mime="application/step", use_container_width=True)
-        st.download_button("⬇️ STL (per imprimir)", part["stl"], f"{name}.stl",
-                           mime="model/stl", use_container_width=True)
-        st.subheader("Dades")
+        c1, c2, c3 = st.columns(3)
         x, y, z = info["bbox"]["size"]
-        st.markdown(f"**Mida total (X × Y × Z)**  \n{x:.1f} × {y:.1f} × {z:.1f} mm")
-        st.markdown(f"**Volum**  \n{info['volume_mm3'] / 1000:.2f} cm³")
+        c1.markdown(f"**Mida total (X × Y × Z)**  \n{x:.1f} × {y:.1f} × {z:.1f} mm")
+        c2.download_button("⬇️ STEP (per a SolidWorks)", part["step"], f"{name}.step",
+                           mime="application/step", use_container_width=True)
+        c3.download_button("⬇️ STL (per imprimir)", part["stl"], f"{name}.stl",
+                           mime="model/stl", use_container_width=True)
+        c1.markdown(f"**Volum**  \n{info['volume_mm3'] / 1000:.2f} cm³")
 
-    with st.expander("Codi CadQuery generat"):
+    with st.expander("Codi CadQuery (amb els valors actuals)"):
         st.code(part["code"], language="python")
 
     failed = [a for a in part["attempts"] if a["error"]]
