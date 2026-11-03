@@ -41,7 +41,14 @@ runs it in a separate process, checks the result and shows it in an interactive
     `claude` once in a terminal and log in.
   - Or an **Anthropic API key** (pay per use).
 
-## Installation (Windows)
+## Quick start (Windows)
+
+After installing Python 3.12 and Claude Code, **double-click `inicia.bat`**.
+The first time it creates the Python environment and installs the libraries
+(a few minutes). Every other time it just opens the app in your browser. Close
+the black window to stop the app.
+
+## Installation (Windows, step by step)
 
 Open *PowerShell* (or the VS Code terminal) in the folder where you keep your
 projects:

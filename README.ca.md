@@ -41,7 +41,14 @@ interactiu.
     `claude` una vegada al terminal i inicia la sessió.
   - O bé una **clau de l'API d'Anthropic** (es paga per ús).
 
-## Instal·lació (Windows)
+## Inici ràpid (Windows)
+
+Un cop instal·lats Python 3.12 i Claude Code, **fes doble clic a `inicia.bat`**.
+La primera vegada crea l'entorn de Python i instal·la les llibreries (uns
+minuts). Les altres vegades només obre l'app al navegador. Per aturar l'app,
+tanca la finestra negra.
+
+## Instal·lació (Windows, pas a pas)
 
 Obre *PowerShell* (o el terminal de VS Code) a la carpeta on guardes els projectes:
 
