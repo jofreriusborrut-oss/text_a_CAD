@@ -9,12 +9,16 @@ import time
 
 import streamlit as st
 
+from textacad.checks import num, run_checks
 from textacad.config import get_settings
 from textacad.generator import ClaudeError, generate_part
 from textacad.regenerate import regenerate
 from textacad.viewer import show_stl
 
 st.set_page_config(page_title="Text a CAD", page_icon="⚙️", layout="wide")
+
+MAX_HISTORY = 30
+LEVEL_ICON = {"ok": "✅", "info": "ℹ️", "warning": "⚠️", "error": "❌"}
 
 EXAMPLE = (
     "Placa de 60x80x5 mm amb 4 forats de 6,5 mm a 10 mm de les vores "
@@ -46,10 +50,42 @@ def _part_from_generation(gen) -> dict:
     return part
 
 
+def current_part() -> dict | None:
+    for part in st.session_state.get("history", []):
+        if part["id"] == st.session_state.get("current_id"):
+            return part
+    return None
+
+
+def add_to_history(part: dict) -> None:
+    history = st.session_state.setdefault("history", [])
+    history.append(part)
+    del history[:-MAX_HISTORY]          # keep only the most recent parts (memory)
+    st.session_state.current_id = part["id"]
+
+
 # Same code + same values -> same result: Streamlit remembers it (no recompute).
 @st.cache_data(show_spinner=False, max_entries=200)
 def _regenerate_cached(code: str, values: tuple) -> dict:
     return regenerate(code, dict(values))
+
+
+@st.cache_data(show_spinner=False, max_entries=200)
+def _checks_cached(stl: bytes, info_items: str) -> list[dict]:
+    import json
+
+    return [c.__dict__ for c in run_checks(json.loads(info_items), stl)]
+
+
+def show_checks(part: dict) -> None:
+    import json
+
+    st.subheader("Comprovacions")
+    checks = _checks_cached(part["stl"], json.dumps(part["info"], sort_keys=True))
+    for c in checks:
+        text = f"**{c['title']}**" + (f"  \n{c['detail']}" if c["detail"] else "")
+        box = {"ok": st.success, "info": st.info, "warning": st.warning, "error": st.error}[c["level"]]
+        box(text, icon=LEVEL_ICON[c["level"]])
 
 
 def _file_name(description: str) -> str:
@@ -86,7 +122,9 @@ def run_generation(description: str) -> None:
         label = "Peça generada" + (" a la primera" if len(gen.attempts) == 1
                                    else f" en {len(gen.attempts)} intents")
         status.update(label=label, state="complete", expanded=False)
-    st.session_state.part = _part_from_generation(gen)
+    part = _part_from_generation(gen)
+    part["time"] = time.strftime("%H:%M")
+    add_to_history(part)
 
 
 # ---------------------------------------------------------------------------
@@ -148,12 +186,13 @@ def show_part(part: dict) -> None:
 
         c1, c2, c3 = st.columns(3)
         x, y, z = info["bbox"]["size"]
-        c1.markdown(f"**Mida total (X × Y × Z)**  \n{x:.1f} × {y:.1f} × {z:.1f} mm")
+        c1.markdown(f"**Mida total (X × Y × Z)**  \n{num(x)} × {num(y)} × {num(z)} mm")
         c2.download_button("⬇️ STEP (per a SolidWorks)", part["step"], f"{name}.step",
                            mime="application/step", use_container_width=True)
         c3.download_button("⬇️ STL (per imprimir)", part["stl"], f"{name}.stl",
                            mime="model/stl", use_container_width=True)
-        c1.markdown(f"**Volum**  \n{info['volume_mm3'] / 1000:.2f} cm³")
+        c1.markdown(f"**Volum**  \n{num(info['volume_mm3'] / 1000, 2)} cm³")
+        show_checks(part)
 
     with st.expander("Codi CadQuery (amb els valors actuals)"):
         st.code(part["code"], language="python")
@@ -169,6 +208,26 @@ def show_part(part: dict) -> None:
 # ---------------------------------------------------------------------------
 # Page
 # ---------------------------------------------------------------------------
+
+def show_history() -> None:
+    history = st.session_state.get("history", [])
+    st.header("Historial")
+    if not history:
+        st.caption("Encara no has generat cap peça en aquesta sessió.")
+        return
+    for part in reversed(history):
+        text = part["description"]
+        label = f"{part['time']} · {text[:45]}{'…' if len(text) > 45 else ''}"
+        selected = part["id"] == st.session_state.get("current_id")
+        if st.button(label, key=f"h_{part['id']}", use_container_width=True,
+                     type="primary" if selected else "secondary"):
+            st.session_state.current_id = part["id"]
+            st.rerun()
+    if st.button("🗑️ Esborra l'historial", use_container_width=True):
+        st.session_state.history = []
+        st.session_state.current_id = None
+        st.rerun()
+
 
 def main() -> None:
     settings = get_settings()
@@ -198,11 +257,16 @@ def main() -> None:
         else:
             run_generation(description.strip())
 
-    part = st.session_state.get("part")
+    part = current_part()
     if part:
         st.divider()
         st.markdown(f"**Peça:** {part['description']}")
         show_part(part)
+
+    # Drawn last, so a part generated in this run already appears in the list.
+    with st.sidebar:
+        st.divider()
+        show_history()
 
 
 main()
