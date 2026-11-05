@@ -10,6 +10,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from . import safety
 from .config import get_settings
 
 RUNNER = Path(__file__).with_name("runner.py")
@@ -31,18 +32,43 @@ class RunResult:
     def stl_path(self) -> Path:
         return self.job_dir / "part.stl"
 
+    @property
+    def threemf_path(self) -> Path:
+        return self.job_dir / "part.3mf"
+
+    @property
+    def reference_path(self) -> Path:
+        return self.job_dir / "reference.stl"
+
+    def files(self) -> dict[str, Path]:
+        """The files the run produced, by name."""
+        names = ("part.step", "part.stl", "part.3mf", "reference.stl")
+        return {n: self.job_dir / n for n in names if (self.job_dir / n).exists()}
+
     def cleanup(self) -> None:
         """Delete the temporary folder (call it after reading the files)."""
         if self.job_dir and self.job_dir.exists():
             shutil.rmtree(self.job_dir, ignore_errors=True)
 
 
-def run_code(code: str, timeout: int | None = None, job_dir: Path | None = None) -> RunResult:
-    """Execute `code` with runner.py in a child process and collect the results."""
+def run_code(code: str, timeout: int | None = None, job_dir: Path | None = None,
+             trusted: bool = False) -> RunResult:
+    """Execute `code` with runner.py in a child process and collect the results.
+
+    Scripts written by Claude are first checked by safety.py; pass
+    trusted=True for a script the user wrote and chose to run.
+    """
     timeout = timeout or get_settings().exec_timeout
+    if not trusted:
+        try:
+            problems = safety.find_problems(code)
+        except SyntaxError as exc:
+            return RunResult(ok=False, error=f"SyntaxError: {exc.msg} (line {exc.lineno})")
+        if problems:
+            return RunResult(ok=False, error="This script is not allowed to run:\n" + "\n".join(problems))
     job_dir = Path(job_dir or tempfile.mkdtemp(prefix="textacad_"))
     job_dir.mkdir(parents=True, exist_ok=True)
-    for old in ("part.step", "part.stl", "result.json", "ready", "log.txt"):
+    for old in ("part.step", "part.stl", "part.3mf", "reference.stl", "result.json", "ready", "log.txt"):
         (job_dir / old).unlink(missing_ok=True)
     (job_dir / "code.py").write_text(code, encoding="utf-8")
 

@@ -5,6 +5,8 @@ A fake `claude` executable (tests/fake_claude.py) plays Claude's role.
 from dataclasses import replace
 from pathlib import Path
 
+import importlib.util
+
 import pytest
 
 from textacad.config import get_settings
@@ -16,6 +18,10 @@ GOOD = (Path(__file__).parent / "parts" / "c_casquet.py").read_text(encoding="ut
 # Same part with a classic CadQuery mistake: a fillet bigger than the wall.
 BROKEN = GOOD.replace("result = result.edges().chamfer(C)", "result = result.edges().fillet(50)")
 NO_PARAMS = "import cadquery as cq\nresult = cq.Workplane('XY').box(10, 10, 10)\n"
+
+
+needs_cadquery = pytest.mark.skipif(importlib.util.find_spec("cadquery") is None,
+                                    reason="CadQuery is not installed here")
 
 
 def fenced(code: str) -> str:
@@ -46,6 +52,7 @@ def test_cli_backend_calls_claude_p(tmp_path):
     assert "Placa de 10x10x2 mm" in call["stdin"]
 
 
+@needs_cadquery
 def test_works_at_first_attempt(tmp_path):
     fake = make_fake_claude(tmp_path, [fenced(GOOD)])
     progress = []
@@ -56,6 +63,7 @@ def test_works_at_first_attempt(tmp_path):
     assert progress[0][:2] == (1, 3)
 
 
+@needs_cadquery
 def test_error_is_sent_back_and_fixed(tmp_path):
     fake = make_fake_claude(tmp_path, [fenced(BROKEN), fenced(GOOD)])
     gen = generate_part("Casquet", settings=settings_for(fake))
@@ -67,6 +75,7 @@ def test_error_is_sent_back_and_fixed(tmp_path):
     assert "Casquet" in second                         # ...and the original description
 
 
+@needs_cadquery
 def test_bad_params_counts_as_an_error(tmp_path):
     fake = make_fake_claude(tmp_path, [fenced(NO_PARAMS), fenced(GOOD)])
     gen = generate_part("Casquet", settings=settings_for(fake))
@@ -74,6 +83,7 @@ def test_bad_params_counts_as_an_error(tmp_path):
     assert "PARAMS" in gen.attempts[0].error
 
 
+@needs_cadquery
 def test_gives_up_after_three_attempts(tmp_path):
     fake = make_fake_claude(tmp_path, [fenced(BROKEN)])
     progress = []

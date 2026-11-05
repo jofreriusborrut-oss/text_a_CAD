@@ -19,6 +19,15 @@ class Settings:
     cli_path: str | None
     exec_timeout: int
     claude_timeout: int
+    max_attempts: int = 4
+    sessions_dir: Path = PROJECT_DIR / "sortida" / "sessions"
+
+
+def _int(name: str, default: int, low: int = 1) -> int:
+    try:
+        return max(low, int(os.getenv(name, str(default))))
+    except ValueError:
+        return default
 
 
 def get_settings() -> Settings:
@@ -27,6 +36,8 @@ def get_settings() -> Settings:
         model=os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5").strip(),
         api_key=os.getenv("ANTHROPIC_API_KEY") or None,
         cli_path=os.getenv("CLAUDE_CLI_PATH") or None,
-        exec_timeout=int(os.getenv("EXEC_TIMEOUT", "30")),
-        claude_timeout=int(os.getenv("CLAUDE_TIMEOUT", "180")),
+        exec_timeout=_int("EXEC_TIMEOUT", 30),
+        claude_timeout=_int("CLAUDE_TIMEOUT", 300),
+        max_attempts=_int("MAX_ATTEMPTS", 4),
+        sessions_dir=Path(os.getenv("SESSIONS_DIR") or PROJECT_DIR / "sortida" / "sessions"),
     )

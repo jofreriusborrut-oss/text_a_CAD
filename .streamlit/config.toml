@@ -1,6 +1,0 @@
-[browser]
-# Do not send usage statistics to Streamlit.
-gatherUsageStats = false
-
-[theme]
-primaryColor = "#2f6db5"

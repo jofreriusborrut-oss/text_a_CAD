@@ -3,7 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from textacad.regenerate import regenerate
+pytest.importorskip("cadquery")
+
+from textacad.regenerate import regenerate    # noqa: E402
 
 PLATE = (Path(__file__).parent / "parts" / "a_placa.py").read_text(encoding="utf-8")
 

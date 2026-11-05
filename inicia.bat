@@ -20,17 +20,26 @@ if not exist ".venv\Scripts\python.exe" python -m venv .venv
 if not exist ".venv\Scripts\python.exe" goto error_python
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 goto error_pip
+goto ready
 
 :venv_ok
+rem Version 2 needs Flask and SciPy: add them if this environment comes from version 1.
+".venv\Scripts\python.exe" -c "import flask, scipy, cadquery" >nul 2>nul
+if not errorlevel 1 goto ready
+echo Actualitzant les llibreries per a la versio 2 (nomes aquesta vegada)...
+".venv\Scripts\python.exe" -m pip install -r requirements.txt
+if errorlevel 1 goto error_pip
+
+:ready
 if not exist ".env" copy ".env.example" ".env" >nul
 
 where claude >nul 2>nul
 if errorlevel 1 echo AVIS: no trobo Claude Code. Instal.la'l i executa "claude" una vegada per iniciar la sessio.
 
-echo Obrint Text a CAD al navegador...
+echo Obrint Text a CAD al navegador: http://localhost:8765
 echo Per tancar l'app, tanca aquesta finestra.
 echo.
-".venv\Scripts\python.exe" -m streamlit run app.py
+".venv\Scripts\python.exe" server.py
 pause
 exit /b 0
 

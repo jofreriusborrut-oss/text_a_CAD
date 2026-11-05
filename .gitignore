@@ -8,8 +8,13 @@ __pycache__/
 venv/
 .pytest_cache/
 
-# Generated parts
+# Generated parts and saved designs
 sortida/
+ci-out/
 *.step
 *.stl
+*.3mf
 !tests/fixtures/**
+
+# Components added by the user in the app
+catalog_user.json

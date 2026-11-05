@@ -11,7 +11,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,9 +25,18 @@ jobs:
       - name: Tests
         run: |
           set +e
-          python -m pytest -q -x --durations=8 2>&1 | tee pytest.txt
+          python -m pytest -q --durations=8 2>&1 | tee pytest.txt
           echo "exit=${PIPESTATUS[0]}" >> pytest.txt
           pip list 2>/dev/null | grep -i -E "cadquery|ocp|numpy|scipy|flask|streamlit|trimesh" >> pytest.txt
+          exit 0
+      - name: Replay recorded Claude answers on real CadQuery
+        if: always()
+        run: |
+          set +e
+          python tools/eval_run.py --out ci-out > eval-log.txt 2>&1
+          echo "eval_exit=$?" >> eval-log.txt
+          cp eval-log.txt ci-out/ 2>/dev/null
+          tail -40 eval-log.txt
           exit 0
       - name: Publish the test report to the ci-results branch
         if: always()

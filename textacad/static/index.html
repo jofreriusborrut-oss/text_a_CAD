@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text a CAD</title>
+<link rel="stylesheet" href="/static/styles.css">
+<script type="importmap">{"imports": {"three": "/static/three/three.module.min.js"}}</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="mark" aria-hidden="true"></span><b>Text a CAD</b><span class="session-title" id="sessionTitle"></span></div>
+  <div class="top-actions">
+    <button class="btn ghost" id="btnNew" data-i18n="newDesign"></button>
+    <button class="btn ghost" id="btnOpen" data-i18n="openDesign"></button>
+    <button class="btn ghost" id="btnCatalog" data-i18n="components"></button>
+    <label class="lang"><span class="sr" data-i18n="language"></span>
+      <select id="lang"><option value="en">English</option><option value="ca">Català</option><option value="es">Español</option></select>
+    </label>
+    <span class="backend" id="backend"></span>
+  </div>
+</header>
+
+<main class="app">
+  <!-- Conversation -->
+  <section class="chat" aria-label="Conversation">
+    <div class="messages" id="messages"></div>
+    <form class="composer" id="composer">
+      <div class="base-note" id="baseNote" hidden></div>
+      <div class="chips" id="detected" hidden></div>
+      <textarea id="prompt" rows="3"></textarea>
+      <div class="composer-row">
+        <span class="hint" id="composerHint"></span>
+        <button class="btn primary" type="submit" id="btnSend"></button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 3D view -->
+  <section class="stage" aria-label="3D view">
+    <div class="viewer" id="viewer">
+      <div class="view-buttons" id="viewButtons">
+        <button data-v="iso" data-i18n="viewIso"></button><button data-v="top" data-i18n="viewTop"></button>
+        <button data-v="front" data-i18n="viewFront"></button><button data-v="right" data-i18n="viewRight"></button>
+      </div>
+      <div class="view-toggles" id="viewToggles" hidden>
+        <label id="tglGhostWrap" hidden><input type="checkbox" id="tglGhost" checked> <span data-i18n="showReference"></span></label>
+        <label id="tglCompareWrap" hidden><input type="checkbox" id="tglCompare"> <span data-i18n="comparePrevious"></span></label>
+        <label id="tglStressWrap" hidden><input type="checkbox" id="tglStress" checked> <span data-i18n="showStress"></span></label>
+        <label id="deformWrap" hidden><span data-i18n="deformation"></span> <input type="range" id="deform" min="0" max="100" value="60"></label>
+      </div>
+      <div class="legend" id="legend" hidden><div class="bar"></div><div class="ticks"><span>0</span><span id="legendMax"></span></div><div class="unit">MPa (von Mises)</div></div>
+      <div class="dims" id="dims" hidden></div>
+      <div class="empty" id="empty"></div>
+      <div class="viewer-msg" id="viewerMsg" hidden></div>
+    </div>
+    <div class="versions" id="versions" hidden></div>
+  </section>
+
+  <!-- Inspector -->
+  <section class="inspector" aria-label="Inspector">
+    <div class="material-bar" id="materialBar" hidden>
+      <span data-i18n="material"></span>
+      <select id="materialSelect"></select>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist">
+      <button role="tab" data-tab="params" data-i18n="tabParams"></button>
+      <button role="tab" data-tab="checks" data-i18n="tabChecks"></button>
+      <button role="tab" data-tab="material" data-i18n="tabMaterial"></button>
+      <button role="tab" data-tab="sim" data-i18n="tabSim"></button>
+      <button role="tab" data-tab="print" data-i18n="tabPrint"></button>
+      <button role="tab" data-tab="files" data-i18n="tabFiles"></button>
+    </nav>
+    <div class="panel" id="panel"></div>
+  </section>
+</main>
+
+<dialog id="dialog"><div class="dialog-body" id="dialogBody"></div></dialog>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>

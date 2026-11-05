@@ -8,7 +8,6 @@ Two interchangeable "backends", chosen with CLAUDE_BACKEND in .env:
 from __future__ import annotations
 
 import os
-import re
 import shutil
 import subprocess
 import tempfile
@@ -18,9 +17,8 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 from .config import Settings, get_settings
-from .params import ParamsError, extract_params
-from .prompts import SYSTEM_PROMPT, first_request, fix_request
-from .sandbox import RunResult, run_code
+from .prompts import SYSTEM_PROMPT, first_request
+from .sandbox import RunResult
 
 
 class ClaudeError(RuntimeError):
@@ -78,6 +76,11 @@ def _ask_cli(user_message: str, settings: Settings) -> str:
             )
         except subprocess.TimeoutExpired as exc:
             raise ClaudeError(f"`claude -p` did not answer within {settings.claude_timeout} s.") from exc
+        except OSError as exc:
+            raise ClaudeError(
+                f"Could not start Claude Code ({exe}): {exc}. Check that it is installed and "
+                "that CLAUDE_CLI_PATH in .env is right."
+            ) from exc
     if proc.returncode != 0:
         raise ClaudeError(
             f"`claude -p` failed (exit code {proc.returncode}):\n"
@@ -118,21 +121,14 @@ def ask_claude(user_message: str, settings: Settings | None = None) -> str:
 # Answer -> code
 # ---------------------------------------------------------------------------
 
-_FENCE = re.compile(r"```(?:python|py)?[ \t]*\n(.*?)```", re.DOTALL | re.IGNORECASE)
-
-
 def extract_code(answer: str) -> str:
     """Keep only the Python code from Claude's answer (drop ``` fences and any text)."""
-    blocks = _FENCE.findall(answer)
-    if blocks:
-        with_params = [b for b in blocks if "PARAMS" in b]
-        code = max(with_params or blocks, key=len)
-    else:
-        code = answer
-    code = code.strip()
+    from .protocol import extract_code as _extract
+
+    code = _extract(answer)
     if not code:
         raise ClaudeError("Claude returned an empty answer.")
-    return code + "\n"
+    return code
 
 
 def generate_code(description: str, settings: Settings | None = None) -> str:
@@ -141,7 +137,8 @@ def generate_code(description: str, settings: Settings | None = None) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Generate + run + self-correct loop
+# One-shot generation (used by the terminal interface and the tests).
+# The conversational assistant lives in assistant.py.
 # ---------------------------------------------------------------------------
 
 MAX_ATTEMPTS = 3
@@ -162,35 +159,24 @@ class GenerationResult:
     params: dict | None = None
     run: RunResult | None = None
     attempts: list[Attempt] = field(default_factory=list)
+    note: dict = field(default_factory=dict)
 
     @property
     def last_error(self) -> str | None:
         return self.attempts[-1].error if self.attempts else None
 
 
-# on_progress(attempt_number, max_attempts, message) lets the UI show where we are.
+# on_progress(attempt_number, max_attempts, message) lets the caller show where we are.
 ProgressFn = Callable[[int, int, str], None]
 
-
-def _problems(code: str, run: RunResult) -> str | None:
-    """Return an error message for Claude, or None if the part is acceptable."""
-    if not run.ok:
-        return run.error
-    info = run.info
-    msgs = []
-    if info.get("expected_bbox") is None:
-        msgs.append("The variable EXPECTED_BBOX = (size_x, size_y, size_z) is missing.")
-    if info["n_solids"] != 1:
-        msgs.append(
-            f"`result` contains {info['n_solids']} separate solids; it must be ONE solid. "
-            "Make sure all pieces touch/overlap and are joined with union()."
-        )
-    if not info["is_valid"]:
-        msgs.append(
-            "The resulting solid is not valid (OpenCascade BRepCheck failed). "
-            "Avoid fillets/chamfers on tiny or tangent edges and coincident faces."
-        )
-    return "\n".join(msgs) or None
+_STAGE_TEXT = {
+    "asking": "Asking Claude for the script...",
+    "fixing": "Asking Claude to correct the problem...",
+    "running": "Running the CadQuery script...",
+    "checking": "Measuring the part...",
+    "done": "Done!",
+    "done_with_warnings": "Done, with warnings.",
+}
 
 
 def generate_part(
@@ -204,46 +190,21 @@ def generate_part(
     Errors from Claude itself (CLI not installed, no network...) are raised as
     ClaudeError: retrying would not help.
     """
-    settings = settings or get_settings()
-    progress = on_progress or (lambda *_: None)
-    result = GenerationResult(ok=False, description=description)
-    code: str | None = None
-    error: str | None = None
+    from .assistant import design
+    from .catalog import find_components
 
-    for n in range(1, max_attempts + 1):
-        if n == 1:
-            progress(n, max_attempts, "Demanant el codi a Claude...")
-            message = first_request(description)
-        else:
-            progress(n, max_attempts, "Demanant a Claude que corregeixi l'error...")
-            message = fix_request(description, code, error, n, max_attempts)
+    def relay(event: dict) -> None:
+        if on_progress:
+            text = _STAGE_TEXT.get(event["stage"]) or "Error: " + event.get("detail", "")
+            on_progress(event["attempt"], event["of"], text)
 
-        code = extract_code(ask_claude(message, settings))
-        attempt = Attempt(number=n, code=code)
-        result.attempts.append(attempt)
-
-        try:
-            params = extract_params(code)
-        except (ParamsError, SyntaxError) as exc:
-            error = f"Problem with the PARAMS dictionary: {exc}"
-            attempt.error = error
-            progress(n, max_attempts, "PARAMS incorrecte.")
-            continue
-
-        progress(n, max_attempts, "Executant el codi CadQuery...")
-        run = run_code(code, timeout=settings.exec_timeout)
-        error = _problems(code, run)
-        attempt.error = error
-
-        last = n == max_attempts
-        # A part that runs but has a quality problem is kept on the last attempt:
-        # the checks will show the warning to the user.
-        if error is None or (run.ok and last):
-            result.ok, result.code, result.params, result.run = True, code, params, run
-            progress(n, max_attempts, "Fet!" if error is None else "Fet, amb avisos.")
-            return result
-        progress(n, max_attempts, "Error: " + error.strip().splitlines()[-1][:200])
-        run.cleanup()
-
-    result.code = code
+    request = first_request(description, find_components(description))
+    outcome = design(request, relay, settings, max_attempts)
+    result = GenerationResult(ok=outcome.ok, description=description, code=outcome.code,
+                              params=outcome.params, run=outcome.run,
+                              note=outcome.note.as_dict() if outcome.note else {})
+    result.attempts = [Attempt(a.number, a.code or "", a.error) for a in outcome.attempts]
+    if outcome.kind == "questions":
+        questions = "; ".join(outcome.note.questions) or outcome.note.summary
+        result.attempts.append(Attempt(1, "", "Claude needs more information: " + questions))
     return result
