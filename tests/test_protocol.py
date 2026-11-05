@@ -53,3 +53,18 @@ def test_picks_the_script_among_several_blocks():
 def test_slug():
     assert slug("Abraçadora sensor forquilla Ø52") == "abracadora-sensor-forquilla-52"
     assert slug("???") == "part"
+
+
+def test_language_of_a_request():
+    from textacad.prompts import change_request, detect_language, first_request
+
+    assert detect_language("Placa de 60x40x5 mm amb 4 forats per a M6") == "Catalan"
+    assert detect_language("Fes-la més gruixuda i afegeix dos forats") == "Catalan"
+    assert detect_language("Soporte con dos agujeros para tornillos M5") == "Spanish"
+    assert detect_language("Make it 100 mm wide and add four holes") == "English"
+    assert detect_language("Entretoise de 30 mm de diamètre extérieur, alésage de 12 mm") is None     # French: no hint
+    assert detect_language("60x40x5") is None
+    assert "is written in Catalan: write the note in Catalan." in first_request("Placa amb 4 forats de 6 mm")
+    request = change_request("Make it 100 mm wide and add two holes", "PARAMS = {}", ["Placa amb forats"])
+    assert "is written in English: write the note in English." in request
+    assert "must be in the language of the description above" in first_request("Entretoise de 30 mm")

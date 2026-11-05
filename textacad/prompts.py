@@ -585,6 +585,36 @@ SYSTEM_PROMPT = build_system_prompt()
 # Requests
 # ---------------------------------------------------------------------------
 
+# Words that give away the three languages of the interface. Only words that
+# are not shared with the other two (or with French, Italian, Portuguese).
+_LANGUAGE_WORDS = {
+    "English": {"the", "and", "with", "for", "of", "hole", "holes", "make", "add", "thick", "wide", "long",
+                "screw", "screws", "bracket", "mount", "plate", "it", "to", "from", "each", "between"},
+    "Catalan": {"amb", "els", "forat", "forats", "fes", "afegeix", "gruix", "més", "alçada", "amplada",
+                "llargada", "cargol", "cargols", "peça", "vull", "sota", "dues", "també", "perquè", "cada"},
+    "Spanish": {"con", "los", "las", "agujero", "agujeros", "haz", "añade", "grosor", "más", "altura",
+                "anchura", "longitud", "tornillo", "tornillos", "pieza", "quiero", "debajo", "también", "porque"},
+}
+
+
+def detect_language(text: str) -> str | None:
+    """"English", "Catalan" or "Spanish" when the text is clearly in one of them, else None."""
+    import re
+
+    words = re.findall(r"[a-zàèéíïòóúüçñ]+", text.lower())
+    scores = {lang: sum(w in vocab for w in words) for lang, vocab in _LANGUAGE_WORDS.items()}
+    ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    (best, top), (_, second) = ranked[0], ranked[1]
+    return best if top >= 2 and top > second else None
+
+
+def _language_line(text: str, what: str) -> str:
+    language = detect_language(text)
+    if language is None:
+        return f"The note must be in the language of the {what} above."
+    return f"The {what} above is written in {language}: write the note in {language}."
+
+
 def _components_block(components: list[dict] | None) -> str:
     if not components:
         return ""
@@ -630,8 +660,8 @@ def first_request(description: str, components: list[dict] | None = None) -> str
     return (
         f"Part description:\n{description.strip()}\n"
         f"{_components_block(components)}"
-        "\nWrite the note and the CadQuery script. The note and the PARAMS labels must be in the "
-        "language of the description above."
+        "\nWrite the note and the CadQuery script. "
+        f"{_language_line(description, 'description')} The PARAMS labels use the same language."
     )
 
 
@@ -643,8 +673,9 @@ def change_request(instruction: str, current_code: str, history: list[str] | Non
         f"{_history_block(history)}"
         f"{_components_block(components)}"
         f"\nChange requested by the user:\n{instruction.strip()}\n"
-        "\nWrite the note and the COMPLETE updated script. The note must be in the language of the "
-        "change request above, even when the script or the earlier messages are in another language."
+        "\nWrite the note and the COMPLETE updated script. "
+        f"{_language_line(instruction, 'change request')} This holds even when the script or the "
+        "earlier messages are in another language."
     )
 
 
