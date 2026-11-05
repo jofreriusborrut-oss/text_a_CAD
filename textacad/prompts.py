@@ -56,18 +56,18 @@ EXPECTED_HOLES = [(BORE, 1), (HOLE, N)]
 )
 
 EXAMPLE_U_BRACKET = (
-    "Suport en U: base de 50x30 mm, dues parets laterals de 25 mm d'alçada total, "
-    "gruix de 3 mm, i una ranura de 6x20 mm al centre de la base.",
+    "Soporte en U: base de 50x30 mm, dos paredes laterales de 25 mm de altura total, "
+    "grosor de 3 mm y una ranura de 6x20 mm en el centro de la base.",
     '''\
 import cadquery as cq
 
 PARAMS = {
-    "length": {"value": 50, "unit": "mm", "min": 20, "max": 200, "label": "Llargada de la base (X)"},
-    "width": {"value": 30, "unit": "mm", "min": 10, "max": 150, "label": "Amplada (Y)"},
-    "height": {"value": 25, "unit": "mm", "min": 8, "max": 150, "label": "Alçada total de les parets (Z)"},
-    "thickness": {"value": 3, "unit": "mm", "min": 1, "max": 10, "label": "Gruix"},
-    "slot_width": {"value": 6, "unit": "mm", "min": 2, "max": 20, "label": "Amplada de la ranura"},
-    "slot_length": {"value": 20, "unit": "mm", "min": 5, "max": 100, "label": "Llargada de la ranura"},
+    "length": {"value": 50, "unit": "mm", "min": 20, "max": 200, "label": "Longitud de la base (X)"},
+    "width": {"value": 30, "unit": "mm", "min": 10, "max": 150, "label": "Anchura (Y)"},
+    "height": {"value": 25, "unit": "mm", "min": 8, "max": 150, "label": "Altura total de las paredes (Z)"},
+    "thickness": {"value": 3, "unit": "mm", "min": 1, "max": 10, "label": "Grosor"},
+    "slot_width": {"value": 6, "unit": "mm", "min": 2, "max": 20, "label": "Anchura de la ranura"},
+    "slot_length": {"value": 20, "unit": "mm", "min": 5, "max": 100, "label": "Longitud de la ranura"},
 }
 
 L = PARAMS["length"]["value"]
@@ -99,20 +99,20 @@ EXPECTED_HOLES = []                     # the slot is not a round hole
 )
 
 EXAMPLE_SHAFT = (
-    "Eix esglaonat vertical: un tram de Ø20 mm i 30 mm de llarg, i a sobre un tram de "
-    "Ø12 mm i 40 mm de llarg. Xamfrà d'1 mm als dos extrems i un forat passant "
-    "transversal de Ø4 mm a 8 mm de l'extrem superior.",
+    "Vertical stepped shaft: a 20 mm diameter section 30 mm long, and on top of it a "
+    "12 mm diameter section 40 mm long. 1 mm chamfer on both ends and a 4 mm cross hole "
+    "8 mm from the top end. It will be turned on a lathe.",
     '''\
 import cadquery as cq
 
 PARAMS = {
-    "d1": {"value": 20, "unit": "mm", "min": 6, "max": 80, "label": "Diàmetre tram inferior"},
-    "l1": {"value": 30, "unit": "mm", "min": 5, "max": 200, "label": "Llargada tram inferior"},
-    "d2": {"value": 12, "unit": "mm", "min": 4, "max": 60, "label": "Diàmetre tram superior"},
-    "l2": {"value": 40, "unit": "mm", "min": 5, "max": 200, "label": "Llargada tram superior"},
-    "chamfer": {"value": 1, "unit": "mm", "min": 0, "max": 3, "label": "Xamfrà dels extrems"},
-    "cross_hole_diameter": {"value": 4, "unit": "mm", "min": 0, "max": 20, "label": "Diàmetre del forat transversal (0 = sense)"},
-    "cross_hole_offset": {"value": 8, "unit": "mm", "min": 2, "max": 100, "label": "Distància del forat a l'extrem superior"},
+    "d1": {"value": 20, "unit": "mm", "min": 6, "max": 80, "label": "Lower section diameter"},
+    "l1": {"value": 30, "unit": "mm", "min": 5, "max": 200, "label": "Lower section length"},
+    "d2": {"value": 12, "unit": "mm", "min": 4, "max": 60, "label": "Upper section diameter"},
+    "l2": {"value": 40, "unit": "mm", "min": 5, "max": 200, "label": "Upper section length"},
+    "chamfer": {"value": 1, "unit": "mm", "min": 0, "max": 3, "label": "End chamfers"},
+    "cross_hole_diameter": {"value": 4, "unit": "mm", "min": 0, "max": 20, "label": "Cross hole diameter (0 = none)"},
+    "cross_hole_offset": {"value": 8, "unit": "mm", "min": 2, "max": 100, "label": "Cross hole distance from the top end"},
 }
 
 D1 = PARAMS["d1"]["value"]
@@ -292,16 +292,16 @@ EXAMPLE_NOTES = [
         "use": "process=unknown",
     },
     {
-        "title": "suport-u",
-        "summary": "Suport en U de 50 × 30 × 25 mm amb 3 mm de gruix i una ranura de 6 × 20 mm centrada a la base.",
-        "assumptions": ["La ranura va orientada al llarg de la base (eix X)."],
+        "title": "soporte-u",
+        "summary": "Soporte en U de 50 × 30 × 25 mm con 3 mm de grosor y una ranura de 6 × 20 mm centrada en la base.",
+        "assumptions": ["La ranura va orientada a lo largo de la base (eje X)."],
         "use": "process=unknown",
     },
     {
-        "title": "eix-esglaonat",
-        "summary": "Eix esglaonat vertical: Ø20 × 30 mm i Ø12 × 40 mm, xamfrans d'1 mm als extrems i forat "
-                   "transversal de Ø4 mm a 8 mm de l'extrem superior.",
-        "assumptions": ["El forat transversal travessa l'eix seguint X."],
+        "title": "stepped-shaft",
+        "summary": "Vertical stepped shaft: Ø20 × 30 mm and Ø12 × 40 mm, 1 mm chamfers on both ends and a "
+                   "Ø4 mm cross hole 8 mm from the top end.",
+        "assumptions": ["The cross hole runs through the shaft along X."],
         "use": "process=cnc",
     },
     {
@@ -630,7 +630,8 @@ def first_request(description: str, components: list[dict] | None = None) -> str
     return (
         f"Part description:\n{description.strip()}\n"
         f"{_components_block(components)}"
-        "\nWrite the note and the CadQuery script."
+        "\nWrite the note and the CadQuery script. The note and the PARAMS labels must be in the "
+        "language of the description above."
     )
 
 
@@ -642,7 +643,8 @@ def change_request(instruction: str, current_code: str, history: list[str] | Non
         f"{_history_block(history)}"
         f"{_components_block(components)}"
         f"\nChange requested by the user:\n{instruction.strip()}\n"
-        "\nWrite the note and the COMPLETE updated script."
+        "\nWrite the note and the COMPLETE updated script. The note must be in the language of the "
+        "change request above, even when the script or the earlier messages are in another language."
     )
 
 

@@ -93,8 +93,8 @@ def test_holes_of_the_prompt_examples():
         finally:
             res.cleanup()
     assert found["brida-80"] == {(6.6, "z"): 6, (30.0, "z"): 1}
-    assert found["suport-u"] == {}                                   # a slot is not a round hole
-    assert found["eix-esglaonat"] == {(4.0, "x"): 1}
+    assert found["soporte-u"] == {}                                   # a slot is not a round hole
+    assert found["stepped-shaft"] == {(4.0, "x"): 1}
     assert found["caixa-electronica"] == {(2.5, "z"): 4}
     # Fork clamp: slit bore (52.3), pinch bolt across both ears (one hole) and the stud hole.
     assert found["abracadora-sensor-forquilla"] == {(3.3, "x"): 1, (5.5, "y"): 1, (52.3, "z"): 1}
