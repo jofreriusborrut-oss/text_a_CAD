@@ -38,6 +38,12 @@ jobs:
           cp eval-log.txt ci-out/ 2>/dev/null
           tail -40 eval-log.txt
           exit 0
+      - name: Probe (temporary experiment)
+        if: always()
+        run: |
+          mkdir -p ci-out
+          python tools/ci_probe.py > ci-out/probe.txt 2>&1 || true
+          cat ci-out/probe.txt
       - name: Publish the test report to the ci-results branch
         if: always()
         run: |
