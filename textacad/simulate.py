@@ -205,6 +205,118 @@ def surface_mesh(model: fea.Model) -> tuple[np.ndarray, np.ndarray]:
     return nodes, triangles
 
 
+def _rotate(corners: np.ndarray, k: np.ndarray) -> np.ndarray:
+    """Renumber the three corners of every triangle so that corner k comes first."""
+    order = (np.arange(3)[None, :] + k[:, None]) % 3
+    return np.take_along_axis(corners, order[:, :, None], axis=1)
+
+
+def refine_surface(mesh: Mesh, max_edge: float, limit: int = 120_000) -> tuple[np.ndarray, np.ndarray]:
+    """The real surface of the part, cut into triangles small enough to draw a stress map on it.
+
+    In each pass every edge longer than `max_edge` is cut in half, in all the
+    triangles that share it, so the surface stays closed. It stops when no
+    edge is too long or when the next pass would go over `limit` triangles.
+    Returns (points, triangles) with shared vertices.
+    """
+    tris = np.asarray(mesh.triangles, dtype=float)
+    for _ in range(30):
+        following = np.roll(tris, -1, axis=1)
+        marked = np.linalg.norm(tris - following, axis=2) > max_edge     # edge i joins corner i and corner i + 1
+        count = marked.sum(axis=1)
+        if not count.any() or len(tris) + int(count.sum()) > limit:
+            break
+        mids = (tris + following) / 2                                    # mids[:, i] = middle of edge i
+        parts = [tris[count == 0]]
+
+        one = count == 1                                                 # the cut edge becomes edge 0
+        if one.any():
+            k = marked[one].argmax(axis=1)
+            t, m = _rotate(tris[one], k), _rotate(mids[one], k)
+            parts += [np.stack([t[:, 0], m[:, 0], t[:, 2]], axis=1), np.stack([m[:, 0], t[:, 1], t[:, 2]], axis=1)]
+
+        two = count == 2                                                 # the uncut edge becomes edge 2
+        if two.any():
+            k = (marked[two].argmin(axis=1) + 1) % 3
+            t, m = _rotate(tris[two], k), _rotate(mids[two], k)
+            parts += [np.stack([m[:, 0], t[:, 1], m[:, 1]], axis=1), np.stack([t[:, 0], m[:, 0], m[:, 1]], axis=1),
+                      np.stack([t[:, 0], m[:, 1], t[:, 2]], axis=1)]
+
+        three = count == 3
+        if three.any():
+            t, m = tris[three], mids[three]
+            parts += [np.stack([t[:, 0], m[:, 0], m[:, 2]], axis=1), np.stack([m[:, 0], t[:, 1], m[:, 1]], axis=1),
+                      np.stack([m[:, 2], m[:, 1], t[:, 2]], axis=1), np.stack([m[:, 0], m[:, 1], m[:, 2]], axis=1)]
+        tris = np.concatenate(parts)
+
+    flat = tris.reshape(-1, 3)
+    scale = max(float(np.abs(flat).max()), 1.0)
+    keys = np.round(flat / (1e-7 * scale)).astype(np.int64)
+    _, first, inverse = np.unique(keys, axis=0, return_index=True, return_inverse=True)
+    return flat[first], inverse.reshape(-1, 3)
+
+
+def _to_points(model: fea.Model, values: np.ndarray, points: np.ndarray) -> np.ndarray:
+    """Results known at the nodes of the model, evaluated at points of the real surface.
+
+    Inside an element the value is interpolated between its 8 corners, exactly
+    as the element itself does. Points of the real surface that fall just
+    outside the block model (round holes, slanted faces) take a
+    distance-weighted average of the nearest nodes.
+    """
+    grid = model.grid
+    n = len(points)
+    cell = np.empty((n, 3), dtype=int)
+    local = np.empty((n, 3))
+    for a in range(3):
+        e = grid.edges[a]
+        i = np.clip(np.searchsorted(e, points[:, a], side="right") - 1, 0, len(e) - 2)
+        cell[:, a] = i
+        local[:, a] = np.clip((points[:, a] - e[i]) / (e[i + 1] - e[i]), 0.0, 1.0)
+
+    lookup = np.full(grid.shape, -1, dtype=int)
+    lookup[model.index[:, 0], model.index[:, 1], model.index[:, 2]] = np.arange(model.n_elements)
+    element = lookup[cell[:, 0], cell[:, 1], cell[:, 2]]
+    # A point lying exactly on a grid plane may have landed in the empty box on
+    # the other side of it: try the neighbouring boxes that share that plane.
+    for shift in ((1, 0, 0), (0, 1, 0), (0, 0, 1), (1, 1, 0), (1, 0, 1), (0, 1, 1), (1, 1, 1)):
+        axes = [a for a in range(3) if shift[a]]
+        retry = element < 0
+        for a in axes:
+            retry &= (local[:, a] < 1e-9) & (cell[:, a] > 0)
+        rows = np.where(retry)[0]
+        if len(rows) == 0:
+            continue
+        other = cell[rows].copy()
+        other[:, axes] -= 1
+        found = lookup[other[:, 0], other[:, 1], other[:, 2]]
+        ok = found >= 0
+        rows = rows[ok]
+        element[rows] = found[ok]
+        cell[rows] = other[ok]
+        local[np.ix_(rows, axes)] = 1.0
+
+    out = np.zeros((n,) + values.shape[1:])
+    inside = element >= 0
+    if inside.any():
+        xi = 2 * local[inside] - 1                                        # -1 .. 1 inside the element
+        shape = np.prod(1 + fea._CORNERS[None, :, :] * xi[:, None, :], axis=2) / 8      # (points, 8)
+        corner_values = values[model.elements[element[inside]]]            # (points, 8) or (points, 8, 3)
+        out[inside] = (corner_values * shape[..., None]).sum(axis=1) if corner_values.ndim == 3 \
+            else (corner_values * shape).sum(axis=1)
+    if (~inside).any():
+        from scipy.spatial import cKDTree
+
+        k = min(4, model.n_nodes)
+        dist, idx = cKDTree(model.coords).query(points[~inside], k=k)
+        dist, idx = dist.reshape(-1, k), idx.reshape(-1, k)
+        weight = 1.0 / (dist ** 2 + 1e-12)
+        weight /= weight.sum(axis=1, keepdims=True)
+        picked = values[idx]
+        out[~inside] = (picked * weight[..., None]).sum(axis=1) if picked.ndim == 3 else (picked * weight).sum(axis=1)
+    return out
+
+
 def describe_region(region: dict) -> str:
     kind = region["type"]
     if kind == "side":
@@ -245,7 +357,8 @@ class SimResult:
     stiffness: float | None              # N/mm at the loaded region (force / deflection along the force)
     convergence: dict | None = None      # {"coarse_displacement", "change_percent", ...}
     warnings: list[str] = field(default_factory=list)
-    # Fields for drawing (not part of the summary): the skin of the simulated model.
+    # Fields for drawing (not part of the summary): the real surface of the part,
+    # finely divided, with the results of the model carried over to it.
     skin_points: np.ndarray | None = None            # (n, 3) mm
     skin_triangles: np.ndarray | None = None         # (m, 3) indices into skin_points
     skin_stress: np.ndarray | None = None            # (n,) MPa (von Mises)
@@ -285,7 +398,7 @@ class SimResult:
         }
 
     def drawing_data(self, scale_max: float | None = None) -> dict:
-        """The simulated model with its stresses and displacements, for the 3D viewer.
+        """The surface of the part with its stresses and displacements, for the 3D viewer.
 
         Arrays are packed as base64: points and displacement as float32
         (x, y, z per node), triangles as uint32, stress level as one byte
@@ -309,6 +422,23 @@ class SimResult:
         }
 
 
+def _nearest_free_nodes(model: fea.Model, region: dict, fixed: np.ndarray) -> np.ndarray:
+    """Free nodes closest to a "point" region that touches no material.
+
+    Typical case: a load written at the centre of a hole (the axis of a motor
+    or a bolt). The force then goes to the rim of the hole. If the point is
+    far from the part the selection stays empty and the caller reports it.
+    """
+    xyz = model.coords
+    d = np.linalg.norm(xyz - np.array(region["center"]), axis=1)
+    d[fixed] = np.inf
+    nearest = float(d.min())
+    span = float(np.max(xyz.max(axis=0) - xyz.min(axis=0)))
+    if not np.isfinite(nearest) or nearest > max(3 * region["radius"], 0.2 * span):
+        return np.zeros(len(xyz), dtype=bool)
+    return d <= nearest + model.grid.pitch
+
+
 def _solve_once(mesh: Mesh, case: LoadCase, material: Material, target: int):
     pitch = pitch_for_count(mesh, target)
     grid = voxelize(mesh, pitch)
@@ -327,8 +457,13 @@ def _solve_once(mesh: Mesh, case: LoadCase, material: Material, target: int):
 
     forces = np.zeros((model.n_nodes, 3))
     loaded = np.zeros(model.n_nodes, dtype=bool)
+    notes: list[str] = []
     for load in case.loads:
         sel = select_nodes(model, load["region"]) & ~fixed
+        if not sel.any() and load["region"]["type"] == "point":
+            sel = _nearest_free_nodes(model, load["region"], fixed)
+            if sel.any():
+                notes.append("load_moved")
         if not sel.any():
             raise SimulationError(
                 f"The loaded region selects no free material: {describe_region(load['region'])}."
@@ -346,7 +481,7 @@ def _solve_once(mesh: Mesh, case: LoadCase, material: Material, target: int):
 
     solution = fea.solve(model, material.E, material.nu, fixed, forces)
     field_ = fea.stresses(model, solution.displacement, material.E, material.nu)
-    return model, fixed, loaded, forces, solution, field_
+    return model, fixed, loaded, forces, solution, field_, notes
 
 
 def run_simulation(mesh: Mesh, load_case: LoadCase | dict, material: Material | str = "petg",
@@ -363,7 +498,7 @@ def run_simulation(mesh: Mesh, load_case: LoadCase | dict, material: Material | 
         raise SimulationError("The part is not a closed solid, so it cannot be simulated.")
 
     target = RESOLUTIONS[resolution]
-    model, fixed, loaded, forces, sol, st = _solve_once(mesh, load_case, material, target)
+    model, fixed, loaded, forces, sol, st, notes = _solve_once(mesh, load_case, material, target)
 
     disp = np.linalg.norm(sol.displacement, axis=1)
     i_disp = int(np.argmax(disp))
@@ -394,11 +529,11 @@ def run_simulation(mesh: Mesh, load_case: LoadCase | dict, material: Material | 
             if along > 1e-12:
                 stiffness = float(norm / along)
 
-    warnings: list[str] = []
+    warnings: list[str] = sorted(set(notes))
     convergence = None
     if check_convergence and resolution != "draft":
         try:
-            m2, fx2, ld2, _, sol2, st2 = _solve_once(mesh, load_case, material, max(target // 4, 800))
+            m2, fx2, ld2, _, sol2, st2, _ = _solve_once(mesh, load_case, material, max(target // 4, 800))
             d2 = float(np.linalg.norm(sol2.displacement, axis=1).max())
             near2 = (fx2 | ld2)[m2.elements].any(axis=1)
             s2 = float(st2.peak[~near2].max()) if (~near2).any() else float(st2.peak.max())
@@ -428,14 +563,17 @@ def run_simulation(mesh: Mesh, load_case: LoadCase | dict, material: Material | 
     if disp[i_disp] > 0.1 * float(np.max(mesh.size)):
         warnings.append("large_deformation")
 
-    # For drawing: stress at every node (average of the elements around it) on the skin of the model.
+    # For drawing: stress at every node (average of the elements around it), carried over
+    # to the real surface of the part so the map is smooth instead of made of blocks.
     node_stress = np.zeros(model.n_nodes)
     counts = np.zeros(model.n_nodes)
     for c in range(8):
         np.add.at(node_stress, model.elements[:, c], peak)
         np.add.at(counts, model.elements[:, c], 1)
     node_stress /= np.maximum(counts, 1)
-    skin_nodes, skin_triangles = surface_mesh(model)
+    skin_points, skin_triangles = refine_surface(mesh, max_edge=1.5 * model.grid.pitch)
+    skin_stress = _to_points(model, node_stress, skin_points)
+    skin_displacement = _to_points(model, sol.displacement, skin_points)
 
     return SimResult(
         material=material, load_case=load_case, resolution=resolution, pitch=model.grid.pitch,
@@ -446,6 +584,6 @@ def run_simulation(mesh: Mesh, load_case: LoadCase | dict, material: Material | 
         applied_force=applied.tolist(), reaction_force=reaction.tolist(), equilibrium_error=eq_err,
         voxel_volume=voxel_volume, mesh_volume=mesh.volume, safety_factor=float(sf),
         safety_factor_in_plane=float(sf_plane), stiffness=stiffness, convergence=convergence,
-        warnings=warnings, skin_points=model.coords[skin_nodes], skin_triangles=skin_triangles,
-        skin_stress=node_stress[skin_nodes], skin_displacement=sol.displacement[skin_nodes],
+        warnings=warnings, skin_points=skin_points, skin_triangles=skin_triangles,
+        skin_stress=skin_stress, skin_displacement=skin_displacement,
     )

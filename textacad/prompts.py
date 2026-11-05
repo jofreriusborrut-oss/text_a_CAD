@@ -94,6 +94,7 @@ slot = cq.Workplane("XY").slot2D(SL, SW, angle=0).extrude(T)
 result = body.cut(slot)
 
 EXPECTED_BBOX = (L, W, H)
+EXPECTED_HOLES = []                     # the slot is not a round hole
 ''',
 )
 
@@ -361,9 +362,13 @@ Reply with these blocks, in this order, and nothing else:
   nothing to say in it. Never put code or dimensions tables in the note.
 - <use> describes how the part will be made and used, as far as the user
   said or it is obvious: process is fdm (3D printed), sls, cnc or unknown;
-  max_temp_c is the hottest temperature it will see (a number, or unknown);
-  outdoor / fluids (fuel, oil, solvents) / vibration / flexible are yes or no.
-  It is used to recommend a material.
+  max_temp_c is the hottest temperature the part will see: 40 for a part
+  that lives indoors at room temperature, 70 inside a car or in full summer
+  sun, 80 to 120 next to an engine, a brake, an exhaust or a hot end (a
+  number, or unknown); outdoor / fluids (fuel, oil, solvents) / vibration /
+  flexible are yes or no. Add material=<name> only when the user names the
+  material (pla, petg, abs, asa, pc, pa12, pa-cf, tpu95a, al6061, al7075,
+  s235, ss304, ti64). It is used to recommend a material.
 - ALWAYS build the part. When information is missing, choose a sensible value,
   expose it in PARAMS and say so in <assumptions>; a wrong guess costs the
   user one slider move, a question costs a whole turn. Only when the message
@@ -421,7 +426,9 @@ The script has exactly this structure, in this order:
        {"type": "point", "center": [x, y, z], "radius": r}      r of 5 mm or more
      Coordinates are those of `result`, written with the variables. Hold the
      part where it is really held (bolt holes, clamped bore, glued face) and
-     put the load where it really acts. If the user gave no load, estimate a
+     put the load where it really acts. A region must touch material: for a
+     force carried by a bolt, a pin or a shaft through a hole use a "hole"
+     region on that hole, never a point in the empty middle of it. If the user gave no load, estimate a
      realistic one, say it in <assumptions>, and keep it modest.
 - Never read or write files, never print, never call show_object(), never
   use input(), os, sys, subprocess or network access.

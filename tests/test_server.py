@@ -91,6 +91,21 @@ def test_create_then_change(client):
     assert client.get("/api/sessions").get_json()["sessions"][0]["versions"] == 2
 
 
+def test_material_is_suggested_from_the_use(client):
+    sid, _ = start(client)                                   # use: fdm, no vibration -> the easy material
+    v = client.get(f"/api/sessions/{sid}").get_json()["versions"][0]
+    assert v["suggested_material"] == "pla" and v["material"] == "pla"
+    assert "PLA" in v["checks"][-1]["title"]
+    other = client.get(f"/api/sessions/{sid}/versions/1?material=asa").get_json()
+    assert other["material"] == "asa" and other["suggested_material"] == "pla" and "ASA" in other["checks"][-1]["title"]
+
+    named, _ = start(client, [answer(PLATE, use="process=cnc, material=al7075, vibration=yes")])
+    assert client.get(f"/api/sessions/{named}").get_json()["versions"][0]["suggested_material"] == "al7075"
+    hot, _ = start(client, [answer(PLATE, use="process=fdm, max_temp_c=90, outdoor=yes, fluids=yes, vibration=yes")])
+    best = client.get(f"/api/sessions/{hot}").get_json()["versions"][0]["suggested_material"]
+    assert best not in ("pla", "petg") and best in ("asa", "abs", "pc", "pa12", "pa-cf")
+
+
 def test_sliders_rebuild_without_claude(client):
     sid, _ = start(client)
     r = client.post(f"/api/sessions/{sid}/versions/1/params", json={"values": {"length": 100, "hole_count": 6}})

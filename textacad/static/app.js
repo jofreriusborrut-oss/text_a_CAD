@@ -549,19 +549,37 @@ function bindMaterial(v) {
 
 async function setMaterial(id) {
   state.material = id;
-  store("textacad.material", id);
+  if (state.session) store(`textacad.material.${state.session.id}`, id);    // the user's choice for this design
   $("materialSelect").value = id;
   state.simError = null;
-  const v = version();
-  if (v) {
-    try {      // the weight check depends on the material
-      const fresh = await api(`/api/sessions/${state.session.id}/versions/${v.number}?material=${id}`);
-      const i = state.session.versions.findIndex((x) => x.number === v.number);
-      state.session.versions[i] = fresh;
-    } catch (err) { /* keep the old checks */ }
-  }
+  await refreshChecksForMaterial();
   renderPanel();
   applySimulationToViewer();
+}
+
+// The weight check of a version is computed for one material: fetch it again if another one is selected.
+async function refreshChecksForMaterial() {
+  const v = version();
+  if (!v || v.material === state.material) return;
+  try {
+    const fresh = await api(`/api/sessions/${state.session.id}/versions/${v.number}?material=${state.material}`);
+    const i = state.session.versions.findIndex((x) => x.number === v.number);
+    if (i >= 0) state.session.versions[i] = fresh;
+  } catch (err) { /* keep the old checks */ }
+}
+
+// Material shown for the selected version: the one the user picked for this design,
+// otherwise the one suggested from what the assistant knows about its use.
+function syncMaterial() {
+  const v = version();
+  if (!v || !state.session) return;
+  const chosen = recall(`textacad.material.${state.session.id}`);
+  const want = materialInfo(chosen) ? chosen : (materialInfo(v.suggested_material) ? v.suggested_material : state.config.default_material);
+  if (want !== state.material) {
+    state.material = want;
+    $("materialSelect").value = want;
+  }
+  if (v.material !== state.material) refreshChecksForMaterial().then(() => { if (state.tab === "checks") renderPanel(); });
 }
 
 function fillMaterialSelect() {
@@ -809,6 +827,7 @@ async function renderPanel() {
 
 function renderAll() {
   $("sessionTitle").textContent = state.session && state.session.title ? state.session.title : "";
+  syncMaterial();
   renderMessages(); renderComposer(); renderVersions(); renderViewer(); renderPanel();
 }
 
@@ -976,8 +995,7 @@ async function start() {
     $("messages").innerHTML = `<div class="msg card error"><p>${esc(err.message)}</p></div>`;
     return;
   }
-  const material = recall("textacad.material");
-  state.material = state.config.materials.some((m) => m.id === material) ? material : state.config.default_material;
+  state.material = state.config.default_material;
   fillMaterialSelect();
   applyStaticTexts();
   const last = recall("textacad.session");

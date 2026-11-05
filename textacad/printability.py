@@ -105,8 +105,11 @@ def analyse(mesh: Mesh, material: Material | str = "petg") -> dict:
     printers = [{"name": name, "volume_mm": list(vol), "fits": fits(best.footprint, best.height, vol)}
                 for name, vol in PRINTERS.items()]
     notes = []
-    if best.support_area <= 0.005 * mesh.area:
+    share = best.support_area / max(mesh.area, 1e-9)
+    if share <= 0.005:
         notes.append("no_support")
+    elif share <= 0.03:
+        notes.append("small_overhangs")          # cross holes, chamfers: they bridge
     else:
         notes.append("needs_support")
     if best.bed_area < 0.02 * mesh.area or best.bed_area < 100:

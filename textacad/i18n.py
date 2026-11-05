@@ -152,6 +152,10 @@ SIM_WARNINGS = {
         "en": "The simulated model differs from the real part by more than 8 % in volume: use a finer resolution.",
         "ca": "El model simulat difereix de la peça real en més d'un 8 % de volum: fes servir una resolució més fina.",
         "es": "El modelo simulado difiere de la pieza real en más de un 8 % de volumen: usa una resolución más fina."},
+    "load_moved": {
+        "en": "A load point was not on the part (for example the centre of a hole): the force was applied to the nearest material.",
+        "ca": "Un punt de càrrega no tocava la peça (per exemple, el centre d'un forat): la força s'ha aplicat al material més proper.",
+        "es": "Un punto de carga no tocaba la pieza (por ejemplo, el centro de un agujero): la fuerza se ha aplicado al material más cercano."},
     "yields": {
         "en": "The stress is above the strength of the material: the part would deform permanently or break.",
         "ca": "La tensió supera la resistència del material: la peça es deformaria permanentment o es trencaria.",
@@ -198,6 +202,9 @@ PRINT_NOTES = {
     "no_support": {"en": "Prints without supports in the recommended orientation.",
                    "ca": "S'imprimeix sense suports en l'orientació recomanada.",
                    "es": "Se imprime sin soportes en la orientación recomendada."},
+    "small_overhangs": {"en": "Only small overhangs (cross holes, chamfers): they usually bridge without supports.",
+                        "ca": "Només hi ha voladissos petits (forats transversals, xamfrans): normalment s'imprimeixen en pont, sense suports.",
+                        "es": "Solo hay voladizos pequeños (agujeros transversales, chaflanes): normalmente se imprimen en puente, sin soportes."},
     "needs_support": {"en": "Needs supports even in the best orientation.",
                       "ca": "Necessita suports fins i tot en la millor orientació.",
                       "es": "Necesita soportes incluso en la mejor orientación."},

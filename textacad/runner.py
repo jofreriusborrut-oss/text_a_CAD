@@ -187,12 +187,14 @@ def run(job_dir: Path) -> dict:
     if not solids:
         raise ValueError("`result` contains no solid (only faces, wires or edges).")
 
+    # Measured on the exact geometry, BEFORE the solid is meshed for the STL
+    # (afterwards OpenCascade would measure the triangles, slightly bigger).
+    bb = shape.BoundingBox()
+
     cq.exporters.export(shape, str(job_dir / "part.step"))
     cq.exporters.export(
         shape, str(job_dir / "part.stl"), tolerance=0.02, angularTolerance=0.1
     )
-
-    bb = shape.BoundingBox()
     expected = namespace.get("EXPECTED_BBOX")
     out = {
         "ok": True,

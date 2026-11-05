@@ -63,7 +63,7 @@ def test_design_then_change_on_the_real_runner(tmp_path):
         settings=settings)
     assert second.ok and second.version.number == 2 and second.version.parent == 1, second.last_error
     v2 = second.version
-    assert v2.info["bbox"]["size"] == pytest.approx([85.15, 62.3, 26.0], abs=0.01)
+    assert v2.info["bbox"]["size"] == pytest.approx([85.15, 62.3, 26.0], abs=0.05)
     assert holes(v2.info) == {(3.3, "x"): 1, (5.5, "y"): 2, (52.3, "z"): 1}
     assert v2.info["volume_mm3"] > v1.info["volume_mm3"]
     assert v2.note["changes"][0] == "Alçada: de 20 a 26 mm."

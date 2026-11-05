@@ -58,5 +58,18 @@ def test_machined_material_has_no_print_estimate():
 
 
 def test_every_note_has_a_text():
-    for code in ("no_support", "needs_support", "small_bed_contact", "tall_and_thin", "weak_between_layers", "too_big"):
+    for code in ("no_support", "small_overhangs", "needs_support", "small_bed_contact", "tall_and_thin", "weak_between_layers", "too_big"):
         assert set(i18n.PRINT_NOTES[code]) == {"en", "ca", "es"}
+
+
+def test_small_overhangs_are_not_called_supports(monkeypatch):
+    mesh = box_mesh((60, 40, 5))
+
+    def fake(share):
+        o = printability.Orientation(up="+z", support_area=share * mesh.area, bed_area=2400, height=5, footprint=(60, 40))
+        monkeypatch.setattr(printability, "orientations", lambda m: [o])
+        return printability.analyse(mesh)["notes"][0]
+
+    assert fake(0.0) == "no_support"
+    assert fake(0.012) == "small_overhangs"          # a cross hole, a chamfer
+    assert fake(0.08) == "needs_support"

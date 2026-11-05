@@ -107,8 +107,23 @@ def _checks(session: DesignSession, version, material, lang: str) -> list[dict]:
     return [c.as_dict(lang) for c in _cache[key]]
 
 
+def _suggest_material(version) -> str:
+    """Material to start with: the one the user named, else the best match for the stated use."""
+    use = dict(version.note.get("use") or {})
+    named = str(use.get("material", "")).lower().replace(" ", "")
+    if named in MATERIALS:
+        return named
+    process = use.get("process")
+    use["processes"] = [process] if process in ("fdm", "sls", "cnc") else ["fdm"]
+    for rec in recommend(UseCase.from_dict(use)):
+        if rec.suitable:
+            return rec.material.id
+    return DEFAULT_MATERIAL
+
+
 def _version_payload(session: DesignSession, version, lang: str, material=None) -> dict:
-    material = material or get_material(DEFAULT_MATERIAL)
+    suggested = _suggest_material(version)
+    material = material or get_material(suggested)
     folder = session.version_dir(version.number)
     by_id = {c["id"]: c for c in catalog.all_components()}
     data = version.public()
@@ -116,6 +131,8 @@ def _version_payload(session: DesignSession, version, lang: str, material=None) 
     data["file_stem"] = session.file_stem(version.number)
     data["components"] = [catalog.public(by_id[c]) for c in version.components if c in by_id]
     data["checks"] = _checks(session, version, material, lang)
+    data["material"] = material.id                    # the material the weight check was computed for
+    data["suggested_material"] = suggested
     data["stamp"] = _code_key(version)
     return data
 
