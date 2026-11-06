@@ -1,0 +1,832 @@
+{
+ "id": "eval-suport-nema17",
+ "title": "suport-l-nema17",
+ "created": 1793927977.349808,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Suport en L per a un motor NEMA 17. Placa vertical de 5 mm amb el forat central del motor i els 4 forats M3, i una base de 50 mm de fons amb 4 forats M5 per cargolar-la a un perfil. Amb dos nervis triangulars als costats.",
+   "time": 1793927977.349888
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927979.827438,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Canvia els forats M3 del motor per ranures verticals de 8 mm de llarg per poder tensar la corretja.",
+   "time": 1793927981.5165374
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927984.0894418,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Suport en L per a un motor NEMA 17. Placa vertical de 5 mm amb el forat central del motor i els 4 forats M3, i una base de 50 mm de fons amb 4 forats M5 per cargolar-la a un perfil. Amb dos nervis triangulars als costats.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Amplada (X)\"},\n    \"height\": {\"value\": 56, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Alçada de la placa (Z)\"},\n    \"depth\": {\"value\": 50, \"unit\": \"mm\", \"min\": 30, \"max\": 120, \"label\": \"Fons de la base (Y)\"},\n    \"plate_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la placa vertical\"},\n    \"base_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"motor_center_z\": {\"value\": 31, \"unit\": \"mm\", \"min\": 22, \"max\": 100, \"label\": \"Alçada del centre del motor\"},\n    \"pilot_diameter\": {\"value\": 22.5, \"unit\": \"mm\", \"min\": 20, \"max\": 30, \"label\": \"Forat central del motor\"},\n    \"motor_bolt_square\": {\"value\": 31, \"unit\": \"mm\", \"min\": 20, \"max\": 40, \"label\": \"Quadrat dels forats M3\"},\n    \"motor_bolt_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2.5, \"max\": 4.5, \"label\": \"Forats M3 (3,4)\"},\n    \"base_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forats M5 de la base (5,5)\"},\n    \"base_hole_edge\": {\"value\": 8, \"unit\": \"mm\", \"min\": 5, \"max\": 20, \"label\": \"Distància dels forats a la vora\"},\n    \"rib_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Gruix dels nervis\"},\n    \"rib_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Llargada del nervi (sobre la base)\"},\n    \"rib_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Alçada del nervi\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nD = PARAMS[\"depth\"][\"value\"]\nT = PARAMS[\"plate_t\"][\"value\"]\nBT = PARAMS[\"base_t\"][\"value\"]\nHC = PARAMS[\"motor_center_z\"][\"value\"]\nPIL = PARAMS[\"pilot_diameter\"][\"value\"]\nSQ = PARAMS[\"motor_bolt_square\"][\"value\"]\nMH = PARAMS[\"motor_bolt_hole\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nBE = PARAMS[\"base_hole_edge\"][\"value\"]\nRT = PARAMS[\"rib_t\"][\"value\"]\nRL = PARAMS[\"rib_length\"][\"value\"]\nRH = PARAMS[\"rib_height\"][\"value\"]\n\nH = max(H, BT + 20)\nD = max(D, T + 20)\nBT = min(BT, H / 4)\nSQ = min(SQ, W - MH - 6)\nPIL = min(PIL, SQ - MH - 2)\nHC = min(max(HC, SQ / 2 + MH / 2 + 2, BT + SQ / 2 + MH / 2 + 2), H - SQ / 2 - MH / 2 - 2)\nBH = min(BH, 8)\nBE = max(BE, BH / 2 + 2)\nRT = min(RT, W / 4)\nRL = min(RL, D - T - 1)\nRH = min(RH, H - 2)\nYB = -(D - T)   # back edge of the base\n\nplate = cq.Workplane(\"XY\").box(W, T, H, centered=(True, False, False))\nbase = cq.Workplane(\"XY\").box(W, D, BT, centered=(True, False, False)).translate((0, YB, 0))\nbody = plate.union(base)\n\n# Triangular ribs at both sides (profile in the YZ plane, extruded along X)\nprof = [(T / 2, 0), (-RL, 0), (T / 2, RH)]\nfor sx in (-1, 1):\n    x0 = sx * (W / 2 - RT / 2) - RT / 2\n    rib = cq.Workplane(\"YZ\").workplane(offset=x0).polyline(prof).close().extrude(RT)\n    body = body.union(rib)\n\n# Motor holes through the plate (along Y)\ncutter = cq.Workplane(\"XZ\").center(0, HC).circle(PIL / 2).extrude(T * 2, both=True)\npts = [(sx * SQ / 2, HC + sy * SQ / 2) for sx in (-1, 1) for sy in (-1, 1)]\ncutter = cutter.union(cq.Workplane(\"XZ\").pushPoints(pts).circle(MH / 2).extrude(T * 2, both=True))\nbody = body.cut(cutter)\n\n# M5 holes in the base\nhx = W / 2 - BE\nhole_pts = [(sx * hx, y) for sx in (-1, 1) for y in (-BE, YB + BE)]\nbh = cq.Workplane(\"XY\").pushPoints(hole_pts).circle(BH / 2).extrude(BT)\nresult = body.cut(bh)\n\nEXPECTED_BBOX = (W, D, H)\nEXPECTED_HOLES = [(PIL, 1), (MH, 4), (BH, 4)]\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the M5 bolts, 30 N downwards at the motor\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [sx * hx, y, BT / 2], \"diameter\": BH}\n              for sx in (-1, 1) for y in (-BE, YB + BE)],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [0, T, HC], \"radius\": 8}, \"force\": [0, 0, -30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Amplada (X)\"},\n    \"height\": {\"value\": 56, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Alçada de la placa (Z)\"},\n    \"depth\": {\"value\": 50, \"unit\": \"mm\", \"min\": 30, \"max\": 120, \"label\": \"Fons de la base (Y)\"},\n    \"plate_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la placa vertical\"},\n    \"base_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"motor_center_z\": {\"value\": 31, \"unit\": \"mm\", \"min\": 22, \"max\": 100, \"label\": \"Alçada del centre del motor\"},\n    \"pilot_diameter\": {\"value\": 22.5, \"unit\": \"mm\", \"min\": 20, \"max\": 30, \"label\": \"Forat central del motor\"},\n    \"motor_bolt_square\": {\"value\": 31, \"unit\": \"mm\", \"min\": 20, \"max\": 40, \"label\": \"Quadrat dels forats M3\"},\n    \"motor_bolt_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2.5, \"max\": 4.5, \"label\": \"Forats M3 (3,4)\"},\n    \"base_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forats M5 de la base (5,5)\"},\n    \"base_hole_edge\": {\"value\": 8, \"unit\": \"mm\", \"min\": 5, \"max\": 20, \"label\": \"Distància dels forats a la vora\"},\n    \"rib_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Gruix dels nervis\"},\n    \"rib_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Llargada del nervi (sobre la base)\"},\n    \"rib_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Alçada del nervi\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nD = PARAMS[\"depth\"][\"value\"]\nT = PARAMS[\"plate_t\"][\"value\"]\nBT = PARAMS[\"base_t\"][\"value\"]\nHC = PARAMS[\"motor_center_z\"][\"value\"]\nPIL = PARAMS[\"pilot_diameter\"][\"value\"]\nSQ = PARAMS[\"motor_bolt_square\"][\"value\"]\nMH = PARAMS[\"motor_bolt_hole\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nBE = PARAMS[\"base_hole_edge\"][\"value\"]\nRT = PARAMS[\"rib_t\"][\"value\"]\nRL = PARAMS[\"rib_length\"][\"value\"]\nRH = PARAMS[\"rib_height\"][\"value\"]\n\nH = max(H, BT + 20)\nD = max(D, T + 20)\nBT = min(BT, H / 4)\nSQ = min(SQ, W - MH - 6)\nPIL = min(PIL, SQ - MH - 2)\nHC = min(max(HC, SQ / 2 + MH / 2 + 2, BT + SQ / 2 + MH / 2 + 2), H - SQ / 2 - MH / 2 - 2)\nBH = min(BH, 8)\nBE = max(BE, BH / 2 + 2)\nRT = min(RT, W / 4)\nRL = min(RL, D - T - 1)\nRH = min(RH, H - 2)\nYB = -(D - T)   # back edge of the base\n\nplate = cq.Workplane(\"XY\").box(W, T, H, centered=(True, False, False))\nbase = cq.Workplane(\"XY\").box(W, D, BT, centered=(True, False, False)).translate((0, YB, 0))\nbody = plate.union(base)\n\n# Triangular ribs at both sides (profile in the YZ plane, extruded along X)\nprof = [(T / 2, 0), (-RL, 0), (T / 2, RH)]\nfor sx in (-1, 1):\n    x0 = sx * (W / 2 - RT / 2) - RT / 2\n    rib = cq.Workplane(\"YZ\").workplane(offset=x0).polyline(prof).close().extrude(RT)\n    body = body.union(rib)\n\n# Motor holes through the plate (along Y)\ncutter = cq.Workplane(\"XZ\").center(0, HC).circle(PIL / 2).extrude(T * 2, both=True)\npts = [(sx * SQ / 2, HC + sy * SQ / 2) for sx in (-1, 1) for sy in (-1, 1)]\ncutter = cutter.union(cq.Workplane(\"XZ\").pushPoints(pts).circle(MH / 2).extrude(T * 2, both=True))\nbody = body.cut(cutter)\n\n# M5 holes in the base\nhx = W / 2 - BE\nhole_pts = [(sx * hx, y) for sx in (-1, 1) for y in (-BE, YB + BE)]\nbh = cq.Workplane(\"XY\").pushPoints(hole_pts).circle(BH / 2).extrude(BT)\nresult = body.cut(bh)\n\nEXPECTED_BBOX = (W, D, H)\nEXPECTED_HOLES = [(PIL, 1), (MH, 4), (BH, 4)]\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the M5 bolts, 30 N downwards at the motor\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [sx * hx, y, BT / 2], \"diameter\": BH}\n              for sx in (-1, 1) for y in (-BE, YB + BE)],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [0, T, HC], \"radius\": 8}, \"force\": [0, 0, -30]}],\n}\n",
+   "params": {
+    "width": {
+     "value": 60,
+     "unit": "mm",
+     "min": 45,
+     "max": 120,
+     "label": "Amplada (X)"
+    },
+    "height": {
+     "value": 56,
+     "unit": "mm",
+     "min": 45,
+     "max": 120,
+     "label": "Alçada de la placa (Z)"
+    },
+    "depth": {
+     "value": 50,
+     "unit": "mm",
+     "min": 30,
+     "max": 120,
+     "label": "Fons de la base (Y)"
+    },
+    "plate_t": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de la placa vertical"
+    },
+    "base_t": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de la base"
+    },
+    "motor_center_z": {
+     "value": 31,
+     "unit": "mm",
+     "min": 22,
+     "max": 100,
+     "label": "Alçada del centre del motor"
+    },
+    "pilot_diameter": {
+     "value": 22.5,
+     "unit": "mm",
+     "min": 20,
+     "max": 30,
+     "label": "Forat central del motor"
+    },
+    "motor_bolt_square": {
+     "value": 31,
+     "unit": "mm",
+     "min": 20,
+     "max": 40,
+     "label": "Quadrat dels forats M3"
+    },
+    "motor_bolt_hole": {
+     "value": 3.4,
+     "unit": "mm",
+     "min": 2.5,
+     "max": 4.5,
+     "label": "Forats M3 (3,4)"
+    },
+    "base_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forats M5 de la base (5,5)"
+    },
+    "base_hole_edge": {
+     "value": 8,
+     "unit": "mm",
+     "min": 5,
+     "max": 20,
+     "label": "Distància dels forats a la vora"
+    },
+    "rib_t": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Gruix dels nervis"
+    },
+    "rib_length": {
+     "value": 40,
+     "unit": "mm",
+     "min": 10,
+     "max": 100,
+     "label": "Llargada del nervi (sobre la base)"
+    },
+    "rib_height": {
+     "value": 35,
+     "unit": "mm",
+     "min": 10,
+     "max": 100,
+     "label": "Alçada del nervi"
+    }
+   },
+   "values": {
+    "width": 60,
+    "height": 56,
+    "depth": 50,
+    "plate_t": 5,
+    "base_t": 5,
+    "motor_center_z": 31,
+    "pilot_diameter": 22.5,
+    "motor_bolt_square": 31,
+    "motor_bolt_hole": 3.4,
+    "base_hole": 5.5,
+    "base_hole_edge": 8,
+    "rib_t": 5,
+    "rib_length": 40,
+    "rib_height": 35
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 32395.231963070615,
+    "area_mm2": 15301.55695883281,
+    "bbox": {
+     "xmin": -30.0,
+     "ymin": -45.0,
+     "zmin": 0.0,
+     "xmax": 30.0,
+     "ymax": 5.0,
+     "zmax": 56.0,
+     "size": [
+      60.0,
+      50.0,
+      56.0
+     ]
+    },
+    "expected_bbox": [
+     60.0,
+     50.0,
+     56.0
+    ],
+    "n_faces": 21,
+    "notes": [],
+    "center_of_mass": [
+     2.7373081793008185e-16,
+     -9.57209401055124,
+     15.543988928159058
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.4,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -15.5,
+       2.5,
+       15.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -15.5,
+       2.5,
+       46.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       15.5,
+       2.5,
+       15.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       15.5,
+       2.5,
+       46.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.0,
+       -37.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.0,
+       -8.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       22.0,
+       -37.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       22.0,
+       -8.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 22.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       2.5,
+       31.0
+      ],
+      "length": 5.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.4,
+      "axis": "y",
+      "count": 4
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 22.5,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      22.5,
+      1
+     ],
+     [
+      3.4,
+      4
+     ],
+     [
+      5.5,
+      4
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Base fixed by the M5 bolts, 30 N downwards at the motor",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.0,
+        -8.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.0,
+        -37.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        22.0,
+        -8.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        22.0,
+        -37.0,
+        2.5
+       ],
+       "diameter": 5.5
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         0.0,
+         5.0,
+         31.0
+        ],
+        "radius": 8.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        -30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-l-nema17",
+    "summary": "Suport en L per a un motor NEMA 17. La placa vertical és de 5 mm, amb forat central de 22,5 mm i 4 forats de 3,4 mm per als M3 sobre un quadrat de 31 mm. La base fa 50 mm de fons i té 4 forats M5. Dos nervis triangulars reforcen els costats.",
+    "changes": [],
+    "assumptions": [
+     "El motor va a la cara davantera de la placa (+Y). La base s'estén cap enrere (−Y), perquè el cos del motor no toqui la base.",
+     "Mides del NEMA 17 de la referència: pilot de 22,5 mm i forats de 3,4 mm sobre un quadrat de 31 mm.",
+     "Forats M5 amb joc mitjà (5,5 mm), a 8 mm de les vores de la base.",
+     "Amplada 60 mm i alçada 56 mm de la placa, amb el centre del motor a 31 mm del terra. Són valors meus: ajusta'ls als sliders.",
+     "Els nervis fan 5 mm de gruix, 40 mm de llarg i 35 mm d'alt, i van als dos costats exteriors.",
+     "Impressió FDM: imprimeix-la estirada sobre la base perquè les capes no treballin a tracció al colze.",
+     "Càrrega estimada: 30 N cap avall al motor, amb la base fixada pels forats M5."
+    ],
+    "questions": [
+     "Quin perfil fas servir (20x20, 30x30, 2020...)? Cal per ajustar la posició dels forats M5, i per si en vols de ranurats.",
+     "Vols ranures als forats del motor per tensar la corretja?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": true,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "nema17",
+    "metric-m3",
+    "metric-m5"
+   ],
+   "created": 1793927979.824893
+  },
+  {
+   "number": 2,
+   "instruction": "Canvia els forats M3 del motor per ranures verticals de 8 mm de llarg per poder tensar la corretja.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Amplada (X)\"},\n    \"height\": {\"value\": 56, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Alçada de la placa (Z)\"},\n    \"depth\": {\"value\": 50, \"unit\": \"mm\", \"min\": 30, \"max\": 120, \"label\": \"Fons de la base (Y)\"},\n    \"plate_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la placa vertical\"},\n    \"base_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"motor_center_z\": {\"value\": 31, \"unit\": \"mm\", \"min\": 22, \"max\": 100, \"label\": \"Alçada del centre del motor\"},\n    \"pilot_diameter\": {\"value\": 22.5, \"unit\": \"mm\", \"min\": 20, \"max\": 30, \"label\": \"Forat central del motor\"},\n    \"motor_bolt_square\": {\"value\": 31, \"unit\": \"mm\", \"min\": 20, \"max\": 40, \"label\": \"Quadrat dels forats M3\"},\n    \"motor_bolt_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2.5, \"max\": 4.5, \"label\": \"Ample de les ranures M3 (3,4)\"},\n    \"slot_length\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 20, \"label\": \"Llargada de les ranures verticals\"},\n    \"base_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forats M5 de la base (5,5)\"},\n    \"base_hole_edge\": {\"value\": 8, \"unit\": \"mm\", \"min\": 5, \"max\": 20, \"label\": \"Distància dels forats a la vora\"},\n    \"rib_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Gruix dels nervis\"},\n    \"rib_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Llargada del nervi (sobre la base)\"},\n    \"rib_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Alçada del nervi\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nD = PARAMS[\"depth\"][\"value\"]\nT = PARAMS[\"plate_t\"][\"value\"]\nBT = PARAMS[\"base_t\"][\"value\"]\nHC = PARAMS[\"motor_center_z\"][\"value\"]\nPIL = PARAMS[\"pilot_diameter\"][\"value\"]\nSQ = PARAMS[\"motor_bolt_square\"][\"value\"]\nMH = PARAMS[\"motor_bolt_hole\"][\"value\"]\nSL = PARAMS[\"slot_length\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nBE = PARAMS[\"base_hole_edge\"][\"value\"]\nRT = PARAMS[\"rib_t\"][\"value\"]\nRL = PARAMS[\"rib_length\"][\"value\"]\nRH = PARAMS[\"rib_height\"][\"value\"]\n\nH = max(H, BT + 20)\nD = max(D, T + 20)\nBT = min(BT, H / 4)\nSQ = min(SQ, W - MH - 6)\nPIL = min(PIL, SQ - MH - 2)\nSL = max(SL, MH + 0.1)\next = SQ / 2 + SL / 2 + 2     # half-height of the slot pattern plus margin\nHC = min(max(HC, ext, BT + ext), H - ext)\nBH = min(BH, 8)\nBE = max(BE, BH / 2 + 2)\nRT = min(RT, W / 4)\nRL = min(RL, D - T - 1)\nRH = min(RH, H - 2)\nYB = -(D - T)   # back edge of the base\n\nplate = cq.Workplane(\"XY\").box(W, T, H, centered=(True, False, False))\nbase = cq.Workplane(\"XY\").box(W, D, BT, centered=(True, False, False)).translate((0, YB, 0))\nbody = plate.union(base)\n\n# Triangular ribs at both sides (profile in the YZ plane, extruded along X)\nprof = [(T / 2, 0), (-RL, 0), (T / 2, RH)]\nfor sx in (-1, 1):\n    x0 = sx * (W / 2 - RT / 2) - RT / 2\n    rib = cq.Workplane(\"YZ\").workplane(offset=x0).polyline(prof).close().extrude(RT)\n    body = body.union(rib)\n\n# Pilot hole and vertical slots through the plate (along Y)\ncutter = cq.Workplane(\"XZ\").center(0, HC).circle(PIL / 2).extrude(T * 2, both=True)\npts = [(sx * SQ / 2, HC + sy * SQ / 2) for sx in (-1, 1) for sy in (-1, 1)]\nslots = cq.Workplane(\"XZ\").pushPoints(pts).slot2D(SL, MH, 90).extrude(T * 2, both=True)\ncutter = cutter.union(slots)\nbody = body.cut(cutter)\n\n# M5 holes in the base\nhx = W / 2 - BE\nhole_pts = [(sx * hx, y) for sx in (-1, 1) for y in (-BE, YB + BE)]\nbh = cq.Workplane(\"XY\").pushPoints(hole_pts).circle(BH / 2).extrude(BT)\nresult = body.cut(bh)\n\nEXPECTED_BBOX = (W, D, H)\nEXPECTED_HOLES = [(PIL, 1), (BH, 4)]\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the M5 bolts, 30 N downwards at the motor\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [sx * hx, y, BT / 2], \"diameter\": BH}\n              for sx in (-1, 1) for y in (-BE, YB + BE)],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [0, T, HC], \"radius\": 8}, \"force\": [0, 0, -30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Amplada (X)\"},\n    \"height\": {\"value\": 56, \"unit\": \"mm\", \"min\": 45, \"max\": 120, \"label\": \"Alçada de la placa (Z)\"},\n    \"depth\": {\"value\": 50, \"unit\": \"mm\", \"min\": 30, \"max\": 120, \"label\": \"Fons de la base (Y)\"},\n    \"plate_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la placa vertical\"},\n    \"base_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"motor_center_z\": {\"value\": 31, \"unit\": \"mm\", \"min\": 22, \"max\": 100, \"label\": \"Alçada del centre del motor\"},\n    \"pilot_diameter\": {\"value\": 22.5, \"unit\": \"mm\", \"min\": 20, \"max\": 30, \"label\": \"Forat central del motor\"},\n    \"motor_bolt_square\": {\"value\": 31, \"unit\": \"mm\", \"min\": 20, \"max\": 40, \"label\": \"Quadrat dels forats M3\"},\n    \"motor_bolt_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2.5, \"max\": 4.5, \"label\": \"Ample de les ranures M3 (3,4)\"},\n    \"slot_length\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 20, \"label\": \"Llargada de les ranures verticals\"},\n    \"base_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forats M5 de la base (5,5)\"},\n    \"base_hole_edge\": {\"value\": 8, \"unit\": \"mm\", \"min\": 5, \"max\": 20, \"label\": \"Distància dels forats a la vora\"},\n    \"rib_t\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Gruix dels nervis\"},\n    \"rib_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Llargada del nervi (sobre la base)\"},\n    \"rib_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 10, \"max\": 100, \"label\": \"Alçada del nervi\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nD = PARAMS[\"depth\"][\"value\"]\nT = PARAMS[\"plate_t\"][\"value\"]\nBT = PARAMS[\"base_t\"][\"value\"]\nHC = PARAMS[\"motor_center_z\"][\"value\"]\nPIL = PARAMS[\"pilot_diameter\"][\"value\"]\nSQ = PARAMS[\"motor_bolt_square\"][\"value\"]\nMH = PARAMS[\"motor_bolt_hole\"][\"value\"]\nSL = PARAMS[\"slot_length\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nBE = PARAMS[\"base_hole_edge\"][\"value\"]\nRT = PARAMS[\"rib_t\"][\"value\"]\nRL = PARAMS[\"rib_length\"][\"value\"]\nRH = PARAMS[\"rib_height\"][\"value\"]\n\nH = max(H, BT + 20)\nD = max(D, T + 20)\nBT = min(BT, H / 4)\nSQ = min(SQ, W - MH - 6)\nPIL = min(PIL, SQ - MH - 2)\nSL = max(SL, MH + 0.1)\next = SQ / 2 + SL / 2 + 2     # half-height of the slot pattern plus margin\nHC = min(max(HC, ext, BT + ext), H - ext)\nBH = min(BH, 8)\nBE = max(BE, BH / 2 + 2)\nRT = min(RT, W / 4)\nRL = min(RL, D - T - 1)\nRH = min(RH, H - 2)\nYB = -(D - T)   # back edge of the base\n\nplate = cq.Workplane(\"XY\").box(W, T, H, centered=(True, False, False))\nbase = cq.Workplane(\"XY\").box(W, D, BT, centered=(True, False, False)).translate((0, YB, 0))\nbody = plate.union(base)\n\n# Triangular ribs at both sides (profile in the YZ plane, extruded along X)\nprof = [(T / 2, 0), (-RL, 0), (T / 2, RH)]\nfor sx in (-1, 1):\n    x0 = sx * (W / 2 - RT / 2) - RT / 2\n    rib = cq.Workplane(\"YZ\").workplane(offset=x0).polyline(prof).close().extrude(RT)\n    body = body.union(rib)\n\n# Pilot hole and vertical slots through the plate (along Y)\ncutter = cq.Workplane(\"XZ\").center(0, HC).circle(PIL / 2).extrude(T * 2, both=True)\npts = [(sx * SQ / 2, HC + sy * SQ / 2) for sx in (-1, 1) for sy in (-1, 1)]\nslots = cq.Workplane(\"XZ\").pushPoints(pts).slot2D(SL, MH, 90).extrude(T * 2, both=True)\ncutter = cutter.union(slots)\nbody = body.cut(cutter)\n\n# M5 holes in the base\nhx = W / 2 - BE\nhole_pts = [(sx * hx, y) for sx in (-1, 1) for y in (-BE, YB + BE)]\nbh = cq.Workplane(\"XY\").pushPoints(hole_pts).circle(BH / 2).extrude(BT)\nresult = body.cut(bh)\n\nEXPECTED_BBOX = (W, D, H)\nEXPECTED_HOLES = [(PIL, 1), (BH, 4)]\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the M5 bolts, 30 N downwards at the motor\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [sx * hx, y, BT / 2], \"diameter\": BH}\n              for sx in (-1, 1) for y in (-BE, YB + BE)],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [0, T, HC], \"radius\": 8}, \"force\": [0, 0, -30]}],\n}\n",
+   "params": {
+    "width": {
+     "value": 60,
+     "unit": "mm",
+     "min": 45,
+     "max": 120,
+     "label": "Amplada (X)"
+    },
+    "height": {
+     "value": 56,
+     "unit": "mm",
+     "min": 45,
+     "max": 120,
+     "label": "Alçada de la placa (Z)"
+    },
+    "depth": {
+     "value": 50,
+     "unit": "mm",
+     "min": 30,
+     "max": 120,
+     "label": "Fons de la base (Y)"
+    },
+    "plate_t": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de la placa vertical"
+    },
+    "base_t": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de la base"
+    },
+    "motor_center_z": {
+     "value": 31,
+     "unit": "mm",
+     "min": 22,
+     "max": 100,
+     "label": "Alçada del centre del motor"
+    },
+    "pilot_diameter": {
+     "value": 22.5,
+     "unit": "mm",
+     "min": 20,
+     "max": 30,
+     "label": "Forat central del motor"
+    },
+    "motor_bolt_square": {
+     "value": 31,
+     "unit": "mm",
+     "min": 20,
+     "max": 40,
+     "label": "Quadrat dels forats M3"
+    },
+    "motor_bolt_hole": {
+     "value": 3.4,
+     "unit": "mm",
+     "min": 2.5,
+     "max": 4.5,
+     "label": "Ample de les ranures M3 (3,4)"
+    },
+    "slot_length": {
+     "value": 8,
+     "unit": "mm",
+     "min": 4,
+     "max": 20,
+     "label": "Llargada de les ranures verticals"
+    },
+    "base_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forats M5 de la base (5,5)"
+    },
+    "base_hole_edge": {
+     "value": 8,
+     "unit": "mm",
+     "min": 5,
+     "max": 20,
+     "label": "Distància dels forats a la vora"
+    },
+    "rib_t": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Gruix dels nervis"
+    },
+    "rib_length": {
+     "value": 40,
+     "unit": "mm",
+     "min": 10,
+     "max": 100,
+     "label": "Llargada del nervi (sobre la base)"
+    },
+    "rib_height": {
+     "value": 35,
+     "unit": "mm",
+     "min": 10,
+     "max": 100,
+     "label": "Alçada del nervi"
+    }
+   },
+   "values": {
+    "width": 60,
+    "height": 56,
+    "depth": 50,
+    "plate_t": 5,
+    "base_t": 5,
+    "motor_center_z": 31,
+    "pilot_diameter": 22.5,
+    "motor_bolt_square": 31,
+    "motor_bolt_hole": 3.4,
+    "slot_length": 8,
+    "base_hole": 5.5,
+    "base_hole_edge": 8,
+    "rib_t": 5,
+    "rib_length": 40,
+    "rib_height": 35
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 32082.431963070652,
+    "area_mm2": 15360.436958832808,
+    "bbox": {
+     "xmin": -30.0,
+     "ymin": -45.0,
+     "zmin": 0.0,
+     "xmax": 30.0,
+     "ymax": 5.0,
+     "zmax": 56.0,
+     "size": [
+      60.0,
+      50.0,
+      56.0
+     ]
+    },
+    "expected_bbox": [
+     60.0,
+     50.0,
+     56.0
+    ],
+    "n_faces": 33,
+    "notes": [],
+    "center_of_mass": [
+     -1.7505311909996191e-15,
+     -9.689795530524746,
+     15.393294608325773
+    ],
+    "hole_list": [
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.0,
+       -37.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.0,
+       -8.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       22.0,
+       -37.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       22.0,
+       -8.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 22.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       2.5,
+       31.0
+      ],
+      "length": 5.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 22.5,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      22.5,
+      1
+     ],
+     [
+      5.5,
+      4
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Base fixed by the M5 bolts, 30 N downwards at the motor",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.0,
+        -8.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.0,
+        -37.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        22.0,
+        -8.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        22.0,
+        -37.0,
+        2.5
+       ],
+       "diameter": 5.5
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         0.0,
+         5.0,
+         31.0
+        ],
+        "radius": 8.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        -30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-motor-nema17",
+    "summary": "Els quatre forats M3 del motor són ara quatre ranures verticals de 8 mm de llarg i 3,4 mm d'ample. Així el motor es pot pujar o baixar per tensar la corretja.",
+    "changes": [
+     "Els 4 forats M3 rodons del motor passen a ser 4 ranures verticals (eix Z) de 8 mm de llarg total, centrades a les posicions dels forats anteriors.",
+     "Nou paràmetre \"slot_length\" (8 mm).",
+     "He ampliat el marge del centre del motor perquè les ranures no surtin de la placa.",
+     "EXPECTED_HOLES ja no inclou els forats de 3,4 mm, perquè ara són ranures."
+    ],
+    "assumptions": [
+     "Interpreto \"8 mm de llarg\" com la longitud total de cada ranura, amb extrems arrodonits. Fa 4 mm de recorregut de cada banda respecte a la posició nominal.",
+     "L'ample de la ranura és el mateix que tenien els forats (3,4 mm, joc mitjà M3).",
+     "He mantingut les quatre ranures separades, sense unir les de dalt amb les de baix."
+    ],
+    "questions": [
+     "Vols que la ranura sigui més llarga (el recorregut és ±4 mm)? El forat central de Ø22,5 només deixa uns 0,25 mm de joc al coll del motor. Per desplaçar el motor, probablement l'hauràs d'allargar també en vertical."
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": true
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m3"
+   ],
+   "created": 1793927984.0863025
+  }
+ ]
+}

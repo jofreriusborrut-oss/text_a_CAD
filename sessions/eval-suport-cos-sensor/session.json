@@ -1,0 +1,599 @@
+{
+ "id": "eval-suport-cos-sensor",
+ "title": "suport-l-sensor",
+ "created": 1793927977.349767,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Suport en L d'alumini per a l'altre extrem del sensor: base de 60 x 25 x 5 mm amb dos forats M6 separats 40 mm, i una ala vertical de 35 mm d'alçada al final de la base amb un forat roscat M4 a 25 mm de la base per a la ròtula. Radi interior de 3 mm. El mecanitzarem.",
+   "time": 1793927977.349861
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927979.7789063,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Afegeix un nervi triangular de reforç de 4 mm de gruix a cada costat.",
+   "time": 1793927981.034315
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927983.6240656,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Suport en L d'alumini per a l'altre extrem del sensor: base de 60 x 25 x 5 mm amb dos forats M6 separats 40 mm, i una ala vertical de 35 mm d'alçada al final de la base amb un forat roscat M4 a 25 mm de la base per a la ròtula. Radi interior de 3 mm. El mecanitzarem.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de base i ala\"},\n    \"wing_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Alçada total de l'ala (Z)\"},\n    \"inner_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 10, \"label\": \"Radi interior\"},\n    \"base_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Forats de la base (M6 = 6,6)\"},\n    \"base_hole_spacing\": {\"value\": 40, \"unit\": \"mm\", \"min\": 15, \"max\": 150, \"label\": \"Separació dels forats\"},\n    \"wing_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Forat roscat ala (M4 = 3,3)\"},\n    \"wing_hole_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 10, \"max\": 110, \"label\": \"Alçada del forat de l'ala\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nH = PARAMS[\"wing_height\"][\"value\"]\nR = PARAMS[\"inner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nSP = PARAMS[\"base_hole_spacing\"][\"value\"]\nWH = PARAMS[\"wing_hole\"][\"value\"]\nHZ = PARAMS[\"wing_hole_height\"][\"value\"]\n\nH = max(H, T + R + 8)\nR = min(R, H - T - 2, L / 4)\nBH = min(BH, W - 4)\nWH = min(WH, W - 4, T * 2)\nfree_len = L - T                      # base length not occupied by the wing\nSP = min(SP, free_len - BH - 4)\nHZ = min(max(HZ, T + R + WH / 2 + 1), H - WH / 2 - 2)\ncx = -L / 2 + free_len / 2            # centre of the free part of the base\n\n# L profile in XZ with an inner fillet, extruded symmetrically along Y.\nk = 0.70710678 * R\nxi = L / 2 - T\nprofile = (\n    cq.Workplane(\"XZ\")\n    .moveTo(-L / 2, 0)\n    .lineTo(L / 2, 0)\n    .lineTo(L / 2, H)\n    .lineTo(xi, H)\n    .lineTo(xi, T + R)\n    .threePointArc((xi - R + k, T + R - k), (xi - R, T))\n    .lineTo(-L / 2, T)\n    .close()\n)\nbody = profile.extrude(W / 2, both=True)\n\n# Two M6 clearance holes through the base.\npts = [(cx - SP / 2, 0), (cx + SP / 2, 0)]\nbolts = cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(T)\nbody = body.cut(bolts)\n\n# Tapped M4 hole (tap drill) through the wing, along X.\nstud = cq.Workplane(\"YZ\").workplane(offset=xi - 1).center(0, HZ).circle(WH / 2).extrude(T + 2)\nresult = body.cut(stud)\n\nEXPECTED_BBOX = (L, W, H)\nEXPECTED_HOLES = [(BH, 2), (WH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx - SP / 2, 0, T / 2], \"diameter\": BH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx + SP / 2, 0, T / 2], \"diameter\": BH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"x\", \"center\": [L / 2 - T / 2, 0, HZ], \"diameter\": WH}, \"force\": [30, 0, 0]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de base i ala\"},\n    \"wing_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Alçada total de l'ala (Z)\"},\n    \"inner_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 10, \"label\": \"Radi interior\"},\n    \"base_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Forats de la base (M6 = 6,6)\"},\n    \"base_hole_spacing\": {\"value\": 40, \"unit\": \"mm\", \"min\": 15, \"max\": 150, \"label\": \"Separació dels forats\"},\n    \"wing_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Forat roscat ala (M4 = 3,3)\"},\n    \"wing_hole_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 10, \"max\": 110, \"label\": \"Alçada del forat de l'ala\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nH = PARAMS[\"wing_height\"][\"value\"]\nR = PARAMS[\"inner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nSP = PARAMS[\"base_hole_spacing\"][\"value\"]\nWH = PARAMS[\"wing_hole\"][\"value\"]\nHZ = PARAMS[\"wing_hole_height\"][\"value\"]\n\nH = max(H, T + R + 8)\nR = min(R, H - T - 2, L / 4)\nBH = min(BH, W - 4)\nWH = min(WH, W - 4, T * 2)\nfree_len = L - T                      # base length not occupied by the wing\nSP = min(SP, free_len - BH - 4)\nHZ = min(max(HZ, T + R + WH / 2 + 1), H - WH / 2 - 2)\ncx = -L / 2 + free_len / 2            # centre of the free part of the base\n\n# L profile in XZ with an inner fillet, extruded symmetrically along Y.\nk = 0.70710678 * R\nxi = L / 2 - T\nprofile = (\n    cq.Workplane(\"XZ\")\n    .moveTo(-L / 2, 0)\n    .lineTo(L / 2, 0)\n    .lineTo(L / 2, H)\n    .lineTo(xi, H)\n    .lineTo(xi, T + R)\n    .threePointArc((xi - R + k, T + R - k), (xi - R, T))\n    .lineTo(-L / 2, T)\n    .close()\n)\nbody = profile.extrude(W / 2, both=True)\n\n# Two M6 clearance holes through the base.\npts = [(cx - SP / 2, 0), (cx + SP / 2, 0)]\nbolts = cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(T)\nbody = body.cut(bolts)\n\n# Tapped M4 hole (tap drill) through the wing, along X.\nstud = cq.Workplane(\"YZ\").workplane(offset=xi - 1).center(0, HZ).circle(WH / 2).extrude(T + 2)\nresult = body.cut(stud)\n\nEXPECTED_BBOX = (L, W, H)\nEXPECTED_HOLES = [(BH, 2), (WH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx - SP / 2, 0, T / 2], \"diameter\": BH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx + SP / 2, 0, T / 2], \"diameter\": BH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"x\", \"center\": [L / 2 - T / 2, 0, HZ], \"diameter\": WH}, \"force\": [30, 0, 0]}],\n}\n",
+   "params": {
+    "base_length": {
+     "value": 60,
+     "unit": "mm",
+     "min": 40,
+     "max": 200,
+     "label": "Llargada de la base (X)"
+    },
+    "base_width": {
+     "value": 25,
+     "unit": "mm",
+     "min": 15,
+     "max": 100,
+     "label": "Amplada (Y)"
+    },
+    "thickness": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Gruix de base i ala"
+    },
+    "wing_height": {
+     "value": 35,
+     "unit": "mm",
+     "min": 15,
+     "max": 120,
+     "label": "Alçada total de l'ala (Z)"
+    },
+    "inner_radius": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 10,
+     "label": "Radi interior"
+    },
+    "base_hole": {
+     "value": 6.6,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Forats de la base (M6 = 6,6)"
+    },
+    "base_hole_spacing": {
+     "value": 40,
+     "unit": "mm",
+     "min": 15,
+     "max": 150,
+     "label": "Separació dels forats"
+    },
+    "wing_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Forat roscat ala (M4 = 3,3)"
+    },
+    "wing_hole_height": {
+     "value": 25,
+     "unit": "mm",
+     "min": 10,
+     "max": 110,
+     "label": "Alçada del forat de l'ala"
+    }
+   },
+   "values": {
+    "base_length": 60,
+    "base_width": 25,
+    "thickness": 5,
+    "wing_height": 35,
+    "inner_radius": 3,
+    "base_hole": 6.6,
+    "base_hole_spacing": 40,
+    "wing_hole": 3.3,
+    "wing_hole_height": 25
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 10913.401043653874,
+    "area_mm2": 5726.900203401345,
+    "bbox": {
+     "xmin": -30.0,
+     "ymin": -12.5,
+     "zmin": 0.0,
+     "xmax": 30.0,
+     "ymax": 12.5,
+     "zmax": 35.0,
+     "size": [
+      60.0,
+      25.0,
+      35.0
+     ]
+    },
+    "expected_bbox": [
+     60.0,
+     25.0,
+     35.0
+    ],
+    "n_faces": 12,
+    "notes": [],
+    "center_of_mass": [
+     9.527647862446713,
+     9.701810552817615e-16,
+     8.439107212313525
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       27.5,
+       0.0,
+       25.0
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.5,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       17.5,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "count": 1
+     },
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      6.6,
+      2
+     ],
+     [
+      3.3,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.5,
+        0.0,
+        2.5
+       ],
+       "diameter": 6.6
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        17.5,
+        0.0,
+        2.5
+       ],
+       "diameter": 6.6
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "x",
+        "center": [
+         27.5,
+         0.0,
+         25.0
+        ],
+        "diameter": 3.3
+       },
+       "force": [
+        30.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-l-sensor",
+    "summary": "Suport en L per mecanitzar: base de 60 × 25 × 5 mm amb dos forats per a M6 separats 40 mm, ala vertical de 35 mm d'alçada al final de la base amb un forat roscat M4 (broca de 3,3 mm) a 25 mm de la base, i radi interior de 3 mm.",
+    "changes": [],
+    "assumptions": [
+     "Els forats M6 són passants amb joc mitjà (Ø6,6 mm), alineats a l'eix X i centrats a l'amplada.",
+     "Els dos forats M6 queden centrats a la part lliure de la base, abans de l'ala.",
+     "L'ala fa 5 mm de gruix, com la base.",
+     "L'alçada de 35 mm és total, mesurada des de la cara inferior de la base.",
+     "Els 25 mm del forat M4 es mesuren des de la cara inferior de la base (z = 25). Si volies comptar des de la cara superior, puja aquest valor 5 mm.",
+     "El forat M4 és a mig ample i va en direcció X, perpendicular a l'ala.",
+     "Per a la comprovació he suposat una càrrega de 30 N sobre la ròtula, en direcció X. No és una dada teva.",
+     "El forat M4 es dibuixa al diàmetre de la broca (3,3 mm) i caldrà roscar-lo."
+    ],
+    "questions": [
+     "El forat M4 s'ha de comptar des de la cara inferior o des de la superior de la base?",
+     "Quin gruix té l'ala? Ara és de 5 mm."
+    ],
+    "use": {
+     "process": "cnc",
+     "max_temp_c": 80.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m4",
+    "metric-m6"
+   ],
+   "created": 1793927979.7772202
+  },
+  {
+   "number": 2,
+   "instruction": "Afegeix un nervi triangular de reforç de 4 mm de gruix a cada costat.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de base i ala\"},\n    \"wing_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Alçada total de l'ala (Z)\"},\n    \"inner_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 10, \"label\": \"Radi interior\"},\n    \"base_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Forats de la base (M6 = 6,6)\"},\n    \"base_hole_spacing\": {\"value\": 40, \"unit\": \"mm\", \"min\": 15, \"max\": 150, \"label\": \"Separació dels forats\"},\n    \"wing_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Forat roscat ala (M4 = 3,3)\"},\n    \"wing_hole_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 10, \"max\": 110, \"label\": \"Alçada del forat de l'ala\"},\n    \"rib_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix dels nervis\"},\n    \"rib_length\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada del nervi sobre la base\"},\n    \"rib_height\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Alçada del nervi sobre l'ala\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nH = PARAMS[\"wing_height\"][\"value\"]\nR = PARAMS[\"inner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nSP = PARAMS[\"base_hole_spacing\"][\"value\"]\nWH = PARAMS[\"wing_hole\"][\"value\"]\nHZ = PARAMS[\"wing_hole_height\"][\"value\"]\nRT = PARAMS[\"rib_thickness\"][\"value\"]\nRL = PARAMS[\"rib_length\"][\"value\"]\nRH = PARAMS[\"rib_height\"][\"value\"]\n\nH = max(H, T + R + 8)\nR = min(R, H - T - 2, L / 4)\nBH = min(BH, W - 4)\nWH = min(WH, W - 4, T * 2)\nfree_len = L - T                      # base length not occupied by the wing\nSP = min(SP, free_len - BH - 4)\nHZ = min(max(HZ, T + R + WH / 2 + 1), H - WH / 2 - 2)\ncx = -L / 2 + free_len / 2            # centre of the free part of the base\nRT = min(RT, W / 4)\nRL = min(RL, free_len - 2)\nRH = min(RH, H - T - 2)\n\n# L profile in XZ with an inner fillet, extruded symmetrically along Y.\nk = 0.70710678 * R\nxi = L / 2 - T\nprofile = (\n    cq.Workplane(\"XZ\")\n    .moveTo(-L / 2, 0)\n    .lineTo(L / 2, 0)\n    .lineTo(L / 2, H)\n    .lineTo(xi, H)\n    .lineTo(xi, T + R)\n    .threePointArc((xi - R + k, T + R - k), (xi - R, T))\n    .lineTo(-L / 2, T)\n    .close()\n)\nbody = profile.extrude(W / 2, both=True)\n\n# Triangular gussets, one on each side, flush with the base edges.\n# The profile overlaps the wing and the base by 1 mm so the union is solid.\nrib_pts = [(xi - RL, T), (xi, T + RH), (xi + 1, T + RH), (xi + 1, T - 1), (xi - RL, T - 1)]\nrib = cq.Workplane(\"XZ\").polyline(rib_pts).close().extrude(RT)   # spans y = 0 .. -RT\nrib_neg = rib.translate((0, -(W / 2 - RT), 0))\nrib_pos = rib.translate((0, W / 2, 0))\nbody = body.union(rib_neg).union(rib_pos)\n\n# Two M6 clearance holes through the base.\npts = [(cx - SP / 2, 0), (cx + SP / 2, 0)]\nbolts = cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(T)\nbody = body.cut(bolts)\n\n# Tapped M4 hole (tap drill) through the wing, along X.\nstud = cq.Workplane(\"YZ\").workplane(offset=xi - 1).center(0, HZ).circle(WH / 2).extrude(T + 2)\nresult = body.cut(stud)\n\nEXPECTED_BBOX = (L, W, H)\nEXPECTED_HOLES = [(BH, 2), (WH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx - SP / 2, 0, T / 2], \"diameter\": BH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx + SP / 2, 0, T / 2], \"diameter\": BH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"x\", \"center\": [L / 2 - T / 2, 0, HZ], \"diameter\": WH}, \"force\": [30, 0, 0]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de base i ala\"},\n    \"wing_height\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Alçada total de l'ala (Z)\"},\n    \"inner_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 10, \"label\": \"Radi interior\"},\n    \"base_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Forats de la base (M6 = 6,6)\"},\n    \"base_hole_spacing\": {\"value\": 40, \"unit\": \"mm\", \"min\": 15, \"max\": 150, \"label\": \"Separació dels forats\"},\n    \"wing_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Forat roscat ala (M4 = 3,3)\"},\n    \"wing_hole_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 10, \"max\": 110, \"label\": \"Alçada del forat de l'ala\"},\n    \"rib_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix dels nervis\"},\n    \"rib_length\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada del nervi sobre la base\"},\n    \"rib_height\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Alçada del nervi sobre l'ala\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nH = PARAMS[\"wing_height\"][\"value\"]\nR = PARAMS[\"inner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nSP = PARAMS[\"base_hole_spacing\"][\"value\"]\nWH = PARAMS[\"wing_hole\"][\"value\"]\nHZ = PARAMS[\"wing_hole_height\"][\"value\"]\nRT = PARAMS[\"rib_thickness\"][\"value\"]\nRL = PARAMS[\"rib_length\"][\"value\"]\nRH = PARAMS[\"rib_height\"][\"value\"]\n\nH = max(H, T + R + 8)\nR = min(R, H - T - 2, L / 4)\nBH = min(BH, W - 4)\nWH = min(WH, W - 4, T * 2)\nfree_len = L - T                      # base length not occupied by the wing\nSP = min(SP, free_len - BH - 4)\nHZ = min(max(HZ, T + R + WH / 2 + 1), H - WH / 2 - 2)\ncx = -L / 2 + free_len / 2            # centre of the free part of the base\nRT = min(RT, W / 4)\nRL = min(RL, free_len - 2)\nRH = min(RH, H - T - 2)\n\n# L profile in XZ with an inner fillet, extruded symmetrically along Y.\nk = 0.70710678 * R\nxi = L / 2 - T\nprofile = (\n    cq.Workplane(\"XZ\")\n    .moveTo(-L / 2, 0)\n    .lineTo(L / 2, 0)\n    .lineTo(L / 2, H)\n    .lineTo(xi, H)\n    .lineTo(xi, T + R)\n    .threePointArc((xi - R + k, T + R - k), (xi - R, T))\n    .lineTo(-L / 2, T)\n    .close()\n)\nbody = profile.extrude(W / 2, both=True)\n\n# Triangular gussets, one on each side, flush with the base edges.\n# The profile overlaps the wing and the base by 1 mm so the union is solid.\nrib_pts = [(xi - RL, T), (xi, T + RH), (xi + 1, T + RH), (xi + 1, T - 1), (xi - RL, T - 1)]\nrib = cq.Workplane(\"XZ\").polyline(rib_pts).close().extrude(RT)   # spans y = 0 .. -RT\nrib_neg = rib.translate((0, -(W / 2 - RT), 0))\nrib_pos = rib.translate((0, W / 2, 0))\nbody = body.union(rib_neg).union(rib_pos)\n\n# Two M6 clearance holes through the base.\npts = [(cx - SP / 2, 0), (cx + SP / 2, 0)]\nbolts = cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(T)\nbody = body.cut(bolts)\n\n# Tapped M4 hole (tap drill) through the wing, along X.\nstud = cq.Workplane(\"YZ\").workplane(offset=xi - 1).center(0, HZ).circle(WH / 2).extrude(T + 2)\nresult = body.cut(stud)\n\nEXPECTED_BBOX = (L, W, H)\nEXPECTED_HOLES = [(BH, 2), (WH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx - SP / 2, 0, T / 2], \"diameter\": BH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [cx + SP / 2, 0, T / 2], \"diameter\": BH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"x\", \"center\": [L / 2 - T / 2, 0, HZ], \"diameter\": WH}, \"force\": [30, 0, 0]}],\n}\n",
+   "params": {
+    "base_length": {
+     "value": 60,
+     "unit": "mm",
+     "min": 40,
+     "max": 200,
+     "label": "Llargada de la base (X)"
+    },
+    "base_width": {
+     "value": 25,
+     "unit": "mm",
+     "min": 15,
+     "max": 100,
+     "label": "Amplada (Y)"
+    },
+    "thickness": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Gruix de base i ala"
+    },
+    "wing_height": {
+     "value": 35,
+     "unit": "mm",
+     "min": 15,
+     "max": 120,
+     "label": "Alçada total de l'ala (Z)"
+    },
+    "inner_radius": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 10,
+     "label": "Radi interior"
+    },
+    "base_hole": {
+     "value": 6.6,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Forats de la base (M6 = 6,6)"
+    },
+    "base_hole_spacing": {
+     "value": 40,
+     "unit": "mm",
+     "min": 15,
+     "max": 150,
+     "label": "Separació dels forats"
+    },
+    "wing_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Forat roscat ala (M4 = 3,3)"
+    },
+    "wing_hole_height": {
+     "value": 25,
+     "unit": "mm",
+     "min": 10,
+     "max": 110,
+     "label": "Alçada del forat de l'ala"
+    },
+    "rib_thickness": {
+     "value": 4,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gruix dels nervis"
+    },
+    "rib_length": {
+     "value": 20,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Llargada del nervi sobre la base"
+    },
+    "rib_height": {
+     "value": 20,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Alçada del nervi sobre l'ala"
+    }
+   },
+   "values": {
+    "base_length": 60,
+    "base_width": 25,
+    "thickness": 5,
+    "wing_height": 35,
+    "inner_radius": 3,
+    "base_hole": 6.6,
+    "base_hole_spacing": 40,
+    "wing_hole": 3.3,
+    "wing_hole_height": 25,
+    "rib_thickness": 4,
+    "rib_length": 20,
+    "rib_height": 20
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 12497.949711293295,
+    "area_mm2": 6435.749595399406,
+    "bbox": {
+     "xmin": -30.0,
+     "ymin": -12.5,
+     "zmin": 0.0,
+     "xmax": 30.0,
+     "ymax": 12.5,
+     "zmax": 35.0,
+     "size": [
+      60.0,
+      25.0,
+      35.0
+     ]
+    },
+    "expected_bbox": [
+     60.0,
+     25.0,
+     35.0
+    ],
+    "n_faces": 16,
+    "notes": [],
+    "center_of_mass": [
+     10.636660349706831,
+     0.0,
+     8.855725940902992
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       27.5,
+       0.0,
+       25.0
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.5,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       17.5,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "count": 1
+     },
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      6.6,
+      2
+     ],
+     [
+      3.3,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.5,
+        0.0,
+        2.5
+       ],
+       "diameter": 6.6
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        17.5,
+        0.0,
+        2.5
+       ],
+       "diameter": 6.6
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "x",
+        "center": [
+         27.5,
+         0.0,
+         25.0
+        ],
+        "diameter": 3.3
+       },
+       "force": [
+        30.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-L-nervis",
+    "summary": "He afegit dos nervis triangulars de reforç de 4 mm de gruix, un a cada costat de l'ala (a les vores Y de la base). Cada nervi uneix la base amb l'ala i queda enrasat amb els cantells laterals.",
+    "changes": [
+     "Dos nervis triangulars nous de 4 mm de gruix, a y = ±W/2, entre la base i la cara interior de l'ala.",
+     "Nous paràmetres: gruix del nervi, llargada sobre la base (20 mm) i alçada sobre l'ala (20 mm)."
+    ],
+    "assumptions": [
+     "Llargada del nervi sobre la base: 20 mm, i alçada sobre l'ala: 20 mm (triangle isòsceles).",
+     "Els nervis van enrasats amb els cantells exteriors de la base, de manera que no interfereixen amb el forat M4 central ni amb els forats M6.",
+     "Al mecanitzar-los, els nervis necessiten el radi interior de la fresa a la unió amb la base i l'ala. Ara tenen cantonada viva."
+    ],
+    "questions": [
+     "Vols nervis més grans (p. ex. 30 mm de llarg i 25 mm d'alt) per a més rigidesa?"
+    ],
+    "use": {
+     "process": "cnc",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": true,
+     "flexible": false,
+     "material": "al6061"
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927983.6213458
+  }
+ ]
+}

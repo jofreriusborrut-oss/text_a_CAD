@@ -1,0 +1,643 @@
+{
+ "id": "eval-suport-tub-inclinat",
+ "title": "suport-paret-tub-25",
+ "created": 1793928002.1949754,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Suport de paret per a un tub de 25 mm que surt inclinat 30 graus respecte a l'horitzontal: placa de 60 x 40 x 5 mm amb dos forats M5 i un casquet de 40 mm de llarg on entra el tub.",
+   "time": 1793928002.1949832
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928005.0244353,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Afegeix-hi un forat roscat M4 al casquet per a un cargol presoner que bloquegi el tub.",
+   "time": 1793928006.5886116
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928009.1633794,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Suport de paret per a un tub de 25 mm que surt inclinat 30 graus respecte a l'horitzontal: placa de 60 x 40 x 5 mm amb dos forats M5 i un casquet de 40 mm de llarg on entra el tub.",
+   "parent": null,
+   "base_code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"plate_width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 30, \"max\": 150, \"label\": \"Amplada de la placa (Y)\"},\n    \"plate_height\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Alçada de la placa (Z)\"},\n    \"plate_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de la placa (X)\"},\n    \"hole_diameter\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Forats de la placa (M5 = 5,5)\"},\n    \"hole_spacing\": {\"value\": 44, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Distància entre forats\"},\n    \"tube_diameter\": {\"value\": 25, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Diàmetre del tub\"},\n    \"tube_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc del tub\"},\n    \"sleeve_wall\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Paret del casquet\"},\n    \"sleeve_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Llargada del casquet\"},\n    \"angle\": {\"value\": 30, \"unit\": \"deg\", \"min\": 0, \"max\": 60, \"label\": \"Inclinació respecte a l'horitzontal\"},\n}\n\nW = PARAMS[\"plate_width\"][\"value\"]\nH = PARAMS[\"plate_height\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nHOLE = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"tube_clearance\"][\"value\"]\nWALL = PARAMS[\"sleeve_wall\"][\"value\"]\nL = PARAMS[\"sleeve_length\"][\"value\"]\nA = PARAMS[\"angle\"][\"value\"]\n\nca = math.cos(math.radians(A))\nsa = math.sin(math.radians(A))\nRB = (D + C) / 2\nRO = RB + WALL\nHS = max(HS, 2 * RO + HOLE + 4)\nW = max(W, HS + HOLE + 6)\nH = max(H, 2 * RO / ca + 2)\nZC = H / 2\nTS = (T + RB * sa) / ca            # distance along the axis where the bore starts\nL = max(L, TS + 10)\n\nd = cq.Vector(ca, 0, sa)\n\nplate = cq.Workplane(\"XY\").box(T, W, H, centered=(False, True, False))\nsleeve = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RO, L, cq.Vector(0, 0, ZC), d))\nbody = plate.union(sleeve)\n# remove whatever of the sleeve pokes behind the wall\nbody = body.cut(cq.Workplane(\"XY\").box(2 * L, W + 2 * RO, 3 * H + 2 * L, centered=(False, True, True)).translate((-2 * L, 0, 0)))\n\np0 = cq.Vector(TS * ca, 0, ZC + TS * sa)\nbore = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RB, L - TS, p0, d))\nbody = body.cut(bore)\n\nfor sy in (-1, 1):\n    h = cq.Workplane(\"YZ\").center(sy * HS / 2, ZC).circle(HOLE / 2).extrude(T)\n    body = body.cut(h)\n\nresult = body\n\nXE = L * ca\nZE = ZC + L * sa\nEXPECTED_BBOX = (XE + RO * sa, max(W, 2 * RO), max(H, ZE + RO * ca))\nEXPECTED_HOLES = [(2 * RB, 1), (HOLE, 2)]\n\nREFERENCE = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(D / 2, L - TS + 10, p0, d))\n\nLOAD_CASE = {\n    \"description\": \"Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, -HS / 2, ZC], \"diameter\": HOLE},\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, HS / 2, ZC], \"diameter\": HOLE},\n    ],\n    \"loads\": [\n        {\"region\": {\"type\": \"box\",\n                    \"min\": [XE - 3, -RO - 1, ZE - RO - 3],\n                    \"max\": [XE + 3, RO + 1, ZE + RO + 3]},\n         \"force\": [0, 0, -50]}\n    ],\n}\n",
+   "code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"plate_width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 30, \"max\": 150, \"label\": \"Amplada de la placa (Y)\"},\n    \"plate_height\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Alçada de la placa (Z)\"},\n    \"plate_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de la placa (X)\"},\n    \"hole_diameter\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Forats de la placa (M5 = 5,5)\"},\n    \"hole_spacing\": {\"value\": 44, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Distància entre forats\"},\n    \"tube_diameter\": {\"value\": 25, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Diàmetre del tub\"},\n    \"tube_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc del tub\"},\n    \"sleeve_wall\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Paret del casquet\"},\n    \"sleeve_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Llargada del casquet\"},\n    \"angle\": {\"value\": 30, \"unit\": \"deg\", \"min\": 0, \"max\": 60, \"label\": \"Inclinació respecte a l'horitzontal\"},\n}\n\nW = PARAMS[\"plate_width\"][\"value\"]\nH = PARAMS[\"plate_height\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nHOLE = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"tube_clearance\"][\"value\"]\nWALL = PARAMS[\"sleeve_wall\"][\"value\"]\nL = PARAMS[\"sleeve_length\"][\"value\"]\nA = PARAMS[\"angle\"][\"value\"]\n\nca = math.cos(math.radians(A))\nsa = math.sin(math.radians(A))\nRB = (D + C) / 2\nRO = RB + WALL\nHS = max(HS, 2 * RO + HOLE + 4)\nW = max(W, HS + HOLE + 6)\nH = max(H, 2 * RO / ca + 2)\nZC = H / 2\nTS = (T + RB * sa) / ca            # distance along the axis where the bore starts\nL = max(L, TS + 10)\n\nd = cq.Vector(ca, 0, sa)\n\nplate = cq.Workplane(\"XY\").box(T, W, H, centered=(False, True, False))\nsleeve = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RO, L, cq.Vector(0, 0, ZC), d))\nbody = plate.union(sleeve)\n# remove whatever of the sleeve pokes behind the wall\nbody = body.cut(cq.Workplane(\"XY\").box(2 * L, W + 2 * RO, 3 * H + 2 * L, centered=(False, True, True)).translate((-2 * L, 0, 0)))\n\np0 = cq.Vector(TS * ca, 0, ZC + TS * sa)\nbore = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RB, L - TS, p0, d))\nbody = body.cut(bore)\n\nfor sy in (-1, 1):\n    h = cq.Workplane(\"YZ\").center(sy * HS / 2, ZC).circle(HOLE / 2).extrude(T)\n    body = body.cut(h)\n\nresult = body\n\nXE = L * ca\nZE = ZC + L * sa\nEXPECTED_BBOX = (XE + RO * sa, max(W, 2 * RO), max(H, ZE + RO * ca))\nEXPECTED_HOLES = [(2 * RB, 1), (HOLE, 2)]\n\nREFERENCE = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(D / 2, L - TS + 10, p0, d))\n\nLOAD_CASE = {\n    \"description\": \"Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, -HS / 2, ZC], \"diameter\": HOLE},\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, HS / 2, ZC], \"diameter\": HOLE},\n    ],\n    \"loads\": [\n        {\"region\": {\"type\": \"box\",\n                    \"min\": [XE - 3, -RO - 1, ZE - RO - 3],\n                    \"max\": [XE + 3, RO + 1, ZE + RO + 3]},\n         \"force\": [0, 0, -50]}\n    ],\n}\n",
+   "params": {
+    "plate_width": {
+     "value": 60,
+     "unit": "mm",
+     "min": 30,
+     "max": 150,
+     "label": "Amplada de la placa (Y)"
+    },
+    "plate_height": {
+     "value": 40,
+     "unit": "mm",
+     "min": 20,
+     "max": 150,
+     "label": "Alçada de la placa (Z)"
+    },
+    "plate_thickness": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Gruix de la placa (X)"
+    },
+    "hole_diameter": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Forats de la placa (M5 = 5,5)"
+    },
+    "hole_spacing": {
+     "value": 44,
+     "unit": "mm",
+     "min": 20,
+     "max": 120,
+     "label": "Distància entre forats"
+    },
+    "tube_diameter": {
+     "value": 25,
+     "unit": "mm",
+     "min": 8,
+     "max": 60,
+     "label": "Diàmetre del tub"
+    },
+    "tube_clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc del tub"
+    },
+    "sleeve_wall": {
+     "value": 4,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Paret del casquet"
+    },
+    "sleeve_length": {
+     "value": 40,
+     "unit": "mm",
+     "min": 20,
+     "max": 120,
+     "label": "Llargada del casquet"
+    },
+    "angle": {
+     "value": 30,
+     "unit": "deg",
+     "min": 0,
+     "max": 60,
+     "label": "Inclinació respecte a l'horitzontal"
+    }
+   },
+   "values": {
+    "plate_width": 60,
+    "plate_height": 40,
+    "plate_thickness": 5,
+    "hole_diameter": 5.5,
+    "hole_spacing": 44,
+    "tube_diameter": 25,
+    "tube_clearance": 0.3,
+    "sleeve_wall": 4,
+    "sleeve_length": 40,
+    "angle": 30
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 28001.828719233836,
+    "area_mm2": 11734.948180767653,
+    "bbox": {
+     "xmin": 0.0,
+     "ymin": -30.0,
+     "zmin": 0.0,
+     "xmax": 42.966016151377545,
+     "ymax": 30.0,
+     "zmax": 54.64508693702544,
+     "size": [
+      42.966016151377545,
+      60.0,
+      54.64508693702544
+     ]
+    },
+    "expected_bbox": [
+     42.966016151377545,
+     60.0,
+     54.64508693702544
+    ],
+    "n_faces": 13,
+    "notes": [],
+    "center_of_mass": [
+     11.325976064812096,
+     2.0674958100952997e-11,
+     24.84082888278482
+    ],
+    "hole_list": [
+     {
+      "diameter": 5.5,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       2.5,
+       -22.0,
+       20.2258
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       2.5,
+       22.0,
+       20.2258
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 25.3,
+      "axis": "oblique",
+      "direction": [
+       0.86603,
+       0.0,
+       0.5
+      ],
+      "center": [
+       22.983,
+       0.0,
+       33.495
+      ],
+      "length": 26.923
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 5.5,
+      "axis": "x",
+      "count": 2
+     },
+     {
+      "diameter": 25.3,
+      "axis": "oblique",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      25.3,
+      1
+     ],
+     [
+      5.5,
+      2
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 18124.5432936851,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "x",
+       "center": [
+        2.5,
+        -22.0,
+        20.225763964014536
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "x",
+       "center": [
+        2.5,
+        22.0,
+        20.225763964014536
+       ],
+       "diameter": 5.5
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "box",
+        "min": [
+         31.64101615137755,
+         -17.65,
+         20.575763964014534
+        ],
+        "max": [
+         37.64101615137755,
+         17.65,
+         59.87576396401453
+        ]
+       },
+       "force": [
+        0.0,
+        0.0,
+        -50.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-paret-tub-25",
+    "summary": "Suport de paret amb placa de 60 × 40 × 5 mm, dos forats per a M5 i un casquet de 40 mm de llarg inclinat 30° respecte a l'horitzontal, on entra un tub de Ø25 mm.",
+    "changes": [],
+    "assumptions": [
+     "La placa va dreta contra una paret vertical: gruix 5 mm en X (la cara de paret és x = 0), 60 mm d'ample en Y i 40 mm d'alçada en Z. El tub surt cap a +X i cap amunt.",
+     "Els 40 mm del casquet són mesurats sobre l'eix inclinat, des de la cara de la paret.",
+     "Joc de 0,3 mm al forat del tub i paret del casquet de 4 mm (Ø exterior ≈ 33,3 mm).",
+     "Forats M5 amb joc mitjà de Ø5,5 mm, separats 44 mm en Y i centrats en alçada.",
+     "El forat del casquet acaba en un fons que deixa la placa tancada (no passa fins a la paret).",
+     "Càrrega estimada: 50 N cap avall a l'extrem del casquet. Per imprimir-lo, col·loca'l estirat sobre la cara posterior (la de la paret)."
+    ],
+    "questions": [
+     "El tub s'ha de poder encolar o collar dins del casquet? Podria afegir un cargol de fixació.",
+     "Vols el casquet més llarg o amb nervis de reforç a la placa?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m5"
+   ],
+   "created": 1793928005.0227814
+  },
+  {
+   "number": 2,
+   "instruction": "Afegeix-hi un forat roscat M4 al casquet per a un cargol presoner que bloquegi el tub.",
+   "parent": 1,
+   "base_code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"plate_width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 30, \"max\": 150, \"label\": \"Amplada de la placa (Y)\"},\n    \"plate_height\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Alçada de la placa (Z)\"},\n    \"plate_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de la placa (X)\"},\n    \"hole_diameter\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Forats de la placa (M5 = 5,5)\"},\n    \"hole_spacing\": {\"value\": 44, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Distància entre forats\"},\n    \"tube_diameter\": {\"value\": 25, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Diàmetre del tub\"},\n    \"tube_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc del tub\"},\n    \"sleeve_wall\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Paret del casquet\"},\n    \"sleeve_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Llargada del casquet\"},\n    \"angle\": {\"value\": 30, \"unit\": \"deg\", \"min\": 0, \"max\": 60, \"label\": \"Inclinació respecte a l'horitzontal\"},\n    \"set_screw_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat roscat cargol presoner (M4 = 3,3)\"},\n    \"set_screw_offset\": {\"value\": 12, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Distància del forat a l'extrem del casquet\"},\n}\n\nW = PARAMS[\"plate_width\"][\"value\"]\nH = PARAMS[\"plate_height\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nHOLE = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"tube_clearance\"][\"value\"]\nWALL = PARAMS[\"sleeve_wall\"][\"value\"]\nL = PARAMS[\"sleeve_length\"][\"value\"]\nA = PARAMS[\"angle\"][\"value\"]\nSS = PARAMS[\"set_screw_hole\"][\"value\"]\nSSO = PARAMS[\"set_screw_offset\"][\"value\"]\n\nca = math.cos(math.radians(A))\nsa = math.sin(math.radians(A))\nRB = (D + C) / 2\nRO = RB + WALL\nHS = max(HS, 2 * RO + HOLE + 4)\nW = max(W, HS + HOLE + 6)\nH = max(H, 2 * RO / ca + 2)\nZC = H / 2\nTS = (T + RB * sa) / ca            # distance along the axis where the bore starts\nL = max(L, TS + 10)\nSS = min(SS, WALL + RB - 1, 6)\nSPOS = min(max(L - SSO, TS + SS / 2 + 2), L - SS / 2 - 2)\n\nd = cq.Vector(ca, 0, sa)\nn = cq.Vector(-sa, 0, ca)          # radial direction pointing up\n\nplate = cq.Workplane(\"XY\").box(T, W, H, centered=(False, True, False))\nsleeve = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RO, L, cq.Vector(0, 0, ZC), d))\nbody = plate.union(sleeve)\n# remove whatever of the sleeve pokes behind the wall\nbody = body.cut(cq.Workplane(\"XY\").box(2 * L, W + 2 * RO, 3 * H + 2 * L, centered=(False, True, True)).translate((-2 * L, 0, 0)))\n\np0 = cq.Vector(TS * ca, 0, ZC + TS * sa)\nbore = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RB, L - TS, p0, d))\nbody = body.cut(bore)\n\nfor sy in (-1, 1):\n    h = cq.Workplane(\"YZ\").center(sy * HS / 2, ZC).circle(HOLE / 2).extrude(T)\n    body = body.cut(h)\n\n# Threaded radial hole (tap drill) for the set screw, on the upper side of the sleeve.\nps = cq.Vector(SPOS * ca, 0, ZC + SPOS * sa)\nset_hole = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(SS / 2, RO + 1, ps, n))\nbody = body.cut(set_hole)\n\nresult = body\n\nXE = L * ca\nZE = ZC + L * sa\nEXPECTED_BBOX = (XE + RO * sa, max(W, 2 * RO), max(H, ZE + RO * ca))\nEXPECTED_HOLES = [(2 * RB, 1), (HOLE, 2), (SS, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(D / 2, L - TS + 10, p0, d))\n\nLOAD_CASE = {\n    \"description\": \"Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, -HS / 2, ZC], \"diameter\": HOLE},\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, HS / 2, ZC], \"diameter\": HOLE},\n    ],\n    \"loads\": [\n        {\"region\": {\"type\": \"box\",\n                    \"min\": [XE - 3, -RO - 1, ZE - RO - 3],\n                    \"max\": [XE + 3, RO + 1, ZE + RO + 3]},\n         \"force\": [0, 0, -50]}\n    ],\n}\n",
+   "code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"plate_width\": {\"value\": 60, \"unit\": \"mm\", \"min\": 30, \"max\": 150, \"label\": \"Amplada de la placa (Y)\"},\n    \"plate_height\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Alçada de la placa (Z)\"},\n    \"plate_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Gruix de la placa (X)\"},\n    \"hole_diameter\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Forats de la placa (M5 = 5,5)\"},\n    \"hole_spacing\": {\"value\": 44, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Distància entre forats\"},\n    \"tube_diameter\": {\"value\": 25, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Diàmetre del tub\"},\n    \"tube_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc del tub\"},\n    \"sleeve_wall\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Paret del casquet\"},\n    \"sleeve_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 120, \"label\": \"Llargada del casquet\"},\n    \"angle\": {\"value\": 30, \"unit\": \"deg\", \"min\": 0, \"max\": 60, \"label\": \"Inclinació respecte a l'horitzontal\"},\n    \"set_screw_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat roscat cargol presoner (M4 = 3,3)\"},\n    \"set_screw_offset\": {\"value\": 12, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Distància del forat a l'extrem del casquet\"},\n}\n\nW = PARAMS[\"plate_width\"][\"value\"]\nH = PARAMS[\"plate_height\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nHOLE = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"tube_clearance\"][\"value\"]\nWALL = PARAMS[\"sleeve_wall\"][\"value\"]\nL = PARAMS[\"sleeve_length\"][\"value\"]\nA = PARAMS[\"angle\"][\"value\"]\nSS = PARAMS[\"set_screw_hole\"][\"value\"]\nSSO = PARAMS[\"set_screw_offset\"][\"value\"]\n\nca = math.cos(math.radians(A))\nsa = math.sin(math.radians(A))\nRB = (D + C) / 2\nRO = RB + WALL\nHS = max(HS, 2 * RO + HOLE + 4)\nW = max(W, HS + HOLE + 6)\nH = max(H, 2 * RO / ca + 2)\nZC = H / 2\nTS = (T + RB * sa) / ca            # distance along the axis where the bore starts\nL = max(L, TS + 10)\nSS = min(SS, WALL + RB - 1, 6)\nSPOS = min(max(L - SSO, TS + SS / 2 + 2), L - SS / 2 - 2)\n\nd = cq.Vector(ca, 0, sa)\nn = cq.Vector(-sa, 0, ca)          # radial direction pointing up\n\nplate = cq.Workplane(\"XY\").box(T, W, H, centered=(False, True, False))\nsleeve = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RO, L, cq.Vector(0, 0, ZC), d))\nbody = plate.union(sleeve)\n# remove whatever of the sleeve pokes behind the wall\nbody = body.cut(cq.Workplane(\"XY\").box(2 * L, W + 2 * RO, 3 * H + 2 * L, centered=(False, True, True)).translate((-2 * L, 0, 0)))\n\np0 = cq.Vector(TS * ca, 0, ZC + TS * sa)\nbore = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(RB, L - TS, p0, d))\nbody = body.cut(bore)\n\nfor sy in (-1, 1):\n    h = cq.Workplane(\"YZ\").center(sy * HS / 2, ZC).circle(HOLE / 2).extrude(T)\n    body = body.cut(h)\n\n# Threaded radial hole (tap drill) for the set screw, on the upper side of the sleeve.\nps = cq.Vector(SPOS * ca, 0, ZC + SPOS * sa)\nset_hole = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(SS / 2, RO + 1, ps, n))\nbody = body.cut(set_hole)\n\nresult = body\n\nXE = L * ca\nZE = ZC + L * sa\nEXPECTED_BBOX = (XE + RO * sa, max(W, 2 * RO), max(H, ZE + RO * ca))\nEXPECTED_HOLES = [(2 * RB, 1), (HOLE, 2), (SS, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").add(cq.Solid.makeCylinder(D / 2, L - TS + 10, p0, d))\n\nLOAD_CASE = {\n    \"description\": \"Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, -HS / 2, ZC], \"diameter\": HOLE},\n        {\"type\": \"hole\", \"axis\": \"x\", \"center\": [T / 2, HS / 2, ZC], \"diameter\": HOLE},\n    ],\n    \"loads\": [\n        {\"region\": {\"type\": \"box\",\n                    \"min\": [XE - 3, -RO - 1, ZE - RO - 3],\n                    \"max\": [XE + 3, RO + 1, ZE + RO + 3]},\n         \"force\": [0, 0, -50]}\n    ],\n}\n",
+   "params": {
+    "plate_width": {
+     "value": 60,
+     "unit": "mm",
+     "min": 30,
+     "max": 150,
+     "label": "Amplada de la placa (Y)"
+    },
+    "plate_height": {
+     "value": 40,
+     "unit": "mm",
+     "min": 20,
+     "max": 150,
+     "label": "Alçada de la placa (Z)"
+    },
+    "plate_thickness": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Gruix de la placa (X)"
+    },
+    "hole_diameter": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Forats de la placa (M5 = 5,5)"
+    },
+    "hole_spacing": {
+     "value": 44,
+     "unit": "mm",
+     "min": 20,
+     "max": 120,
+     "label": "Distància entre forats"
+    },
+    "tube_diameter": {
+     "value": 25,
+     "unit": "mm",
+     "min": 8,
+     "max": 60,
+     "label": "Diàmetre del tub"
+    },
+    "tube_clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc del tub"
+    },
+    "sleeve_wall": {
+     "value": 4,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Paret del casquet"
+    },
+    "sleeve_length": {
+     "value": 40,
+     "unit": "mm",
+     "min": 20,
+     "max": 120,
+     "label": "Llargada del casquet"
+    },
+    "angle": {
+     "value": 30,
+     "unit": "deg",
+     "min": 0,
+     "max": 60,
+     "label": "Inclinació respecte a l'horitzontal"
+    },
+    "set_screw_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Forat roscat cargol presoner (M4 = 3,3)"
+    },
+    "set_screw_offset": {
+     "value": 12,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Distància del forat a l'extrem del casquet"
+    }
+   },
+   "values": {
+    "plate_width": 60,
+    "plate_height": 40,
+    "plate_thickness": 5,
+    "hole_diameter": 5.5,
+    "hole_spacing": 44,
+    "tube_diameter": 25,
+    "tube_clearance": 0.3,
+    "sleeve_wall": 4,
+    "sleeve_length": 40,
+    "angle": 30,
+    "set_screw_hole": 3.3,
+    "set_screw_offset": 12
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 27967.487106535234,
+    "area_mm2": 11759.413432059975,
+    "bbox": {
+     "xmin": 0.0,
+     "ymin": -30.0,
+     "zmin": 0.0,
+     "xmax": 42.966016251377546,
+     "ymax": 30.0,
+     "zmax": 54.64508703702544,
+     "size": [
+      42.966016251377546,
+      60.0,
+      54.64508703702544
+     ]
+    },
+    "expected_bbox": [
+     42.966016151377545,
+     60.0,
+     54.64508693702544
+    ],
+    "n_faces": 14,
+    "notes": [],
+    "center_of_mass": [
+     11.319076763450637,
+     1.5537923865134546e-07,
+     24.813792301986833
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "oblique",
+      "direction": [
+       0.5,
+       -0.0,
+       -0.86603
+      ],
+      "center": [
+       16.9507,
+       0.0,
+       46.8662
+      ],
+      "length": 4.1081
+     },
+     {
+      "diameter": 5.5,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       2.5,
+       -22.0,
+       20.2258
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       2.5,
+       22.0,
+       20.2258
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 25.3,
+      "axis": "oblique",
+      "direction": [
+       0.86603,
+       0.0,
+       0.5
+      ],
+      "center": [
+       22.983,
+       0.0,
+       33.495
+      ],
+      "length": 26.923
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "oblique",
+      "count": 1
+     },
+     {
+      "diameter": 5.5,
+      "axis": "x",
+      "count": 2
+     },
+     {
+      "diameter": 25.3,
+      "axis": "oblique",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      25.3,
+      1
+     ],
+     [
+      5.5,
+      2
+     ],
+     [
+      3.3,
+      1
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 18124.5432936851,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "x",
+       "center": [
+        2.5,
+        -22.0,
+        20.225763964014536
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "x",
+       "center": [
+        2.5,
+        22.0,
+        20.225763964014536
+       ],
+       "diameter": 5.5
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "box",
+        "min": [
+         31.64101615137755,
+         -17.65,
+         20.575763964014534
+        ],
+        "max": [
+         37.64101615137755,
+         17.65,
+         59.87576396401453
+        ]
+       },
+       "force": [
+        0.0,
+        0.0,
+        -50.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-tub-inclinat",
+    "summary": "He afegit un forat roscat M4 (broca de 3,3 mm) a la paret del casquet, a la part superior i perpendicular a l'eix del tub, per a un cargol presoner que bloquegi el tub.",
+    "changes": [
+     "Nou forat radial de Ø3,3 mm (rosca M4) al casquet, a 12 mm de l'extrem lliure, cap amunt.",
+     "Nous paràmetres: diàmetre del forat roscat i distància a l'extrem del casquet.",
+     "EXPECTED_HOLES actualitzat amb el nou forat."
+    ],
+    "assumptions": [
+     "El forat és perpendicular a l'eix del casquet i mira cap amunt (cap a la part superior del casquet).",
+     "Es posa a 12 mm de l'extrem lliure; la posició queda limitada perquè no toqui la placa.",
+     "Paret de 4 mm: dona uns 5 filets de M4 (pas 0,7). Si vols més subjecció, augmenta la paret del casquet.",
+     "En una impressió 3D, rosca el forat amb el mateix cargol o fes servir un inserts termofusibles M4 (forat de 5,6 mm)."
+    ],
+    "questions": [
+     "Prefereixes el cargol presoner a dalt, o a un costat del casquet?",
+     "El casquet s'imprimirà o es mecanitzarà? Si és impres, t'afegeixo un reforç (coll) al voltant del forat."
+    ],
+    "use": {
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m4"
+   ],
+   "created": 1793928009.1609352
+  }
+ ]
+}

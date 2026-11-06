@@ -1,0 +1,962 @@
+{
+ "id": "eval-sensor-forquilla",
+ "title": "abracadora-sensor-forquilla-43",
+ "created": 1793927977.3491595,
+ "current": 3,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Necessito un suport per al sensor de recorregut lineal de la forquilla de la moto de MotoStudent. És un potenciòmetre AiM de 150 mm amb ròtules M4. Vull una abraçadora per a la barra de 43 mm amb un braç que deixi el pern de la ròtula a 40 mm de l'eix de la barra. La imprimirem en 3D i va a prop del fre.",
+   "time": 1793927977.3492308
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927979.7726357,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Fes l'abraçadora 6 mm més alta i posa-hi dos cargols de tancament en lloc d'un.",
+   "time": 1793927981.2480748
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927983.9285505,
+   "kind": "design",
+   "version": 2
+  },
+  {
+   "role": "user",
+   "text": "El pern ha d'anar paral·lel a la barra, no radial: posa el forat roscat vertical a l'extrem del braç i allarga el braç 10 mm.",
+   "time": 1793927985.4615974
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927988.1378946,
+   "kind": "design",
+   "version": 3
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Necessito un suport per al sensor de recorregut lineal de la forquilla de la moto de MotoStudent. És un potenciòmetre AiM de 150 mm amb ròtules M4. Vull una abraçadora per a la barra de 43 mm amb un braç que deixi el pern de la ròtula a 40 mm de l'eix de la barra. La imprimirem en 3D i va a prop del fre.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 43, \"unit\": \"mm\", \"min\": 30, \"max\": 70, \"label\": \"Diàmetre de la barra\"},\n    \"bore_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de l'anell sobre la barra\"},\n    \"wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de l'anell\"},\n    \"height\": {\"value\": 20, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Alçada de l'anell\"},\n    \"slit\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 5, \"label\": \"Tall de l'abraçadora\"},\n    \"ear_length\": {\"value\": 14, \"unit\": \"mm\", \"min\": 10, \"max\": 30, \"label\": \"Llargada de les orelles\"},\n    \"ear_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de cada orella\"},\n    \"pinch_bolt_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat del cargol de tancament (M5 = 5,5)\"},\n    \"stud_offset\": {\"value\": 40, \"unit\": \"mm\", \"min\": 25, \"max\": 80, \"label\": \"Distància de l'eix de la barra a la cara del pern\"},\n    \"boss_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada del braç del pern\"},\n    \"stud_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat per roscar el pern (M4 = 3,3)\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"bore_clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nGAP = PARAMS[\"slit\"][\"value\"]\nEL = PARAMS[\"ear_length\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nBOLT = PARAMS[\"pinch_bolt_hole\"][\"value\"]\nOFF = PARAMS[\"stud_offset\"][\"value\"]\nBW = PARAMS[\"boss_width\"][\"value\"]\nSTUD = PARAMS[\"stud_hole\"][\"value\"]\n\nRI = (D + C) / 2\nRO = RI + T\nOFF = max(OFF, RO + 3)\nBW = min(BW, 2 * RO - 4)\nEW = min(2 * ET + GAP, 2 * RO - 4)\nBOLT = min(BOLT, EL - 4, H - 6)\nSTUD = min(STUD, BW - 6, H - 6)\nEAR_X = RO + EL\n\nring = cq.Workplane(\"XY\").circle(RO).extrude(H)\nboss = cq.Workplane(\"XY\").box(OFF, BW, H, centered=(False, True, False))\nears = cq.Workplane(\"XY\").box(EAR_X, EW, H, centered=(False, True, False)).translate((-EAR_X, 0, 0))\nbody = ring.union(boss).union(ears)\n\nbody = body.cut(cq.Workplane(\"XY\").circle(RI).extrude(H))\n\nslit = cq.Workplane(\"XY\").box(EAR_X + 1, GAP, H, centered=(False, True, False)).translate((-EAR_X - 1, 0, 0))\nbody = body.cut(slit)\n\npinch = cq.Workplane(\"XZ\").center(-(RO + EL / 2), H / 2).circle(BOLT / 2).extrude(EW, both=True)\n# Blind threaded hole for the M4 ball stud, entering from the stud face along -X\nstud_depth = min(OFF - RI - 1, 14)\nstud = (cq.Workplane(\"YZ\").workplane(offset=OFF - stud_depth)\n        .center(0, H / 2).circle(STUD / 2).extrude(stud_depth + 1))\nresult = body.cut(pinch).cut(stud)\n\nEXPECTED_BBOX = (EAR_X + OFF, 2 * RO, H)\nEXPECTED_HOLES = [(2 * RI, 1), (BOLT, 1), (STUD, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").workplane(offset=-15).circle(D / 2).extrude(H + 30)\n\nLOAD_CASE = {\n    \"description\": \"Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [0, 0, 0], \"diameter\": 2 * RI}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [OFF, 0, H / 2], \"radius\": 6}, \"force\": [0, 0, 30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 43, \"unit\": \"mm\", \"min\": 30, \"max\": 70, \"label\": \"Diàmetre de la barra\"},\n    \"bore_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de l'anell sobre la barra\"},\n    \"wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de l'anell\"},\n    \"height\": {\"value\": 20, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Alçada de l'anell\"},\n    \"slit\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 5, \"label\": \"Tall de l'abraçadora\"},\n    \"ear_length\": {\"value\": 14, \"unit\": \"mm\", \"min\": 10, \"max\": 30, \"label\": \"Llargada de les orelles\"},\n    \"ear_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de cada orella\"},\n    \"pinch_bolt_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat del cargol de tancament (M5 = 5,5)\"},\n    \"stud_offset\": {\"value\": 40, \"unit\": \"mm\", \"min\": 25, \"max\": 80, \"label\": \"Distància de l'eix de la barra a la cara del pern\"},\n    \"boss_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada del braç del pern\"},\n    \"stud_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat per roscar el pern (M4 = 3,3)\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"bore_clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nGAP = PARAMS[\"slit\"][\"value\"]\nEL = PARAMS[\"ear_length\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nBOLT = PARAMS[\"pinch_bolt_hole\"][\"value\"]\nOFF = PARAMS[\"stud_offset\"][\"value\"]\nBW = PARAMS[\"boss_width\"][\"value\"]\nSTUD = PARAMS[\"stud_hole\"][\"value\"]\n\nRI = (D + C) / 2\nRO = RI + T\nOFF = max(OFF, RO + 3)\nBW = min(BW, 2 * RO - 4)\nEW = min(2 * ET + GAP, 2 * RO - 4)\nBOLT = min(BOLT, EL - 4, H - 6)\nSTUD = min(STUD, BW - 6, H - 6)\nEAR_X = RO + EL\n\nring = cq.Workplane(\"XY\").circle(RO).extrude(H)\nboss = cq.Workplane(\"XY\").box(OFF, BW, H, centered=(False, True, False))\nears = cq.Workplane(\"XY\").box(EAR_X, EW, H, centered=(False, True, False)).translate((-EAR_X, 0, 0))\nbody = ring.union(boss).union(ears)\n\nbody = body.cut(cq.Workplane(\"XY\").circle(RI).extrude(H))\n\nslit = cq.Workplane(\"XY\").box(EAR_X + 1, GAP, H, centered=(False, True, False)).translate((-EAR_X - 1, 0, 0))\nbody = body.cut(slit)\n\npinch = cq.Workplane(\"XZ\").center(-(RO + EL / 2), H / 2).circle(BOLT / 2).extrude(EW, both=True)\n# Blind threaded hole for the M4 ball stud, entering from the stud face along -X\nstud_depth = min(OFF - RI - 1, 14)\nstud = (cq.Workplane(\"YZ\").workplane(offset=OFF - stud_depth)\n        .center(0, H / 2).circle(STUD / 2).extrude(stud_depth + 1))\nresult = body.cut(pinch).cut(stud)\n\nEXPECTED_BBOX = (EAR_X + OFF, 2 * RO, H)\nEXPECTED_HOLES = [(2 * RI, 1), (BOLT, 1), (STUD, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").workplane(offset=-15).circle(D / 2).extrude(H + 30)\n\nLOAD_CASE = {\n    \"description\": \"Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [0, 0, 0], \"diameter\": 2 * RI}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [OFF, 0, H / 2], \"radius\": 6}, \"force\": [0, 0, 30]}],\n}\n",
+   "params": {
+    "tube_diameter": {
+     "value": 43,
+     "unit": "mm",
+     "min": 30,
+     "max": 70,
+     "label": "Diàmetre de la barra"
+    },
+    "bore_clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc de l'anell sobre la barra"
+    },
+    "wall": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de l'anell"
+    },
+    "height": {
+     "value": 20,
+     "unit": "mm",
+     "min": 10,
+     "max": 50,
+     "label": "Alçada de l'anell"
+    },
+    "slit": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1,
+     "max": 5,
+     "label": "Tall de l'abraçadora"
+    },
+    "ear_length": {
+     "value": 14,
+     "unit": "mm",
+     "min": 10,
+     "max": 30,
+     "label": "Llargada de les orelles"
+    },
+    "ear_thickness": {
+     "value": 6,
+     "unit": "mm",
+     "min": 4,
+     "max": 12,
+     "label": "Gruix de cada orella"
+    },
+    "pinch_bolt_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forat del cargol de tancament (M5 = 5,5)"
+    },
+    "stud_offset": {
+     "value": 40,
+     "unit": "mm",
+     "min": 25,
+     "max": 80,
+     "label": "Distància de l'eix de la barra a la cara del pern"
+    },
+    "boss_width": {
+     "value": 16,
+     "unit": "mm",
+     "min": 10,
+     "max": 40,
+     "label": "Amplada del braç del pern"
+    },
+    "stud_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Forat per roscar el pern (M4 = 3,3)"
+    }
+   },
+   "values": {
+    "tube_diameter": 43,
+    "bore_clearance": 0.3,
+    "wall": 5,
+    "height": 20,
+    "slit": 2,
+    "ear_length": 14,
+    "ear_thickness": 6,
+    "pinch_bolt_hole": 5.5,
+    "stud_offset": 40,
+    "boss_width": 16,
+    "stud_hole": 3.3
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 22417.326978559624,
+    "area_mm2": 10462.395301163555,
+    "bbox": {
+     "xmin": -40.65,
+     "ymin": -26.65,
+     "zmin": 0.0,
+     "xmax": 40.0,
+     "ymax": 26.65,
+     "zmax": 20.0,
+     "size": [
+      80.65,
+      53.3,
+      20.0
+     ]
+    },
+    "expected_bbox": [
+     80.65,
+     53.3,
+     20.0
+    ],
+    "n_faces": 19,
+    "notes": [],
+    "center_of_mass": [
+     1.8247426705566754,
+     3.574512385565609e-15,
+     10.0
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       33.0,
+       0.0,
+       10.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -33.65,
+       0.0,
+       10.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 43.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       10.0
+      ],
+      "length": 20.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "count": 1
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "count": 1
+     },
+     {
+      "diameter": 43.3,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      43.3,
+      1
+     ],
+     [
+      5.5,
+      1
+     ],
+     [
+      3.3,
+      1
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 72610.06020609409,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "diameter": 43.3
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         40.0,
+         0.0,
+         10.0
+        ],
+        "radius": 6.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "abracadora-sensor-forquilla-43",
+    "summary": "Abraçadora partida per a barra de Ø43 mm: anell de 20 mm d'alçada i 5 mm de paret, dues orelles amb cargol de tancament M5 i un braç pla amb forat roscat M4 (Ø3,3 mm) per a la ròtula, amb la cara del pern a 40 mm de l'eix de la barra.",
+    "changes": [],
+    "assumptions": [
+     "Diàmetre de la barra 43 mm amb 0,3 mm de joc: mesura-la amb un peu de rei on aniran les abraçadores.",
+     "El braç és radial cap a +X i el forat M4 va a mitja alçada, en direcció X. El forat no és passant, només entra al braç.",
+     "Cargol de tancament M5 amb forat de 5,5 mm a través de les orelles (cap a -X).",
+     "Gruix de l'anell 5 mm, orelles de 14 mm i 6 mm de gruix, tall de 2 mm.",
+     "Imprimeix-la amb l'eix de la barra vertical (anell pla sobre el llit) perquè les capes treballin al llarg de l'anell.",
+     "Material: ASA o PA-CF, perquè és a prop del fre (PLA no).",
+     "Càrrega de comprovació: 30 N al pern en direcció de la barra.",
+     "Per a un segon suport al peu de la forquilla cal el mateix desplaçament de 40 mm, perquè el sensor quedi paral·lel a la barra. El sensor de 150 mm necessita 5 mm de marge a cada extrem."
+    ],
+    "questions": [
+     "Quin és el recorregut real de la teva forquilla? Si passa de 140 mm, el sensor de 150 mm no té marge.",
+     "On vols posar l'abraçadora, i a quina distància queda de la pinça de fre?",
+     "Vols que dissenyi també el suport inferior, al peu de la forquilla?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 100.0,
+     "outdoor": true,
+     "fluids": false,
+     "vibration": true,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "aim-eclipse-150",
+    "guide-fork-travel-sensor",
+    "metric-m4"
+   ],
+   "created": 1793927979.7711215
+  },
+  {
+   "number": 2,
+   "instruction": "Fes l'abraçadora 6 mm més alta i posa-hi dos cargols de tancament en lloc d'un.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 43, \"unit\": \"mm\", \"min\": 30, \"max\": 70, \"label\": \"Diàmetre de la barra\"},\n    \"bore_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de l'anell sobre la barra\"},\n    \"wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de l'anell\"},\n    \"height\": {\"value\": 26, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Alçada de l'anell\"},\n    \"slit\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 5, \"label\": \"Tall de l'abraçadora\"},\n    \"ear_length\": {\"value\": 14, \"unit\": \"mm\", \"min\": 10, \"max\": 30, \"label\": \"Llargada de les orelles\"},\n    \"ear_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de cada orella\"},\n    \"pinch_bolt_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat del cargol de tancament (M5 = 5,5)\"},\n    \"bolt_spacing\": {\"value\": 14, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Separació entre cargols de tancament\"},\n    \"stud_offset\": {\"value\": 40, \"unit\": \"mm\", \"min\": 25, \"max\": 80, \"label\": \"Distància de l'eix de la barra a la cara del pern\"},\n    \"boss_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada del braç del pern\"},\n    \"stud_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat per roscar el pern (M4 = 3,3)\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"bore_clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nGAP = PARAMS[\"slit\"][\"value\"]\nEL = PARAMS[\"ear_length\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nBOLT = PARAMS[\"pinch_bolt_hole\"][\"value\"]\nSP = PARAMS[\"bolt_spacing\"][\"value\"]\nOFF = PARAMS[\"stud_offset\"][\"value\"]\nBW = PARAMS[\"boss_width\"][\"value\"]\nSTUD = PARAMS[\"stud_hole\"][\"value\"]\n\nRI = (D + C) / 2\nRO = RI + T\nOFF = max(OFF, RO + 3)\nBW = min(BW, 2 * RO - 4)\nEW = min(2 * ET + GAP, 2 * RO - 4)\nBOLT = min(BOLT, EL - 4, (H - 8) / 2)\nSP = max(min(SP, H - BOLT - 4), BOLT + 3)\nSTUD = min(STUD, BW - 6, H - 6)\nEAR_X = RO + EL\n\nring = cq.Workplane(\"XY\").circle(RO).extrude(H)\nboss = cq.Workplane(\"XY\").box(OFF, BW, H, centered=(False, True, False))\nears = cq.Workplane(\"XY\").box(EAR_X, EW, H, centered=(False, True, False)).translate((-EAR_X, 0, 0))\nbody = ring.union(boss).union(ears)\n\nbody = body.cut(cq.Workplane(\"XY\").circle(RI).extrude(H))\n\nslit = cq.Workplane(\"XY\").box(EAR_X + 1, GAP, H, centered=(False, True, False)).translate((-EAR_X - 1, 0, 0))\nbody = body.cut(slit)\n\n# Two pinch bolts across the ears (along Y), one above the other\npinch = (cq.Workplane(\"XZ\")\n         .pushPoints([(-(RO + EL / 2), H / 2 - SP / 2), (-(RO + EL / 2), H / 2 + SP / 2)])\n         .circle(BOLT / 2).extrude(EW, both=True))\n# Blind threaded hole for the M4 ball stud, entering from the stud face along -X\nstud_depth = min(OFF - RI - 1, 14)\nstud = (cq.Workplane(\"YZ\").workplane(offset=OFF - stud_depth)\n        .center(0, H / 2).circle(STUD / 2).extrude(stud_depth + 1))\nresult = body.cut(pinch).cut(stud)\n\nEXPECTED_BBOX = (EAR_X + OFF, 2 * RO, H)\nEXPECTED_HOLES = [(2 * RI, 1), (BOLT, 2), (STUD, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").workplane(offset=-15).circle(D / 2).extrude(H + 30)\n\nLOAD_CASE = {\n    \"description\": \"Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [0, 0, 0], \"diameter\": 2 * RI}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [OFF, 0, H / 2], \"radius\": 6}, \"force\": [0, 0, 30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 43, \"unit\": \"mm\", \"min\": 30, \"max\": 70, \"label\": \"Diàmetre de la barra\"},\n    \"bore_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de l'anell sobre la barra\"},\n    \"wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de l'anell\"},\n    \"height\": {\"value\": 26, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Alçada de l'anell\"},\n    \"slit\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 5, \"label\": \"Tall de l'abraçadora\"},\n    \"ear_length\": {\"value\": 14, \"unit\": \"mm\", \"min\": 10, \"max\": 30, \"label\": \"Llargada de les orelles\"},\n    \"ear_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de cada orella\"},\n    \"pinch_bolt_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat del cargol de tancament (M5 = 5,5)\"},\n    \"bolt_spacing\": {\"value\": 14, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Separació entre cargols de tancament\"},\n    \"stud_offset\": {\"value\": 40, \"unit\": \"mm\", \"min\": 25, \"max\": 80, \"label\": \"Distància de l'eix de la barra a la cara del pern\"},\n    \"boss_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada del braç del pern\"},\n    \"stud_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat per roscar el pern (M4 = 3,3)\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"bore_clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nGAP = PARAMS[\"slit\"][\"value\"]\nEL = PARAMS[\"ear_length\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nBOLT = PARAMS[\"pinch_bolt_hole\"][\"value\"]\nSP = PARAMS[\"bolt_spacing\"][\"value\"]\nOFF = PARAMS[\"stud_offset\"][\"value\"]\nBW = PARAMS[\"boss_width\"][\"value\"]\nSTUD = PARAMS[\"stud_hole\"][\"value\"]\n\nRI = (D + C) / 2\nRO = RI + T\nOFF = max(OFF, RO + 3)\nBW = min(BW, 2 * RO - 4)\nEW = min(2 * ET + GAP, 2 * RO - 4)\nBOLT = min(BOLT, EL - 4, (H - 8) / 2)\nSP = max(min(SP, H - BOLT - 4), BOLT + 3)\nSTUD = min(STUD, BW - 6, H - 6)\nEAR_X = RO + EL\n\nring = cq.Workplane(\"XY\").circle(RO).extrude(H)\nboss = cq.Workplane(\"XY\").box(OFF, BW, H, centered=(False, True, False))\nears = cq.Workplane(\"XY\").box(EAR_X, EW, H, centered=(False, True, False)).translate((-EAR_X, 0, 0))\nbody = ring.union(boss).union(ears)\n\nbody = body.cut(cq.Workplane(\"XY\").circle(RI).extrude(H))\n\nslit = cq.Workplane(\"XY\").box(EAR_X + 1, GAP, H, centered=(False, True, False)).translate((-EAR_X - 1, 0, 0))\nbody = body.cut(slit)\n\n# Two pinch bolts across the ears (along Y), one above the other\npinch = (cq.Workplane(\"XZ\")\n         .pushPoints([(-(RO + EL / 2), H / 2 - SP / 2), (-(RO + EL / 2), H / 2 + SP / 2)])\n         .circle(BOLT / 2).extrude(EW, both=True))\n# Blind threaded hole for the M4 ball stud, entering from the stud face along -X\nstud_depth = min(OFF - RI - 1, 14)\nstud = (cq.Workplane(\"YZ\").workplane(offset=OFF - stud_depth)\n        .center(0, H / 2).circle(STUD / 2).extrude(stud_depth + 1))\nresult = body.cut(pinch).cut(stud)\n\nEXPECTED_BBOX = (EAR_X + OFF, 2 * RO, H)\nEXPECTED_HOLES = [(2 * RI, 1), (BOLT, 2), (STUD, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").workplane(offset=-15).circle(D / 2).extrude(H + 30)\n\nLOAD_CASE = {\n    \"description\": \"Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [0, 0, 0], \"diameter\": 2 * RI}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [OFF, 0, H / 2], \"radius\": 6}, \"force\": [0, 0, 30]}],\n}\n",
+   "params": {
+    "tube_diameter": {
+     "value": 43,
+     "unit": "mm",
+     "min": 30,
+     "max": 70,
+     "label": "Diàmetre de la barra"
+    },
+    "bore_clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc de l'anell sobre la barra"
+    },
+    "wall": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de l'anell"
+    },
+    "height": {
+     "value": 26,
+     "unit": "mm",
+     "min": 10,
+     "max": 50,
+     "label": "Alçada de l'anell"
+    },
+    "slit": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1,
+     "max": 5,
+     "label": "Tall de l'abraçadora"
+    },
+    "ear_length": {
+     "value": 14,
+     "unit": "mm",
+     "min": 10,
+     "max": 30,
+     "label": "Llargada de les orelles"
+    },
+    "ear_thickness": {
+     "value": 6,
+     "unit": "mm",
+     "min": 4,
+     "max": 12,
+     "label": "Gruix de cada orella"
+    },
+    "pinch_bolt_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forat del cargol de tancament (M5 = 5,5)"
+    },
+    "bolt_spacing": {
+     "value": 14,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Separació entre cargols de tancament"
+    },
+    "stud_offset": {
+     "value": 40,
+     "unit": "mm",
+     "min": 25,
+     "max": 80,
+     "label": "Distància de l'eix de la barra a la cara del pern"
+    },
+    "boss_width": {
+     "value": 16,
+     "unit": "mm",
+     "min": 10,
+     "max": 40,
+     "label": "Amplada del braç del pern"
+    },
+    "stud_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Forat per roscar el pern (M4 = 3,3)"
+    }
+   },
+   "values": {
+    "tube_diameter": 43,
+    "bore_clearance": 0.3,
+    "wall": 5,
+    "height": 26,
+    "slit": 2,
+    "ear_length": 14,
+    "ear_thickness": 6,
+    "pinch_bolt_hole": 5.5,
+    "bolt_spacing": 14,
+    "stud_offset": 40,
+    "boss_width": 16,
+    "stud_hole": 3.3
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 28978.877940005696,
+    "area_mm2": 12951.524724013989,
+    "bbox": {
+     "xmin": -40.65,
+     "ymin": -26.65,
+     "zmin": 0.0,
+     "xmax": 40.0,
+     "ymax": 26.65,
+     "zmax": 26.0,
+     "size": [
+      80.65,
+      53.3,
+      26.0
+     ]
+    },
+    "expected_bbox": [
+     80.65,
+     53.3,
+     26.0
+    ],
+    "n_faces": 21,
+    "notes": [],
+    "center_of_mass": [
+     2.1076928002539925,
+     6.16247441763339e-15,
+     13.0
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       33.0,
+       0.0,
+       13.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -33.65,
+       0.0,
+       6.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -33.65,
+       0.0,
+       20.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 43.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       13.0
+      ],
+      "length": 26.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "x",
+      "count": 1
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "count": 2
+     },
+     {
+      "diameter": 43.3,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      43.3,
+      1
+     ],
+     [
+      5.5,
+      2
+     ],
+     [
+      3.3,
+      1
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 81323.26743082538,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "diameter": 43.3
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         40.0,
+         0.0,
+         13.0
+        ],
+        "radius": 6.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "abracadora-sensor-forquilla",
+    "summary": "L'abraçadora té ara 26 mm d'alçada (6 mm més) i dos cargols de tancament a les orelles, un a sobre de l'altre, en lloc d'un de sol.",
+    "changes": [
+     "Alçada de l'anell: de 20 a 26 mm.",
+     "Cargols de tancament: d'1 a 2, repartits en alçada i centrats respecte a l'abraçadora.",
+     "Nou paràmetre \"separació dels cargols\" (14 mm), limitat perquè els forats no toquin les vores.",
+     "El forat del pern de la ròtula continua a mitja alçada i s'ha actualitzat la llista de forats."
+    ],
+    "assumptions": [
+     "Separació de 14 mm entre els eixos dels dos cargols (M5, forat de 5,5 mm). Els cargols queden a ±7 mm del centre de l'alçada.",
+     "Els dos cargols són del mateix diàmetre que l'anterior."
+    ],
+    "questions": [
+     "Vols que els cargols siguin M5 o prefereixes M4 per deixar més material a les orelles?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 90.0,
+     "outdoor": true,
+     "fluids": true,
+     "vibration": true
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927983.9256432
+  },
+  {
+   "number": 3,
+   "instruction": "El pern ha d'anar paral·lel a la barra, no radial: posa el forat roscat vertical a l'extrem del braç i allarga el braç 10 mm.",
+   "parent": 2,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 43, \"unit\": \"mm\", \"min\": 30, \"max\": 70, \"label\": \"Diàmetre de la barra\"},\n    \"bore_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de l'anell sobre la barra\"},\n    \"wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de l'anell\"},\n    \"height\": {\"value\": 26, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Alçada de l'anell\"},\n    \"slit\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 5, \"label\": \"Tall de l'abraçadora\"},\n    \"ear_length\": {\"value\": 14, \"unit\": \"mm\", \"min\": 10, \"max\": 30, \"label\": \"Llargada de les orelles\"},\n    \"ear_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de cada orella\"},\n    \"pinch_bolt_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat del cargol de tancament (M5 = 5,5)\"},\n    \"bolt_spacing\": {\"value\": 14, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Separació entre cargols de tancament\"},\n    \"stud_offset\": {\"value\": 50, \"unit\": \"mm\", \"min\": 25, \"max\": 90, \"label\": \"Distància de l'eix de la barra a l'extrem del braç\"},\n    \"boss_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada del braç del pern\"},\n    \"stud_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat per roscar el pern (M4 = 3,3)\"},\n    \"stud_depth\": {\"value\": 14, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Profunditat del forat roscat vertical\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"bore_clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nGAP = PARAMS[\"slit\"][\"value\"]\nEL = PARAMS[\"ear_length\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nBOLT = PARAMS[\"pinch_bolt_hole\"][\"value\"]\nSP = PARAMS[\"bolt_spacing\"][\"value\"]\nOFF = PARAMS[\"stud_offset\"][\"value\"]\nBW = PARAMS[\"boss_width\"][\"value\"]\nSTUD = PARAMS[\"stud_hole\"][\"value\"]\nSD = PARAMS[\"stud_depth\"][\"value\"]\n\nRI = (D + C) / 2\nRO = RI + T\nBW = min(BW, 2 * RO - 4)\nOFF = max(OFF, RO + BW / 2 + 2)\nEW = min(2 * ET + GAP, 2 * RO - 4)\nBOLT = min(BOLT, EL - 4, (H - 8) / 2)\nSP = max(min(SP, H - BOLT - 4), BOLT + 3)\nSTUD = min(STUD, BW - 6)\nSD = min(SD, H - 2)\nEAR_X = RO + EL\nXS = OFF - BW / 2          # x of the vertical stud hole\n\nring = cq.Workplane(\"XY\").circle(RO).extrude(H)\nboss = cq.Workplane(\"XY\").box(OFF, BW, H, centered=(False, True, False))\nears = cq.Workplane(\"XY\").box(EAR_X, EW, H, centered=(False, True, False)).translate((-EAR_X, 0, 0))\nbody = ring.union(boss).union(ears)\n\nbody = body.cut(cq.Workplane(\"XY\").circle(RI).extrude(H))\n\nslit = cq.Workplane(\"XY\").box(EAR_X + 1, GAP, H, centered=(False, True, False)).translate((-EAR_X - 1, 0, 0))\nbody = body.cut(slit)\n\n# Two pinch bolts across the ears (along Y), one above the other\npinch = (cq.Workplane(\"XZ\")\n         .pushPoints([(-(RO + EL / 2), H / 2 - SP / 2), (-(RO + EL / 2), H / 2 + SP / 2)])\n         .circle(BOLT / 2).extrude(EW, both=True))\n# Blind vertical threaded hole for the M4 ball stud, from the top face, parallel to the bar\nstud = (cq.Workplane(\"XY\").workplane(offset=H - SD)\n        .center(XS, 0).circle(STUD / 2).extrude(SD + 1))\nresult = body.cut(pinch).cut(stud)\n\nEXPECTED_BBOX = (EAR_X + OFF, 2 * RO, H)\nEXPECTED_HOLES = [(2 * RI, 1), (BOLT, 2), (STUD, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").workplane(offset=-15).circle(D / 2).extrude(H + 30)\n\nLOAD_CASE = {\n    \"description\": \"Abraçadora subjecta a la barra de la forquilla, 30 N al pern vertical en la direcció de la barra\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [0, 0, 0], \"diameter\": 2 * RI}],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"z\", \"center\": [XS, 0, H - SD / 2], \"diameter\": STUD},\n               \"force\": [0, 0, 30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 43, \"unit\": \"mm\", \"min\": 30, \"max\": 70, \"label\": \"Diàmetre de la barra\"},\n    \"bore_clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de l'anell sobre la barra\"},\n    \"wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de l'anell\"},\n    \"height\": {\"value\": 26, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Alçada de l'anell\"},\n    \"slit\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 5, \"label\": \"Tall de l'abraçadora\"},\n    \"ear_length\": {\"value\": 14, \"unit\": \"mm\", \"min\": 10, \"max\": 30, \"label\": \"Llargada de les orelles\"},\n    \"ear_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de cada orella\"},\n    \"pinch_bolt_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat del cargol de tancament (M5 = 5,5)\"},\n    \"bolt_spacing\": {\"value\": 14, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Separació entre cargols de tancament\"},\n    \"stud_offset\": {\"value\": 50, \"unit\": \"mm\", \"min\": 25, \"max\": 90, \"label\": \"Distància de l'eix de la barra a l'extrem del braç\"},\n    \"boss_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada del braç del pern\"},\n    \"stud_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat per roscar el pern (M4 = 3,3)\"},\n    \"stud_depth\": {\"value\": 14, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Profunditat del forat roscat vertical\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nC = PARAMS[\"bore_clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nGAP = PARAMS[\"slit\"][\"value\"]\nEL = PARAMS[\"ear_length\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nBOLT = PARAMS[\"pinch_bolt_hole\"][\"value\"]\nSP = PARAMS[\"bolt_spacing\"][\"value\"]\nOFF = PARAMS[\"stud_offset\"][\"value\"]\nBW = PARAMS[\"boss_width\"][\"value\"]\nSTUD = PARAMS[\"stud_hole\"][\"value\"]\nSD = PARAMS[\"stud_depth\"][\"value\"]\n\nRI = (D + C) / 2\nRO = RI + T\nBW = min(BW, 2 * RO - 4)\nOFF = max(OFF, RO + BW / 2 + 2)\nEW = min(2 * ET + GAP, 2 * RO - 4)\nBOLT = min(BOLT, EL - 4, (H - 8) / 2)\nSP = max(min(SP, H - BOLT - 4), BOLT + 3)\nSTUD = min(STUD, BW - 6)\nSD = min(SD, H - 2)\nEAR_X = RO + EL\nXS = OFF - BW / 2          # x of the vertical stud hole\n\nring = cq.Workplane(\"XY\").circle(RO).extrude(H)\nboss = cq.Workplane(\"XY\").box(OFF, BW, H, centered=(False, True, False))\nears = cq.Workplane(\"XY\").box(EAR_X, EW, H, centered=(False, True, False)).translate((-EAR_X, 0, 0))\nbody = ring.union(boss).union(ears)\n\nbody = body.cut(cq.Workplane(\"XY\").circle(RI).extrude(H))\n\nslit = cq.Workplane(\"XY\").box(EAR_X + 1, GAP, H, centered=(False, True, False)).translate((-EAR_X - 1, 0, 0))\nbody = body.cut(slit)\n\n# Two pinch bolts across the ears (along Y), one above the other\npinch = (cq.Workplane(\"XZ\")\n         .pushPoints([(-(RO + EL / 2), H / 2 - SP / 2), (-(RO + EL / 2), H / 2 + SP / 2)])\n         .circle(BOLT / 2).extrude(EW, both=True))\n# Blind vertical threaded hole for the M4 ball stud, from the top face, parallel to the bar\nstud = (cq.Workplane(\"XY\").workplane(offset=H - SD)\n        .center(XS, 0).circle(STUD / 2).extrude(SD + 1))\nresult = body.cut(pinch).cut(stud)\n\nEXPECTED_BBOX = (EAR_X + OFF, 2 * RO, H)\nEXPECTED_HOLES = [(2 * RI, 1), (BOLT, 2), (STUD, 1)]\n\nREFERENCE = cq.Workplane(\"XY\").workplane(offset=-15).circle(D / 2).extrude(H + 30)\n\nLOAD_CASE = {\n    \"description\": \"Abraçadora subjecta a la barra de la forquilla, 30 N al pern vertical en la direcció de la barra\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [0, 0, 0], \"diameter\": 2 * RI}],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"z\", \"center\": [XS, 0, H - SD / 2], \"diameter\": STUD},\n               \"force\": [0, 0, 30]}],\n}\n",
+   "params": {
+    "tube_diameter": {
+     "value": 43,
+     "unit": "mm",
+     "min": 30,
+     "max": 70,
+     "label": "Diàmetre de la barra"
+    },
+    "bore_clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc de l'anell sobre la barra"
+    },
+    "wall": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de l'anell"
+    },
+    "height": {
+     "value": 26,
+     "unit": "mm",
+     "min": 10,
+     "max": 50,
+     "label": "Alçada de l'anell"
+    },
+    "slit": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1,
+     "max": 5,
+     "label": "Tall de l'abraçadora"
+    },
+    "ear_length": {
+     "value": 14,
+     "unit": "mm",
+     "min": 10,
+     "max": 30,
+     "label": "Llargada de les orelles"
+    },
+    "ear_thickness": {
+     "value": 6,
+     "unit": "mm",
+     "min": 4,
+     "max": 12,
+     "label": "Gruix de cada orella"
+    },
+    "pinch_bolt_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forat del cargol de tancament (M5 = 5,5)"
+    },
+    "bolt_spacing": {
+     "value": 14,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Separació entre cargols de tancament"
+    },
+    "stud_offset": {
+     "value": 50,
+     "unit": "mm",
+     "min": 25,
+     "max": 90,
+     "label": "Distància de l'eix de la barra a l'extrem del braç"
+    },
+    "boss_width": {
+     "value": 16,
+     "unit": "mm",
+     "min": 10,
+     "max": 40,
+     "label": "Amplada del braç del pern"
+    },
+    "stud_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Forat per roscar el pern (M4 = 3,3)"
+    },
+    "stud_depth": {
+     "value": 14,
+     "unit": "mm",
+     "min": 5,
+     "max": 50,
+     "label": "Profunditat del forat roscat vertical"
+    }
+   },
+   "values": {
+    "tube_diameter": 43,
+    "bore_clearance": 0.3,
+    "wall": 5,
+    "height": 26,
+    "slit": 2,
+    "ear_length": 14,
+    "ear_thickness": 6,
+    "pinch_bolt_hole": 5.5,
+    "bolt_spacing": 14,
+    "stud_offset": 50,
+    "boss_width": 16,
+    "stud_hole": 3.3,
+    "stud_depth": 14
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 33138.87794000572,
+    "area_mm2": 13791.524724013989,
+    "bbox": {
+     "xmin": -40.65,
+     "ymin": -26.65,
+     "zmin": 0.0,
+     "xmax": 50.0,
+     "ymax": 26.65,
+     "zmax": 26.0,
+     "size": [
+      90.65,
+      53.3,
+      26.0
+     ]
+    },
+    "expected_bbox": [
+     90.65,
+     53.3,
+     26.0
+    ],
+    "n_faces": 21,
+    "notes": [],
+    "center_of_mass": [
+     7.459543337743516,
+     -1.0198565141792284e-16,
+     12.97832000150245
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       42.0,
+       0.0,
+       19.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -33.65,
+       0.0,
+       6.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       -33.65,
+       0.0,
+       20.0
+      ],
+      "length": 14.0
+     },
+     {
+      "diameter": 43.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       13.0
+      ],
+      "length": 26.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 5.5,
+      "axis": "y",
+      "count": 2
+     },
+     {
+      "diameter": 43.3,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      43.3,
+      1
+     ],
+     [
+      5.5,
+      2
+     ],
+     [
+      3.3,
+      1
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 81323.26743082538,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Abraçadora subjecta a la barra de la forquilla, 30 N al pern vertical en la direcció de la barra",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        0.0,
+        0.0,
+        0.0
+       ],
+       "diameter": 43.3
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "z",
+        "center": [
+         42.0,
+         0.0,
+         19.0
+        ],
+        "diameter": 3.3
+       },
+       "force": [
+        0.0,
+        0.0,
+        30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "abracadora-sensor-barra",
+    "summary": "He allargat el braç 10 mm (fins a 50 mm de l'eix de la barra) i el forat roscat del pern M4 ara és vertical, paral·lel a la barra, a l'extrem del braç i centrat en la seva amplada.",
+    "changes": [
+     "Distància de l'eix al final del braç: de 40 a 50 mm.",
+     "Forat roscat del pern: de radial (eix X) a vertical (eix Z), cec des de la cara superior, centrat a l'extrem del braç.",
+     "Nou paràmetre: profunditat del forat roscat (14 mm).",
+     "Càrrega de la simulació: ara 30 N en direcció Z aplicats a la paret del forat vertical."
+    ],
+    "assumptions": [
+     "El centre del forat és a mig braç de l'extrem, és a dir a 42 mm de l'eix (50 − 16/2). Si vols el pern exactament a 40 mm de l'eix, baixa la distància a 48 mm.",
+     "Forat cec de 14 mm des de la cara superior; la mida és la de rosca M4 (Ø3,3 mm).",
+     "Per imprimir-la, posa-la amb l'anell pla sobre el llit, de manera que el forat del pern quedi vertical."
+    ],
+    "questions": [
+     "Vols que la distància de 40 mm sigui fins al centre del pern i no fins al final del braç?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 90.0,
+     "outdoor": true,
+     "fluids": false,
+     "vibration": true
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927988.1347919
+  }
+ ]
+}

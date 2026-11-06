@@ -1,0 +1,378 @@
+{
+ "id": "eval-pom-estrellat",
+ "title": "pom-estrellat-5-lobuls",
+ "created": 1793927991.6461449,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Pom estrellat de 5 lòbuls, 40 mm de diàmetre i 15 mm d'alçada, amb allotjament hexagonal per a una femella M6 a sota i forat passant per al cargol.",
+   "time": 1793927991.6461537
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927994.4248378,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Fes-lo de 7 lòbuls i de 50 mm.",
+   "time": 1793927995.6274266
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927998.1076553,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Pom estrellat de 5 lòbuls, 40 mm de diàmetre i 15 mm d'alçada, amb allotjament hexagonal per a una femella M6 a sota i forat passant per al cargol.",
+   "parent": null,
+   "base_code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"diameter\": {\"value\": 40, \"unit\": \"mm\", \"min\": 25, \"max\": 100, \"label\": \"Diàmetre total\"},\n    \"height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 50, \"label\": \"Alçada\"},\n    \"lobe_count\": {\"value\": 5, \"unit\": \"count\", \"min\": 3, \"max\": 8, \"label\": \"Nombre de lòbuls\"},\n    \"lobe_radius\": {\"value\": 7, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Radi dels lòbuls\"},\n    \"core_radius\": {\"value\": 11, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Radi del nucli central\"},\n    \"bolt_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 4, \"max\": 9, \"label\": \"Forat del cargol (M6 = 6,6)\"},\n    \"nut_flats\": {\"value\": 10.3, \"unit\": \"mm\", \"min\": 8, \"max\": 14, \"label\": \"Femella: cares (10 + 0,3)\"},\n    \"nut_depth\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Fondària de l'allotjament\"},\n}\n\nD = PARAMS[\"diameter\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nN = int(PARAMS[\"lobe_count\"][\"value\"])\nLR = PARAMS[\"lobe_radius\"][\"value\"]\nCR = PARAMS[\"core_radius\"][\"value\"]\nBH = PARAMS[\"bolt_hole\"][\"value\"]\nNF = PARAMS[\"nut_flats\"][\"value\"]\nND = PARAMS[\"nut_depth\"][\"value\"]\n\nNC = NF / 0.866                       # across corners\nLR = min(LR, D / 2 - 6)\nCR = max(CR, NC / 2 + 2)\nCR = min(CR, D / 2 - 1)\nC = D / 2 - LR                        # lobe centre distance\nLR = max(LR, 1)\nBH = min(BH, NF - 2)\nND = min(ND, H - 3)\n\nresult = cq.Workplane(\"XY\").circle(CR).extrude(H)\nfor i in range(N):\n    a = 2 * math.pi * i / N\n    lobe = cq.Workplane(\"XY\").center(C * math.cos(a), C * math.sin(a)).circle(LR).extrude(H)\n    result = result.union(lobe)\n\n# Through hole and hex nut pocket from below\nresult = result.cut(cq.Workplane(\"XY\").circle(BH / 2).extrude(H))\nresult = result.cut(cq.Workplane(\"XY\").polygon(6, NC).extrude(ND))\n\nxs = [C * math.cos(2 * math.pi * i / N) for i in range(N)]\nys = [C * math.sin(2 * math.pi * i / N) for i in range(N)]\nEXPECTED_BBOX = (max(xs) - min(xs) + 2 * LR, max(ys) - min(ys) + 2 * LR, H)\nEXPECTED_HOLES = [(BH, 1)]\n",
+   "code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"diameter\": {\"value\": 40, \"unit\": \"mm\", \"min\": 25, \"max\": 100, \"label\": \"Diàmetre total\"},\n    \"height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 50, \"label\": \"Alçada\"},\n    \"lobe_count\": {\"value\": 5, \"unit\": \"count\", \"min\": 3, \"max\": 8, \"label\": \"Nombre de lòbuls\"},\n    \"lobe_radius\": {\"value\": 7, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Radi dels lòbuls\"},\n    \"core_radius\": {\"value\": 11, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Radi del nucli central\"},\n    \"bolt_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 4, \"max\": 9, \"label\": \"Forat del cargol (M6 = 6,6)\"},\n    \"nut_flats\": {\"value\": 10.3, \"unit\": \"mm\", \"min\": 8, \"max\": 14, \"label\": \"Femella: cares (10 + 0,3)\"},\n    \"nut_depth\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Fondària de l'allotjament\"},\n}\n\nD = PARAMS[\"diameter\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nN = int(PARAMS[\"lobe_count\"][\"value\"])\nLR = PARAMS[\"lobe_radius\"][\"value\"]\nCR = PARAMS[\"core_radius\"][\"value\"]\nBH = PARAMS[\"bolt_hole\"][\"value\"]\nNF = PARAMS[\"nut_flats\"][\"value\"]\nND = PARAMS[\"nut_depth\"][\"value\"]\n\nNC = NF / 0.866                       # across corners\nLR = min(LR, D / 2 - 6)\nCR = max(CR, NC / 2 + 2)\nCR = min(CR, D / 2 - 1)\nC = D / 2 - LR                        # lobe centre distance\nLR = max(LR, 1)\nBH = min(BH, NF - 2)\nND = min(ND, H - 3)\n\nresult = cq.Workplane(\"XY\").circle(CR).extrude(H)\nfor i in range(N):\n    a = 2 * math.pi * i / N\n    lobe = cq.Workplane(\"XY\").center(C * math.cos(a), C * math.sin(a)).circle(LR).extrude(H)\n    result = result.union(lobe)\n\n# Through hole and hex nut pocket from below\nresult = result.cut(cq.Workplane(\"XY\").circle(BH / 2).extrude(H))\nresult = result.cut(cq.Workplane(\"XY\").polygon(6, NC).extrude(ND))\n\nxs = [C * math.cos(2 * math.pi * i / N) for i in range(N)]\nys = [C * math.sin(2 * math.pi * i / N) for i in range(N)]\nEXPECTED_BBOX = (max(xs) - min(xs) + 2 * LR, max(ys) - min(ys) + 2 * LR, H)\nEXPECTED_HOLES = [(BH, 1)]\n",
+   "params": {
+    "diameter": {
+     "value": 40,
+     "unit": "mm",
+     "min": 25,
+     "max": 100,
+     "label": "Diàmetre total"
+    },
+    "height": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 50,
+     "label": "Alçada"
+    },
+    "lobe_count": {
+     "value": 5,
+     "unit": "count",
+     "min": 3,
+     "max": 8,
+     "label": "Nombre de lòbuls"
+    },
+    "lobe_radius": {
+     "value": 7,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Radi dels lòbuls"
+    },
+    "core_radius": {
+     "value": 11,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Radi del nucli central"
+    },
+    "bolt_hole": {
+     "value": 6.6,
+     "unit": "mm",
+     "min": 4,
+     "max": 9,
+     "label": "Forat del cargol (M6 = 6,6)"
+    },
+    "nut_flats": {
+     "value": 10.3,
+     "unit": "mm",
+     "min": 8,
+     "max": 14,
+     "label": "Femella: cares (10 + 0,3)"
+    },
+    "nut_depth": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Fondària de l'allotjament"
+    }
+   },
+   "values": {
+    "diameter": 40,
+    "height": 15,
+    "lobe_count": 5,
+    "lobe_radius": 7,
+    "core_radius": 11,
+    "bolt_hole": 6.6,
+    "nut_flats": 10.3,
+    "nut_depth": 5.5
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 13324.894128891652,
+    "area_mm2": 4550.254308413752,
+    "bbox": {
+     "xmin": -17.517220926874316,
+     "ymin": -19.363734711836997,
+     "zmin": 0.0,
+     "xmax": 20.0,
+     "ymax": 19.363734711836997,
+     "zmax": 15.0,
+     "size": [
+      37.517220926874316,
+      38.727469423673995,
+      15.0
+     ]
+    },
+    "expected_bbox": [
+     37.517220926874316,
+     38.727469423673995,
+     15.0
+    ],
+    "n_faces": 20,
+    "notes": [],
+    "center_of_mass": [
+     -1.3284055262541896e-14,
+     6.948163754134988e-16,
+     7.613068881798814
+    ],
+    "hole_list": [
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       10.25
+      ],
+      "length": 9.5
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      6.6,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "pom-estrellat-5-lobuls",
+    "summary": "Pom de 5 lòbuls rodons de 40 mm de diàmetre i 15 mm d'alçada, amb un allotjament hexagonal per a una femella M6 a la cara inferior i un forat passant de 6,6 mm per al cargol.",
+    "changes": [],
+    "assumptions": [
+     "Forat del cargol de 6,6 mm (joc mitjà ISO 273 per a M6). En FDM pot sortir uns 0,2 mm més petit.",
+     "Allotjament hexagonal de 10,3 mm entre cares (10 + 0,3) i 5,5 mm de fondària (femella de 5,2 mm + 0,3).",
+     "Lòbuls circulars de radi 7 mm sobre un nucli central de radi 11 mm. Els 40 mm són el diàmetre circumscrit, mesurat des de l'eix fins a la punta d'un lòbul.",
+     "El pom es posa a la cama de la femella cap avall, sobre el pla XY. Per imprimir-lo, col·loca'l amb la cara plana a sota."
+    ],
+    "questions": [
+     "Vols que el pom tingui els lòbuls més marcats (més separats) o més arrodonits, amb un filet a la cara superior?",
+     "Cal un allotjament per al cap del cargol a la part superior, o el cargol entra per sota?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m6"
+   ],
+   "created": 1793927994.4233432
+  },
+  {
+   "number": 2,
+   "instruction": "Fes-lo de 7 lòbuls i de 50 mm.",
+   "parent": 1,
+   "base_code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"diameter\": {\"value\": 50, \"unit\": \"mm\", \"min\": 25, \"max\": 100, \"label\": \"Diàmetre total\"},\n    \"height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 50, \"label\": \"Alçada\"},\n    \"lobe_count\": {\"value\": 7, \"unit\": \"count\", \"min\": 3, \"max\": 8, \"label\": \"Nombre de lòbuls\"},\n    \"lobe_radius\": {\"value\": 8.75, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Radi dels lòbuls\"},\n    \"core_radius\": {\"value\": 13.75, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Radi del nucli central\"},\n    \"bolt_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 4, \"max\": 9, \"label\": \"Forat del cargol (M6 = 6,6)\"},\n    \"nut_flats\": {\"value\": 10.3, \"unit\": \"mm\", \"min\": 8, \"max\": 14, \"label\": \"Femella: cares (10 + 0,3)\"},\n    \"nut_depth\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Fondària de l'allotjament\"},\n}\n\nD = PARAMS[\"diameter\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nN = int(PARAMS[\"lobe_count\"][\"value\"])\nLR = PARAMS[\"lobe_radius\"][\"value\"]\nCR = PARAMS[\"core_radius\"][\"value\"]\nBH = PARAMS[\"bolt_hole\"][\"value\"]\nNF = PARAMS[\"nut_flats\"][\"value\"]\nND = PARAMS[\"nut_depth\"][\"value\"]\n\nNC = NF / 0.866                       # across corners\nLR = min(LR, D / 2 - 6)\nCR = max(CR, NC / 2 + 2)\nCR = min(CR, D / 2 - 1)\nC = D / 2 - LR                        # lobe centre distance\nLR = max(LR, 1)\nBH = min(BH, NF - 2)\nND = min(ND, H - 3)\n\nresult = cq.Workplane(\"XY\").circle(CR).extrude(H)\nfor i in range(N):\n    a = 2 * math.pi * i / N\n    lobe = cq.Workplane(\"XY\").center(C * math.cos(a), C * math.sin(a)).circle(LR).extrude(H)\n    result = result.union(lobe)\n\n# Through hole and hex nut pocket from below\nresult = result.cut(cq.Workplane(\"XY\").circle(BH / 2).extrude(H))\nresult = result.cut(cq.Workplane(\"XY\").polygon(6, NC).extrude(ND))\n\nxs = [C * math.cos(2 * math.pi * i / N) for i in range(N)]\nys = [C * math.sin(2 * math.pi * i / N) for i in range(N)]\nEXPECTED_BBOX = (max(xs) - min(xs) + 2 * LR, max(ys) - min(ys) + 2 * LR, H)\nEXPECTED_HOLES = [(BH, 1)]\n",
+   "code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"diameter\": {\"value\": 50, \"unit\": \"mm\", \"min\": 25, \"max\": 100, \"label\": \"Diàmetre total\"},\n    \"height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 50, \"label\": \"Alçada\"},\n    \"lobe_count\": {\"value\": 7, \"unit\": \"count\", \"min\": 3, \"max\": 8, \"label\": \"Nombre de lòbuls\"},\n    \"lobe_radius\": {\"value\": 8.75, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Radi dels lòbuls\"},\n    \"core_radius\": {\"value\": 13.75, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Radi del nucli central\"},\n    \"bolt_hole\": {\"value\": 6.6, \"unit\": \"mm\", \"min\": 4, \"max\": 9, \"label\": \"Forat del cargol (M6 = 6,6)\"},\n    \"nut_flats\": {\"value\": 10.3, \"unit\": \"mm\", \"min\": 8, \"max\": 14, \"label\": \"Femella: cares (10 + 0,3)\"},\n    \"nut_depth\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Fondària de l'allotjament\"},\n}\n\nD = PARAMS[\"diameter\"][\"value\"]\nH = PARAMS[\"height\"][\"value\"]\nN = int(PARAMS[\"lobe_count\"][\"value\"])\nLR = PARAMS[\"lobe_radius\"][\"value\"]\nCR = PARAMS[\"core_radius\"][\"value\"]\nBH = PARAMS[\"bolt_hole\"][\"value\"]\nNF = PARAMS[\"nut_flats\"][\"value\"]\nND = PARAMS[\"nut_depth\"][\"value\"]\n\nNC = NF / 0.866                       # across corners\nLR = min(LR, D / 2 - 6)\nCR = max(CR, NC / 2 + 2)\nCR = min(CR, D / 2 - 1)\nC = D / 2 - LR                        # lobe centre distance\nLR = max(LR, 1)\nBH = min(BH, NF - 2)\nND = min(ND, H - 3)\n\nresult = cq.Workplane(\"XY\").circle(CR).extrude(H)\nfor i in range(N):\n    a = 2 * math.pi * i / N\n    lobe = cq.Workplane(\"XY\").center(C * math.cos(a), C * math.sin(a)).circle(LR).extrude(H)\n    result = result.union(lobe)\n\n# Through hole and hex nut pocket from below\nresult = result.cut(cq.Workplane(\"XY\").circle(BH / 2).extrude(H))\nresult = result.cut(cq.Workplane(\"XY\").polygon(6, NC).extrude(ND))\n\nxs = [C * math.cos(2 * math.pi * i / N) for i in range(N)]\nys = [C * math.sin(2 * math.pi * i / N) for i in range(N)]\nEXPECTED_BBOX = (max(xs) - min(xs) + 2 * LR, max(ys) - min(ys) + 2 * LR, H)\nEXPECTED_HOLES = [(BH, 1)]\n",
+   "params": {
+    "diameter": {
+     "value": 50,
+     "unit": "mm",
+     "min": 25,
+     "max": 100,
+     "label": "Diàmetre total"
+    },
+    "height": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 50,
+     "label": "Alçada"
+    },
+    "lobe_count": {
+     "value": 7,
+     "unit": "count",
+     "min": 3,
+     "max": 8,
+     "label": "Nombre de lòbuls"
+    },
+    "lobe_radius": {
+     "value": 8.75,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Radi dels lòbuls"
+    },
+    "core_radius": {
+     "value": 13.75,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Radi del nucli central"
+    },
+    "bolt_hole": {
+     "value": 6.6,
+     "unit": "mm",
+     "min": 4,
+     "max": 9,
+     "label": "Forat del cargol (M6 = 6,6)"
+    },
+    "nut_flats": {
+     "value": 10.3,
+     "unit": "mm",
+     "min": 8,
+     "max": 14,
+     "label": "Femella: cares (10 + 0,3)"
+    },
+    "nut_depth": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Fondària de l'allotjament"
+    }
+   },
+   "values": {
+    "diameter": 50,
+    "height": 15,
+    "lobe_count": 7,
+    "lobe_radius": 8.75,
+    "core_radius": 13.75,
+    "bolt_hole": 6.6,
+    "nut_flats": 10.3,
+    "nut_depth": 5.5
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 24985.0794864988,
+    "area_mm2": 6313.262709972119,
+    "bbox": {
+     "xmin": -23.390744103414313,
+     "ymin": -24.592578572954636,
+     "zmin": 0.0,
+     "xmax": 25.0,
+     "ymax": 24.592578572954636,
+     "zmax": 15.0,
+     "size": [
+      48.39074410341431,
+      49.18515714590927,
+      15.0
+     ]
+    },
+    "expected_bbox": [
+     48.39074410341431,
+     49.18515714590927,
+     15.0
+    ],
+    "n_faces": 17,
+    "notes": [],
+    "center_of_mass": [
+     2.6245704337388562e-15,
+     -6.1485150392383714e-15,
+     7.5603012241788345
+    ],
+    "hole_list": [
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       10.25
+      ],
+      "length": 9.5
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 6.6,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      6.6,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "pom-estrellat-7",
+    "summary": "El pom ara té 7 lòbuls i 50 mm de diàmetre, amb la mateixa alçada de 15 mm, l'allotjament hexagonal per a la femella M6 i el forat passant.",
+    "changes": [
+     "Nombre de lòbuls: de 5 a 7.",
+     "Diàmetre total: de 40 a 50 mm.",
+     "Radi dels lòbuls: de 7 a 8,75 mm (+25 %), perquè els lòbuls es toquin bé amb 7 unitats.",
+     "Radi del nucli central: d'11 a 13,75 mm (+25 %), perquè els lòbuls se solapin amb el nucli i el pom sigui un sol sòlid."
+    ],
+    "assumptions": [
+     "He escalat lòbuls i nucli proporcionalment al nou diàmetre. Pots moure els sliders si vols lòbuls més marcats.",
+     "Alçada, forat del cargol i allotjament de la femella queden igual."
+    ],
+    "questions": [],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927998.10575
+  }
+ ]
+}

@@ -1,0 +1,716 @@
+{
+ "id": "eval-action-cam-mount",
+ "title": "action-camera-mount",
+ "created": 1793928009.3340318,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Action camera mount: two prongs 3 mm thick with a 3.2 mm gap between them and a 5 mm cross hole, standing on a 30 x 30 x 4 mm base with rounded corners and four 3.4 mm holes.",
+   "time": 1793928009.33404
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928011.7168455,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Add a third prong and make the base 40 x 30 mm.",
+   "time": 1793928013.0392873
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928014.805699,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Action camera mount: two prongs 3 mm thick with a 3.2 mm gap between them and a 5 mm cross hole, standing on a 30 x 30 x 4 mm base with rounded corners and four 3.4 mm holes.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base length (X)\"},\n    \"base_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base width (Y)\"},\n    \"base_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Base thickness\"},\n    \"corner_radius\": {\"value\": 4, \"unit\": \"mm\", \"min\": 0, \"max\": 12, \"label\": \"Base corner radius\"},\n    \"base_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Base hole diameter\"},\n    \"base_hole_inset\": {\"value\": 4, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Base hole distance from edges\"},\n    \"prong_thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Prong thickness\"},\n    \"prong_gap\": {\"value\": 3.2, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gap between prongs\"},\n    \"prong_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Prong width (X)\"},\n    \"prong_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Prong height above base\"},\n    \"cross_hole\": {\"value\": 5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Cross hole diameter\"},\n    \"cross_hole_height\": {\"value\": 9, \"unit\": \"mm\", \"min\": 4, \"max\": 35, \"label\": \"Cross hole height above base\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nTB = PARAMS[\"base_thickness\"][\"value\"]\nR = PARAMS[\"corner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nINS = PARAMS[\"base_hole_inset\"][\"value\"]\nTP = PARAMS[\"prong_thickness\"][\"value\"]\nGAP = PARAMS[\"prong_gap\"][\"value\"]\nPW = PARAMS[\"prong_width\"][\"value\"]\nPH = PARAMS[\"prong_height\"][\"value\"]\nCH = PARAMS[\"cross_hole\"][\"value\"]\nCZ = PARAMS[\"cross_hole_height\"][\"value\"]\n\n# Keep the geometry valid.\nR = min(R, L / 2 - 0.5, W / 2 - 0.5)\nINS = max(INS, BH / 2 + 1.5)\nINS = min(INS, L / 2 - BH / 2 - 0.5, W / 2 - BH / 2 - 0.5)\nGAP = min(GAP, W - 2 * TP - 2)\nTP = min(TP, (W - GAP) / 2 - 1)\nPW = min(PW, L - 2)\nCH = min(CH, PW - 3)\nPH = max(PH, CH / 2 + 2)\nCZ = min(max(CZ, CH / 2 + 1), PH - CH / 2 - 1)\n# Prong must not cover base holes\nTOTAL_Y = GAP + 2 * TP\n\n# Base\nbase = cq.Workplane(\"XY\").box(L, W, TB, centered=(True, True, False))\nif R > 0:\n    base = base.edges(\"|Z\").fillet(R)\npts = [(sx * (L / 2 - INS), sy * (W / 2 - INS)) for sx in (-1, 1) for sy in (-1, 1)]\nbase = base.cut(cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(TB))\n\n# Prongs: profile in XZ (rounded top), extruded along Y for each prong.\ndef prong(y_center):\n    p = (cq.Workplane(\"XY\").workplane(offset=TB - 0.01)\n         .center(0, y_center).rect(PW, TP).extrude(PH + 0.01))\n    return p\n\nprongs = prong(-(GAP / 2 + TP / 2)).union(prong(GAP / 2 + TP / 2))\n\n# Round the prong tops: cut the corners above the hole axis with a cylinder-intersection.\nzc = TB + CZ\nrr = min(PW / 2, TB + PH - zc)\nif rr > 0.5:\n    top_keep = (cq.Workplane(\"XZ\").center(0, zc).circle(PW / 2).extrude(TOTAL_Y, both=True))\n    lower_box = (cq.Workplane(\"XY\").box(PW, TOTAL_Y, zc - TB + 0.01, centered=(True, True, False))\n                 .translate((0, 0, TB - 0.01)))\n    prongs = prongs.intersect(top_keep.union(lower_box))\n\nbody = base.union(prongs)\n\n# Cross hole along Y through both prongs.\ncross = cq.Workplane(\"XZ\").center(0, zc).circle(CH / 2).extrude(TOTAL_Y, both=True)\nresult = body.cut(cross)\n\ntop = min(TB + PH, zc + PW / 2)\nEXPECTED_BBOX = (L, W, max(top, zc + CH / 2))\nEXPECTED_HOLES = [(BH, 4), (CH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Base screwed down by four bolts; 30 N pull on the cross screw (camera load)\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [p[0], p[1], 0], \"diameter\": BH} for p in pts],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, zc], \"diameter\": CH},\n               \"force\": [0, 0, 30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base length (X)\"},\n    \"base_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base width (Y)\"},\n    \"base_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Base thickness\"},\n    \"corner_radius\": {\"value\": 4, \"unit\": \"mm\", \"min\": 0, \"max\": 12, \"label\": \"Base corner radius\"},\n    \"base_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Base hole diameter\"},\n    \"base_hole_inset\": {\"value\": 4, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Base hole distance from edges\"},\n    \"prong_thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Prong thickness\"},\n    \"prong_gap\": {\"value\": 3.2, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gap between prongs\"},\n    \"prong_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Prong width (X)\"},\n    \"prong_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Prong height above base\"},\n    \"cross_hole\": {\"value\": 5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Cross hole diameter\"},\n    \"cross_hole_height\": {\"value\": 9, \"unit\": \"mm\", \"min\": 4, \"max\": 35, \"label\": \"Cross hole height above base\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nTB = PARAMS[\"base_thickness\"][\"value\"]\nR = PARAMS[\"corner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nINS = PARAMS[\"base_hole_inset\"][\"value\"]\nTP = PARAMS[\"prong_thickness\"][\"value\"]\nGAP = PARAMS[\"prong_gap\"][\"value\"]\nPW = PARAMS[\"prong_width\"][\"value\"]\nPH = PARAMS[\"prong_height\"][\"value\"]\nCH = PARAMS[\"cross_hole\"][\"value\"]\nCZ = PARAMS[\"cross_hole_height\"][\"value\"]\n\n# Keep the geometry valid.\nR = min(R, L / 2 - 0.5, W / 2 - 0.5)\nINS = max(INS, BH / 2 + 1.5)\nINS = min(INS, L / 2 - BH / 2 - 0.5, W / 2 - BH / 2 - 0.5)\nGAP = min(GAP, W - 2 * TP - 2)\nTP = min(TP, (W - GAP) / 2 - 1)\nPW = min(PW, L - 2)\nCH = min(CH, PW - 3)\nPH = max(PH, CH / 2 + 2)\nCZ = min(max(CZ, CH / 2 + 1), PH - CH / 2 - 1)\n# Prong must not cover base holes\nTOTAL_Y = GAP + 2 * TP\n\n# Base\nbase = cq.Workplane(\"XY\").box(L, W, TB, centered=(True, True, False))\nif R > 0:\n    base = base.edges(\"|Z\").fillet(R)\npts = [(sx * (L / 2 - INS), sy * (W / 2 - INS)) for sx in (-1, 1) for sy in (-1, 1)]\nbase = base.cut(cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(TB))\n\n# Prongs: profile in XZ (rounded top), extruded along Y for each prong.\ndef prong(y_center):\n    p = (cq.Workplane(\"XY\").workplane(offset=TB - 0.01)\n         .center(0, y_center).rect(PW, TP).extrude(PH + 0.01))\n    return p\n\nprongs = prong(-(GAP / 2 + TP / 2)).union(prong(GAP / 2 + TP / 2))\n\n# Round the prong tops: cut the corners above the hole axis with a cylinder-intersection.\nzc = TB + CZ\nrr = min(PW / 2, TB + PH - zc)\nif rr > 0.5:\n    top_keep = (cq.Workplane(\"XZ\").center(0, zc).circle(PW / 2).extrude(TOTAL_Y, both=True))\n    lower_box = (cq.Workplane(\"XY\").box(PW, TOTAL_Y, zc - TB + 0.01, centered=(True, True, False))\n                 .translate((0, 0, TB - 0.01)))\n    prongs = prongs.intersect(top_keep.union(lower_box))\n\nbody = base.union(prongs)\n\n# Cross hole along Y through both prongs.\ncross = cq.Workplane(\"XZ\").center(0, zc).circle(CH / 2).extrude(TOTAL_Y, both=True)\nresult = body.cut(cross)\n\ntop = min(TB + PH, zc + PW / 2)\nEXPECTED_BBOX = (L, W, max(top, zc + CH / 2))\nEXPECTED_HOLES = [(BH, 4), (CH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Base screwed down by four bolts; 30 N pull on the cross screw (camera load)\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [p[0], p[1], 0], \"diameter\": BH} for p in pts],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, zc], \"diameter\": CH},\n               \"force\": [0, 0, 30]}],\n}\n",
+   "params": {
+    "base_length": {
+     "value": 30,
+     "unit": "mm",
+     "min": 20,
+     "max": 100,
+     "label": "Base length (X)"
+    },
+    "base_width": {
+     "value": 30,
+     "unit": "mm",
+     "min": 20,
+     "max": 100,
+     "label": "Base width (Y)"
+    },
+    "base_thickness": {
+     "value": 4,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Base thickness"
+    },
+    "corner_radius": {
+     "value": 4,
+     "unit": "mm",
+     "min": 0,
+     "max": 12,
+     "label": "Base corner radius"
+    },
+    "base_hole": {
+     "value": 3.4,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Base hole diameter"
+    },
+    "base_hole_inset": {
+     "value": 4,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Base hole distance from edges"
+    },
+    "prong_thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Prong thickness"
+    },
+    "prong_gap": {
+     "value": 3.2,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gap between prongs"
+    },
+    "prong_width": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Prong width (X)"
+    },
+    "prong_height": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Prong height above base"
+    },
+    "cross_hole": {
+     "value": 5,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Cross hole diameter"
+    },
+    "cross_hole_height": {
+     "value": 9,
+     "unit": "mm",
+     "min": 4,
+     "max": 35,
+     "label": "Cross hole height above base"
+    }
+   },
+   "values": {
+    "base_length": 30,
+    "base_width": 30,
+    "base_thickness": 4,
+    "corner_radius": 4,
+    "base_hole": 3.4,
+    "base_hole_inset": 4,
+    "prong_thickness": 3,
+    "prong_gap": 3.2,
+    "prong_width": 15,
+    "prong_height": 15,
+    "cross_hole": 5,
+    "cross_hole_height": 9
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 4566.9470970936845,
+    "area_mm2": 3351.1369049724926,
+    "bbox": {
+     "xmin": -15.0,
+     "ymin": -15.0,
+     "zmin": 0.0,
+     "xmax": 15.0,
+     "ymax": 15.0,
+     "zmax": 19.0,
+     "size": [
+      30.0,
+      30.0,
+      19.0
+     ]
+    },
+    "expected_bbox": [
+     30.0,
+     30.0,
+     19.0
+    ],
+    "n_faces": 30,
+    "notes": [],
+    "center_of_mass": [
+     2.5107326961649276e-16,
+     -2.4893399311317642e-17,
+     4.302780457850671
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -11.0,
+       -11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -11.0,
+       11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       11.0,
+       -11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       11.0,
+       11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 5.0,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       13.0
+      ],
+      "length": 9.2
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 5.0,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      3.4,
+      4
+     ],
+     [
+      5.0,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Base screwed down by four bolts; 30 N pull on the cross screw (camera load)",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -11.0,
+        -11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -11.0,
+        11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        11.0,
+        -11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        11.0,
+        11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "y",
+        "center": [
+         0.0,
+         0.0,
+         13.0
+        ],
+        "diameter": 5.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "action-camera-mount",
+    "summary": "Action camera mount with a 30 × 30 × 4 mm base with rounded corners and four 3.4 mm holes. Two 3 mm prongs stand on it with a 3.2 mm gap and a 5 mm cross hole through both.",
+    "changes": [],
+    "assumptions": [
+     "Prong height is 15 mm and prong width (along X) is 15 mm. The user did not give them.",
+     "The cross hole is along Y, through both prongs, 9 mm above the base top. Its centre is 9 mm from the base top, so the prong top is 6 mm above the hole centre.",
+     "The prong top is rounded (radius = half the prong width) to follow the hole.",
+     "Base corner radius is 4 mm. The four holes are 4 mm from the edges.",
+     "Print with the base flat on the bed. The prongs then run along the layers in the weak direction, so use thick walls and 100% infill near the hole if it carries load.",
+     "Hole sizes are as given: 3.4 mm for M3 and 5 mm for the cross screw (an M5 screw is normally used)."
+    ],
+    "questions": [
+     "What are the prong height and width of your camera mount standard?",
+     "Do you want a counterbore or a nut pocket on the cross hole?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 70.0,
+     "outdoor": true,
+     "fluids": false,
+     "vibration": true
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928011.7154365
+  },
+  {
+   "number": 2,
+   "instruction": "Add a third prong and make the base 40 x 30 mm.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base length (X)\"},\n    \"base_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base width (Y)\"},\n    \"base_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Base thickness\"},\n    \"corner_radius\": {\"value\": 4, \"unit\": \"mm\", \"min\": 0, \"max\": 12, \"label\": \"Base corner radius\"},\n    \"base_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Base hole diameter\"},\n    \"base_hole_inset\": {\"value\": 4, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Base hole distance from edges\"},\n    \"prong_thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Prong thickness\"},\n    \"prong_gap\": {\"value\": 3.2, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gap between prongs\"},\n    \"prong_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Prong width (X)\"},\n    \"prong_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Prong height above base\"},\n    \"cross_hole\": {\"value\": 5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Cross hole diameter\"},\n    \"cross_hole_height\": {\"value\": 9, \"unit\": \"mm\", \"min\": 4, \"max\": 35, \"label\": \"Cross hole height above base\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nTB = PARAMS[\"base_thickness\"][\"value\"]\nR = PARAMS[\"corner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nINS = PARAMS[\"base_hole_inset\"][\"value\"]\nTP = PARAMS[\"prong_thickness\"][\"value\"]\nGAP = PARAMS[\"prong_gap\"][\"value\"]\nPW = PARAMS[\"prong_width\"][\"value\"]\nPH = PARAMS[\"prong_height\"][\"value\"]\nCH = PARAMS[\"cross_hole\"][\"value\"]\nCZ = PARAMS[\"cross_hole_height\"][\"value\"]\n\n# Keep the geometry valid.\nR = min(R, L / 2 - 0.5, W / 2 - 0.5)\nINS = max(INS, BH / 2 + 1.5)\nINS = min(INS, L / 2 - BH / 2 - 0.5, W / 2 - BH / 2 - 0.5)\nTP = min(TP, (W - 2) / 5)\nGAP = min(GAP, (W - 3 * TP - 2) / 2)\nGAP = max(GAP, 0.5)\nPW = min(PW, L - 2)\nCH = min(CH, PW - 3)\nPH = max(PH, CH / 2 + 2)\nCZ = min(max(CZ, CH / 2 + 1), PH - CH / 2 - 1)\nTOTAL_Y = 3 * TP + 2 * GAP\n\n# Base\nbase = cq.Workplane(\"XY\").box(L, W, TB, centered=(True, True, False))\nif R > 0:\n    base = base.edges(\"|Z\").fillet(R)\npts = [(sx * (L / 2 - INS), sy * (W / 2 - INS)) for sx in (-1, 1) for sy in (-1, 1)]\nbase = base.cut(cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(TB))\n\n# Three prongs, side by side along Y.\ndef prong(y_center):\n    return (cq.Workplane(\"XY\").workplane(offset=TB - 0.01)\n            .center(0, y_center).rect(PW, TP).extrude(PH + 0.01))\n\npitch = GAP + TP\nprongs = prong(-pitch).union(prong(0)).union(prong(pitch))\n\n# Round the prong tops.\nzc = TB + CZ\nrr = min(PW / 2, TB + PH - zc)\nif rr > 0.5:\n    top_keep = cq.Workplane(\"XZ\").center(0, zc).circle(PW / 2).extrude(TOTAL_Y, both=True)\n    lower_box = (cq.Workplane(\"XY\").box(PW, TOTAL_Y, zc - TB + 0.01, centered=(True, True, False))\n                 .translate((0, 0, TB - 0.01)))\n    prongs = prongs.intersect(top_keep.union(lower_box))\n\nbody = base.union(prongs)\n\n# Cross hole along Y through all three prongs.\ncross = cq.Workplane(\"XZ\").center(0, zc).circle(CH / 2).extrude(TOTAL_Y, both=True)\nresult = body.cut(cross)\n\ntop = min(TB + PH, zc + PW / 2)\nEXPECTED_BBOX = (L, W, max(top, zc + CH / 2))\nEXPECTED_HOLES = [(BH, 4), (CH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Base screwed down by four bolts; 30 N pull on the cross screw (camera load)\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [p[0], p[1], 0], \"diameter\": BH} for p in pts],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, zc], \"diameter\": CH},\n               \"force\": [0, 0, 30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"base_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base length (X)\"},\n    \"base_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Base width (Y)\"},\n    \"base_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Base thickness\"},\n    \"corner_radius\": {\"value\": 4, \"unit\": \"mm\", \"min\": 0, \"max\": 12, \"label\": \"Base corner radius\"},\n    \"base_hole\": {\"value\": 3.4, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Base hole diameter\"},\n    \"base_hole_inset\": {\"value\": 4, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Base hole distance from edges\"},\n    \"prong_thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Prong thickness\"},\n    \"prong_gap\": {\"value\": 3.2, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gap between prongs\"},\n    \"prong_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Prong width (X)\"},\n    \"prong_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Prong height above base\"},\n    \"cross_hole\": {\"value\": 5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Cross hole diameter\"},\n    \"cross_hole_height\": {\"value\": 9, \"unit\": \"mm\", \"min\": 4, \"max\": 35, \"label\": \"Cross hole height above base\"},\n}\n\nL = PARAMS[\"base_length\"][\"value\"]\nW = PARAMS[\"base_width\"][\"value\"]\nTB = PARAMS[\"base_thickness\"][\"value\"]\nR = PARAMS[\"corner_radius\"][\"value\"]\nBH = PARAMS[\"base_hole\"][\"value\"]\nINS = PARAMS[\"base_hole_inset\"][\"value\"]\nTP = PARAMS[\"prong_thickness\"][\"value\"]\nGAP = PARAMS[\"prong_gap\"][\"value\"]\nPW = PARAMS[\"prong_width\"][\"value\"]\nPH = PARAMS[\"prong_height\"][\"value\"]\nCH = PARAMS[\"cross_hole\"][\"value\"]\nCZ = PARAMS[\"cross_hole_height\"][\"value\"]\n\n# Keep the geometry valid.\nR = min(R, L / 2 - 0.5, W / 2 - 0.5)\nINS = max(INS, BH / 2 + 1.5)\nINS = min(INS, L / 2 - BH / 2 - 0.5, W / 2 - BH / 2 - 0.5)\nTP = min(TP, (W - 2) / 5)\nGAP = min(GAP, (W - 3 * TP - 2) / 2)\nGAP = max(GAP, 0.5)\nPW = min(PW, L - 2)\nCH = min(CH, PW - 3)\nPH = max(PH, CH / 2 + 2)\nCZ = min(max(CZ, CH / 2 + 1), PH - CH / 2 - 1)\nTOTAL_Y = 3 * TP + 2 * GAP\n\n# Base\nbase = cq.Workplane(\"XY\").box(L, W, TB, centered=(True, True, False))\nif R > 0:\n    base = base.edges(\"|Z\").fillet(R)\npts = [(sx * (L / 2 - INS), sy * (W / 2 - INS)) for sx in (-1, 1) for sy in (-1, 1)]\nbase = base.cut(cq.Workplane(\"XY\").pushPoints(pts).circle(BH / 2).extrude(TB))\n\n# Three prongs, side by side along Y.\ndef prong(y_center):\n    return (cq.Workplane(\"XY\").workplane(offset=TB - 0.01)\n            .center(0, y_center).rect(PW, TP).extrude(PH + 0.01))\n\npitch = GAP + TP\nprongs = prong(-pitch).union(prong(0)).union(prong(pitch))\n\n# Round the prong tops.\nzc = TB + CZ\nrr = min(PW / 2, TB + PH - zc)\nif rr > 0.5:\n    top_keep = cq.Workplane(\"XZ\").center(0, zc).circle(PW / 2).extrude(TOTAL_Y, both=True)\n    lower_box = (cq.Workplane(\"XY\").box(PW, TOTAL_Y, zc - TB + 0.01, centered=(True, True, False))\n                 .translate((0, 0, TB - 0.01)))\n    prongs = prongs.intersect(top_keep.union(lower_box))\n\nbody = base.union(prongs)\n\n# Cross hole along Y through all three prongs.\ncross = cq.Workplane(\"XZ\").center(0, zc).circle(CH / 2).extrude(TOTAL_Y, both=True)\nresult = body.cut(cross)\n\ntop = min(TB + PH, zc + PW / 2)\nEXPECTED_BBOX = (L, W, max(top, zc + CH / 2))\nEXPECTED_HOLES = [(BH, 4), (CH, 1)]\n\nLOAD_CASE = {\n    \"description\": \"Base screwed down by four bolts; 30 N pull on the cross screw (camera load)\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [p[0], p[1], 0], \"diameter\": BH} for p in pts],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, zc], \"diameter\": CH},\n               \"force\": [0, 0, 30]}],\n}\n",
+   "params": {
+    "base_length": {
+     "value": 40,
+     "unit": "mm",
+     "min": 20,
+     "max": 100,
+     "label": "Base length (X)"
+    },
+    "base_width": {
+     "value": 30,
+     "unit": "mm",
+     "min": 20,
+     "max": 100,
+     "label": "Base width (Y)"
+    },
+    "base_thickness": {
+     "value": 4,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Base thickness"
+    },
+    "corner_radius": {
+     "value": 4,
+     "unit": "mm",
+     "min": 0,
+     "max": 12,
+     "label": "Base corner radius"
+    },
+    "base_hole": {
+     "value": 3.4,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Base hole diameter"
+    },
+    "base_hole_inset": {
+     "value": 4,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Base hole distance from edges"
+    },
+    "prong_thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Prong thickness"
+    },
+    "prong_gap": {
+     "value": 3.2,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gap between prongs"
+    },
+    "prong_width": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Prong width (X)"
+    },
+    "prong_height": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Prong height above base"
+    },
+    "cross_hole": {
+     "value": 5,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Cross hole diameter"
+    },
+    "cross_hole_height": {
+     "value": 9,
+     "unit": "mm",
+     "min": 4,
+     "max": 35,
+     "label": "Cross hole height above base"
+    }
+   },
+   "values": {
+    "base_length": 40,
+    "base_width": 30,
+    "base_thickness": 4,
+    "corner_radius": 4,
+    "base_hole": 3.4,
+    "base_hole_inset": 4,
+    "prong_thickness": 3,
+    "prong_gap": 3.2,
+    "prong_width": 15,
+    "prong_height": 15,
+    "cross_hole": 5,
+    "cross_hole_height": 9
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 6350.523302876647,
+    "area_mm2": 4545.039883441723,
+    "bbox": {
+     "xmin": -20.0,
+     "ymin": -15.0,
+     "zmin": 0.0,
+     "xmax": 20.0,
+     "ymax": 15.0,
+     "zmax": 19.0,
+     "size": [
+      40.0,
+      30.0,
+      19.0
+     ]
+    },
+    "expected_bbox": [
+     40.0,
+     30.0,
+     19.0
+    ],
+    "n_faces": 41,
+    "notes": [],
+    "center_of_mass": [
+     4.692272519878982e-17,
+     8.055883670492679e-17,
+     4.484049587487075
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -16.0,
+       -11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -16.0,
+       11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       16.0,
+       -11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       16.0,
+       11.0,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 5.0,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       13.0
+      ],
+      "length": 15.4
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.4,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 5.0,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      3.4,
+      4
+     ],
+     [
+      5.0,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Base screwed down by four bolts; 30 N pull on the cross screw (camera load)",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -16.0,
+        -11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -16.0,
+        11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        16.0,
+        -11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        16.0,
+        11.0,
+        0.0
+       ],
+       "diameter": 3.4
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "y",
+        "center": [
+         0.0,
+         0.0,
+         13.0
+        ],
+        "diameter": 5.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "action-camera-mount-3-prongs",
+    "summary": "The action camera mount now has three prongs, each 3 mm thick, with a 3.2 mm gap between neighbouring prongs. The base is 40 x 30 mm. The 5 mm cross hole passes through all three prongs.",
+    "changes": [
+     "Base length (X): 30 → 40 mm.",
+     "Added a third prong. The prongs are now centred in Y with a gap between each pair, so the prong block is 15.4 mm wide in Y.",
+     "The cross hole now goes through all three prongs.",
+     "The size limits on prong thickness and gap now take three prongs into account.",
+     "The four base holes now sit at the corners of the longer base, so they are 32 mm apart in X."
+    ],
+    "assumptions": [
+     "The 3.2 mm gap is the same between both pairs of prongs.",
+     "The middle prong has the same thickness and size as the outer two."
+    ],
+    "questions": [],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928014.8037653
+  }
+ ]
+}

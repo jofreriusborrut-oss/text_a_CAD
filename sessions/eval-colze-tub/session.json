@@ -1,0 +1,484 @@
+{
+ "id": "eval-colze-tub",
+ "title": "colze-90-tub-20",
+ "created": 1793927995.9580836,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Colze de 90 graus per a tub de 20 mm de diàmetre exterior: paret de 2 mm, radi de curvatura de 30 mm i una boca femella de 12 mm de fondària a cada extrem perquè hi entri el tub.",
+   "time": 1793927995.9580922
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928002.2070193,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Afegeix una orella amb un forat de 5 mm a la part exterior del colze per fixar-lo a la paret.",
+   "time": 1793928005.5885565
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928009.225018,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Colze de 90 graus per a tub de 20 mm de diàmetre exterior: paret de 2 mm, radi de curvatura de 30 mm i una boca femella de 12 mm de fondària a cada extrem perquè hi entri el tub.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 20, \"unit\": \"mm\", \"min\": 6, \"max\": 60, \"label\": \"Diàmetre exterior del tub\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"bend_radius\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Radi de curvatura (a l'eix)\"},\n    \"socket_depth\": {\"value\": 12, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Fondària de la boca femella\"},\n    \"clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de la boca sobre el tub\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nW = PARAMS[\"wall\"][\"value\"]\nR = PARAMS[\"bend_radius\"][\"value\"]\nS = PARAMS[\"socket_depth\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\n\nW = min(W, D / 4)\nBORE = D + C                      # socket bore\nRS = BORE / 2 + W                 # outer radius of the whole elbow\nRI = D / 2 - W                    # inner radius of the bent part\nR = max(R, RS + 1)                # bend must be possible\n\n# Outer torus (axis Z through origin), cut to the first quadrant -> 90 deg bend.\ntorus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS)\n         .revolve(360, (0, 0, 0), (0, 1, 0)))\nsize = R + RS + 1\nquad = cq.Workplane(\"XY\").box(size, size, 2 * RS + 2, centered=(False, False, False)).translate((0, 0, -1))\nbend = torus.intersect(quad)\n\n# Outer sleeves at both ends.\nsleeve_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS).extrude(S)\nsleeve_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n            .pushPoints([(R, RS)]).circle(RS).extrude(S))\nbody = bend.union(sleeve_a).union(sleeve_b)\n\n# Inner passage of the bent part, cut to the same quadrant.\ninner_torus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RI)\n               .revolve(360, (0, 0, 0), (0, 1, 0)))\ninner_bend = inner_torus.intersect(quad)\nbody = body.cut(inner_bend)\n\n# Female sockets.\nsock_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(BORE / 2).extrude(S)\nsock_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n          .pushPoints([(R, RS)]).circle(BORE / 2).extrude(S))\nresult = body.cut(sock_a).cut(sock_b)\n\nEXPECTED_BBOX = (R + RS + S, R + RS + S, 2 * RS)\nEXPECTED_HOLES = [(BORE, 2)]\n\n# Tube stubs in the sockets (not part of the result).\nREFERENCE = [\n    cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n    cq.Workplane(\"YZ\").workplane(offset=-S * 0.99).pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 20, \"unit\": \"mm\", \"min\": 6, \"max\": 60, \"label\": \"Diàmetre exterior del tub\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"bend_radius\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Radi de curvatura (a l'eix)\"},\n    \"socket_depth\": {\"value\": 12, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Fondària de la boca femella\"},\n    \"clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de la boca sobre el tub\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nW = PARAMS[\"wall\"][\"value\"]\nR = PARAMS[\"bend_radius\"][\"value\"]\nS = PARAMS[\"socket_depth\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\n\nW = min(W, D / 4)\nBORE = D + C                      # socket bore\nRS = BORE / 2 + W                 # outer radius of the whole elbow\nRI = D / 2 - W                    # inner radius of the bent part\nR = max(R, RS + 1)                # bend must be possible\n\n# Outer torus (axis Z through origin), cut to the first quadrant -> 90 deg bend.\ntorus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS)\n         .revolve(360, (0, 0, 0), (0, 1, 0)))\nsize = R + RS + 1\nquad = cq.Workplane(\"XY\").box(size, size, 2 * RS + 2, centered=(False, False, False)).translate((0, 0, -1))\nbend = torus.intersect(quad)\n\n# Outer sleeves at both ends.\nsleeve_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS).extrude(S)\nsleeve_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n            .pushPoints([(R, RS)]).circle(RS).extrude(S))\nbody = bend.union(sleeve_a).union(sleeve_b)\n\n# Inner passage of the bent part, cut to the same quadrant.\ninner_torus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RI)\n               .revolve(360, (0, 0, 0), (0, 1, 0)))\ninner_bend = inner_torus.intersect(quad)\nbody = body.cut(inner_bend)\n\n# Female sockets.\nsock_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(BORE / 2).extrude(S)\nsock_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n          .pushPoints([(R, RS)]).circle(BORE / 2).extrude(S))\nresult = body.cut(sock_a).cut(sock_b)\n\nEXPECTED_BBOX = (R + RS + S, R + RS + S, 2 * RS)\nEXPECTED_HOLES = [(BORE, 2)]\n\n# Tube stubs in the sockets (not part of the result).\nREFERENCE = [\n    cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n    cq.Workplane(\"YZ\").workplane(offset=-S * 0.99).pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n]\n",
+   "params": {
+    "tube_diameter": {
+     "value": 20,
+     "unit": "mm",
+     "min": 6,
+     "max": 60,
+     "label": "Diàmetre exterior del tub"
+    },
+    "wall": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1,
+     "max": 6,
+     "label": "Gruix de paret"
+    },
+    "bend_radius": {
+     "value": 30,
+     "unit": "mm",
+     "min": 15,
+     "max": 120,
+     "label": "Radi de curvatura (a l'eix)"
+    },
+    "socket_depth": {
+     "value": 12,
+     "unit": "mm",
+     "min": 5,
+     "max": 40,
+     "label": "Fondària de la boca femella"
+    },
+    "clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc de la boca sobre el tub"
+    }
+   },
+   "values": {
+    "tube_diameter": 20,
+    "wall": 2,
+    "bend_radius": 30,
+    "socket_depth": 12,
+    "clearance": 0.3
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 15742.575686853941,
+    "area_mm2": 9854.352300210656,
+    "bbox": {
+     "xmin": -12.0,
+     "ymin": -12.0,
+     "zmin": -1e-07,
+     "xmax": 42.15,
+     "ymax": 42.1500001,
+     "zmax": 24.300000100000002,
+     "size": [
+      54.15,
+      54.1500001,
+      24.300000200000003
+     ]
+    },
+    "expected_bbox": [
+     54.15,
+     54.15,
+     24.3
+    ],
+    "n_faces": 10,
+    "notes": [],
+    "center_of_mass": [
+     18.465142276181407,
+     18.4651422761814,
+     12.149999999999995
+    ],
+    "hole_list": [
+     {
+      "diameter": 20.3,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       -6.0,
+       30.0,
+       12.15
+      ],
+      "length": 12.0
+     },
+     {
+      "diameter": 20.3,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       30.0,
+       -6.0,
+       12.15
+      ],
+      "length": 12.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 20.3,
+      "axis": "x",
+      "count": 1
+     },
+     {
+      "diameter": 20.3,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      20.3,
+      2
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 7464.424144929349,
+     "interference_mm3": 0.0
+    },
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "colze-90-tub-20",
+    "summary": "Colze de 90° per a tub de Ø20 mm, amb paret de 2 mm, radi de curvatura de 30 mm a l'eix i una boca femella de 12 mm de fondària a cada extrem.",
+    "changes": [
+     "EXPECTED_HOLES: he tret l'entrada del conducte de Ø16 mm. Dins del tram corbat és toroïdal, no un forat cilíndric, i per això el mesurador no el comptava. Només queden les dues boques cilíndriques.",
+     "REFERENCE: ara són dos trams de tub, un a cada boca, i no se solapen amb el colze."
+    ],
+    "assumptions": [
+     "Joc de 0,3 mm a la boca perquè el tub hi entri (Ø20,3 mm).",
+     "El conducte interior del tram corbat té Ø16 mm (Ø20 menys 2 × 2 mm de paret).",
+     "Entre cada boca i el conducte queda un petit sortint plànol on el tub fa topall.",
+     "Si imprimeixes el colze en 3D, comprova el joc amb el teu tub."
+    ],
+    "questions": [
+     "Vols que el tub faci topall al fons de la boca, com ara, o que el conducte tingui el mateix diàmetre que el tub?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": "EXPECTED_HOLES says 2 round hole(s) of diameter 16 mm but the solid has 0.\nRound holes actually found on the solid: 1 x d20.3 (axis x), 1 x d20.3 (axis y)."
+    },
+    {
+     "number": 2,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928002.2053263
+  },
+  {
+   "number": 2,
+   "instruction": "Afegeix una orella amb un forat de 5 mm a la part exterior del colze per fixar-lo a la paret.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\nimport math\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 20, \"unit\": \"mm\", \"min\": 6, \"max\": 60, \"label\": \"Diàmetre exterior del tub\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"bend_radius\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Radi de curvatura (a l'eix)\"},\n    \"socket_depth\": {\"value\": 12, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Fondària de la boca femella\"},\n    \"clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de la boca sobre el tub\"},\n    \"ear_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de l'orella\"},\n    \"ear_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada de l'orella\"},\n    \"ear_reach\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Distància del tub al centre del forat\"},\n    \"ear_hole\": {\"value\": 5, \"unit\": \"mm\", \"min\": 2, \"max\": 12, \"label\": \"Forat de l'orella\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nW = PARAMS[\"wall\"][\"value\"]\nR = PARAMS[\"bend_radius\"][\"value\"]\nS = PARAMS[\"socket_depth\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nEW = PARAMS[\"ear_width\"][\"value\"]\nER = PARAMS[\"ear_reach\"][\"value\"]\nHD = PARAMS[\"ear_hole\"][\"value\"]\n\nW = min(W, D / 4)\nBORE = D + C                      # socket bore\nRS = BORE / 2 + W                 # outer radius of the whole elbow\nRI = D / 2 - W                    # inner radius of the bent part\nR = max(R, RS + 1)                # bend must be possible\nET = min(ET, RS)\nEW = min(EW, 2 * RS)\nHD = min(HD, EW - 6)\nER = max(ER, HD / 2 + 3)\nRH = R + RS + ER                  # radius of the ear hole centre\n\n# Outer torus (axis Z through origin), cut to the first quadrant -> 90 deg bend.\ntorus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS)\n         .revolve(360, (0, 0, 0), (0, 1, 0)))\nsize = R + RS + 1\nquad = cq.Workplane(\"XY\").box(size, size, 2 * RS + 2, centered=(False, False, False)).translate((0, 0, -1))\nbend = torus.intersect(quad)\n\n# Outer sleeves at both ends.\nsleeve_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS).extrude(S)\nsleeve_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n            .pushPoints([(R, RS)]).circle(RS).extrude(S))\nbody = bend.union(sleeve_a).union(sleeve_b)\n\n# Mounting ear on the outside of the bend (45 deg), flat on z = 0.\near = (cq.Workplane(\"XY\").box(RH - R, EW, ET, centered=(False, True, False)).translate((R, 0, 0))\n       .union(cq.Workplane(\"XY\").center(RH, 0).circle(EW / 2).extrude(ET)))\near = ear.rotate((0, 0, 0), (0, 0, 1), 45)\nbody = body.union(ear)\n\n# Inner passage of the bent part, cut to the same quadrant.\ninner_torus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RI)\n               .revolve(360, (0, 0, 0), (0, 1, 0)))\ninner_bend = inner_torus.intersect(quad)\nbody = body.cut(inner_bend)\n\n# Female sockets.\nsock_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(BORE / 2).extrude(S)\nsock_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n          .pushPoints([(R, RS)]).circle(BORE / 2).extrude(S))\nbody = body.cut(sock_a).cut(sock_b)\n\n# Ear hole along Z.\near_hole = (cq.Workplane(\"XY\").center(RH, 0).circle(HD / 2).extrude(ET)\n            .rotate((0, 0, 0), (0, 0, 1), 45))\nresult = body.cut(ear_hole)\n\nHX = RH * math.cos(math.radians(45))\nEXT = max(R + RS, HX + EW / 2)\nEXPECTED_BBOX = (EXT + S, EXT + S, 2 * RS)\nEXPECTED_HOLES = [(BORE, 2), (HD, 1)]\n\n# Tube stubs in the sockets (not part of the result).\nREFERENCE = [\n    cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n    cq.Workplane(\"YZ\").workplane(offset=-S * 0.99).pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n]\n\nLOAD_CASE = {\n    \"description\": \"Colze cargolat a la paret per l'orella; 20 N de tracció al tub d'una boca\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [HX, HX, ET / 2], \"diameter\": HD}],\n    \"loads\": [{\"region\": {\"type\": \"box\", \"min\": [R - RS, -S, 0], \"max\": [R + RS, -S + 1, 2 * RS]},\n               \"force\": [0, -20, 0]}],\n}\n",
+   "code": "import cadquery as cq\nimport math\n\nPARAMS = {\n    \"tube_diameter\": {\"value\": 20, \"unit\": \"mm\", \"min\": 6, \"max\": 60, \"label\": \"Diàmetre exterior del tub\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"bend_radius\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Radi de curvatura (a l'eix)\"},\n    \"socket_depth\": {\"value\": 12, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Fondària de la boca femella\"},\n    \"clearance\": {\"value\": 0.3, \"unit\": \"mm\", \"min\": 0, \"max\": 1, \"label\": \"Joc de la boca sobre el tub\"},\n    \"ear_thickness\": {\"value\": 4, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de l'orella\"},\n    \"ear_width\": {\"value\": 16, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Amplada de l'orella\"},\n    \"ear_reach\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Distància del tub al centre del forat\"},\n    \"ear_hole\": {\"value\": 5, \"unit\": \"mm\", \"min\": 2, \"max\": 12, \"label\": \"Forat de l'orella\"},\n}\n\nD = PARAMS[\"tube_diameter\"][\"value\"]\nW = PARAMS[\"wall\"][\"value\"]\nR = PARAMS[\"bend_radius\"][\"value\"]\nS = PARAMS[\"socket_depth\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\nET = PARAMS[\"ear_thickness\"][\"value\"]\nEW = PARAMS[\"ear_width\"][\"value\"]\nER = PARAMS[\"ear_reach\"][\"value\"]\nHD = PARAMS[\"ear_hole\"][\"value\"]\n\nW = min(W, D / 4)\nBORE = D + C                      # socket bore\nRS = BORE / 2 + W                 # outer radius of the whole elbow\nRI = D / 2 - W                    # inner radius of the bent part\nR = max(R, RS + 1)                # bend must be possible\nET = min(ET, RS)\nEW = min(EW, 2 * RS)\nHD = min(HD, EW - 6)\nER = max(ER, HD / 2 + 3)\nRH = R + RS + ER                  # radius of the ear hole centre\n\n# Outer torus (axis Z through origin), cut to the first quadrant -> 90 deg bend.\ntorus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS)\n         .revolve(360, (0, 0, 0), (0, 1, 0)))\nsize = R + RS + 1\nquad = cq.Workplane(\"XY\").box(size, size, 2 * RS + 2, centered=(False, False, False)).translate((0, 0, -1))\nbend = torus.intersect(quad)\n\n# Outer sleeves at both ends.\nsleeve_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RS).extrude(S)\nsleeve_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n            .pushPoints([(R, RS)]).circle(RS).extrude(S))\nbody = bend.union(sleeve_a).union(sleeve_b)\n\n# Mounting ear on the outside of the bend (45 deg), flat on z = 0.\near = (cq.Workplane(\"XY\").box(RH - R, EW, ET, centered=(False, True, False)).translate((R, 0, 0))\n       .union(cq.Workplane(\"XY\").center(RH, 0).circle(EW / 2).extrude(ET)))\near = ear.rotate((0, 0, 0), (0, 0, 1), 45)\nbody = body.union(ear)\n\n# Inner passage of the bent part, cut to the same quadrant.\ninner_torus = (cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(RI)\n               .revolve(360, (0, 0, 0), (0, 1, 0)))\ninner_bend = inner_torus.intersect(quad)\nbody = body.cut(inner_bend)\n\n# Female sockets.\nsock_a = cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(BORE / 2).extrude(S)\nsock_b = (cq.Workplane(\"YZ\").workplane(offset=-S)\n          .pushPoints([(R, RS)]).circle(BORE / 2).extrude(S))\nbody = body.cut(sock_a).cut(sock_b)\n\n# Ear hole along Z.\near_hole = (cq.Workplane(\"XY\").center(RH, 0).circle(HD / 2).extrude(ET)\n            .rotate((0, 0, 0), (0, 0, 1), 45))\nresult = body.cut(ear_hole)\n\nHX = RH * math.cos(math.radians(45))\nEXT = max(R + RS, HX + EW / 2)\nEXPECTED_BBOX = (EXT + S, EXT + S, 2 * RS)\nEXPECTED_HOLES = [(BORE, 2), (HD, 1)]\n\n# Tube stubs in the sockets (not part of the result).\nREFERENCE = [\n    cq.Workplane(\"XZ\").pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n    cq.Workplane(\"YZ\").workplane(offset=-S * 0.99).pushPoints([(R, RS)]).circle(D / 2).extrude(S * 0.99),\n]\n\nLOAD_CASE = {\n    \"description\": \"Colze cargolat a la paret per l'orella; 20 N de tracció al tub d'una boca\",\n    \"fixed\": [{\"type\": \"hole\", \"axis\": \"z\", \"center\": [HX, HX, ET / 2], \"diameter\": HD}],\n    \"loads\": [{\"region\": {\"type\": \"box\", \"min\": [R - RS, -S, 0], \"max\": [R + RS, -S + 1, 2 * RS]},\n               \"force\": [0, -20, 0]}],\n}\n",
+   "params": {
+    "tube_diameter": {
+     "value": 20,
+     "unit": "mm",
+     "min": 6,
+     "max": 60,
+     "label": "Diàmetre exterior del tub"
+    },
+    "wall": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1,
+     "max": 6,
+     "label": "Gruix de paret"
+    },
+    "bend_radius": {
+     "value": 30,
+     "unit": "mm",
+     "min": 15,
+     "max": 120,
+     "label": "Radi de curvatura (a l'eix)"
+    },
+    "socket_depth": {
+     "value": 12,
+     "unit": "mm",
+     "min": 5,
+     "max": 40,
+     "label": "Fondària de la boca femella"
+    },
+    "clearance": {
+     "value": 0.3,
+     "unit": "mm",
+     "min": 0,
+     "max": 1,
+     "label": "Joc de la boca sobre el tub"
+    },
+    "ear_thickness": {
+     "value": 4,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gruix de l'orella"
+    },
+    "ear_width": {
+     "value": 16,
+     "unit": "mm",
+     "min": 10,
+     "max": 40,
+     "label": "Amplada de l'orella"
+    },
+    "ear_reach": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Distància del tub al centre del forat"
+    },
+    "ear_hole": {
+     "value": 5,
+     "unit": "mm",
+     "min": 2,
+     "max": 12,
+     "label": "Forat de l'orella"
+    }
+   },
+   "values": {
+    "tube_diameter": 20,
+    "wall": 2,
+    "bend_radius": 30,
+    "socket_depth": 12,
+    "clearance": 0.3,
+    "ear_thickness": 4,
+    "ear_width": 16,
+    "ear_reach": 12,
+    "ear_hole": 5
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 17231.544825698023,
+    "area_mm2": 10804.954025722049,
+    "bbox": {
+     "xmin": -12.0,
+     "ymin": -12.0,
+     "zmin": -1.000005675195232e-07,
+     "xmax": 46.28983220125155,
+     "ymax": 46.28983220125154,
+     "zmax": 24.300000100000002,
+     "size": [
+      58.28983220125155,
+      58.28983220125154,
+      24.300000200000568
+     ]
+    },
+    "expected_bbox": [
+     58.28983220125155,
+     58.28983220125155,
+     24.3
+    ],
+    "n_faces": 18,
+    "notes": [],
+    "center_of_mass": [
+     19.792905612039316,
+     19.79290561156612,
+     11.264184484531327
+    ],
+    "hole_list": [
+     {
+      "diameter": 5.0,
+      "axis": "z",
+      "direction": [
+       -0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       38.2898,
+       38.2898,
+       2.0
+      ],
+      "length": 4.0
+     },
+     {
+      "diameter": 20.3,
+      "axis": "x",
+      "direction": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "center": [
+       -6.0,
+       30.0,
+       12.15
+      ],
+      "length": 12.0
+     },
+     {
+      "diameter": 20.3,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       30.0,
+       -6.0,
+       12.15
+      ],
+      "length": 12.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 5.0,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 20.3,
+      "axis": "x",
+      "count": 1
+     },
+     {
+      "diameter": 20.3,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      20.3,
+      2
+     ],
+     [
+      5.0,
+      1
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 7464.424144929349,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Colze cargolat a la paret per l'orella; 20 N de tracció al tub d'una boca",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        38.28983220125155,
+        38.28983220125155,
+        2.0
+       ],
+       "diameter": 5.0
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "box",
+        "min": [
+         17.85,
+         -12.0,
+         0.0
+        ],
+        "max": [
+         42.15,
+         -11.0,
+         24.3
+        ]
+       },
+       "force": [
+        0.0,
+        -20.0,
+        0.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "colze-90-orella",
+    "summary": "He afegit una orella plana amb un forat de Ø5 mm a la part exterior del colze, a 45°. Queda enrasada amb la cara inferior (z = 0) perquè el colze es cargoli pla contra la paret.",
+    "changes": [
+     "Orella nova de 4 mm de gruix i 16 mm d'ample, amb l'extrem arrodonit, que surt radialment de l'exterior del colze.",
+     "Forat passant de Ø5 mm a l'orella, amb l'eix en Z (perpendicular a la paret).",
+     "Paràmetres nous: gruix, ample, sortint i diàmetre del forat de l'orella.",
+     "Mida total actualitzada: l'orella allarga un poc X i Y.",
+     "Càrrega d'estudi afegida: orella fixa i 20 N de tracció al tub."
+    ],
+    "assumptions": [
+     "L'orella és a la cara inferior (z = 0) i el forat va en Z. Així el pla del colze queda paral·lel a la paret.",
+     "L'orella és a 45°, al punt més exterior de la corba.",
+     "El forat de 5 mm és per a un cargol M4 (joc mitjà 4,5 mm) o per a un cargol de fusta. Si vols un M5, puja'l a 5,5 mm.",
+     "La mida de l'orella (4 mm de gruix, 16 mm d'ample, 12 mm del tub al centre del forat) és una estimació meva.",
+     "La càrrega de 20 N és una estimació."
+    ],
+    "questions": [
+     "Vols una orella a cada banda, o una de sola al centre del colze és suficient?",
+     "La paret és a la cara inferior, o prefereixes que el forat sigui paral·lel al pla del colze?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928009.2222285
+  }
+ ]
+}

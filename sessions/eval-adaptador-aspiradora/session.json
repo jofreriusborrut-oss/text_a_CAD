@@ -1,0 +1,492 @@
+{
+ "id": "eval-adaptador-aspiradora",
+ "title": "adaptador-aspiradora-35-50",
+ "created": 1793927984.9231777,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Adaptador per a l'aspiradora: d'un tub de 35 mm de diàmetre exterior a un de 50 mm de diàmetre interior, 70 mm de llarg en total, paret de 2,5 mm, amb un tram cònic al mig.",
+   "time": 1793927984.9231892
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927987.4933748,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Afegeix una pestanya exterior de 3 mm de gruix i 70 mm de diàmetre a l'extrem gran, amb 3 forats per a M4.",
+   "time": 1793927989.0017486
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927991.7321227,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Adaptador per a l'aspiradora: d'un tub de 35 mm de diàmetre exterior a un de 50 mm de diàmetre interior, 70 mm de llarg en total, paret de 2,5 mm, amb un tram cònic al mig.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"small_od\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Diàmetre exterior extrem prim\"},\n    \"large_od\": {\"value\": 50, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Diàmetre exterior extrem gros\"},\n    \"total_length\": {\"value\": 70, \"unit\": \"mm\", \"min\": 30, \"max\": 250, \"label\": \"Llargada total\"},\n    \"wall\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"small_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram prim\"},\n    \"large_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram gros\"},\n}\n\nD1 = PARAMS[\"small_od\"][\"value\"]\nD2 = PARAMS[\"large_od\"][\"value\"]\nL = PARAMS[\"total_length\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nL1 = PARAMS[\"small_len\"][\"value\"]\nL2 = PARAMS[\"large_len\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nD2 = max(D2, D1 + 1)\nT = min(T, D1 / 2 - 1)\nL1 = max(L1, 1)\nL2 = max(L2, 1)\nLC = max(L - L1 - L2, 5)           # conical section length\nL = L1 + LC + L2\n\nR1 = D1 / 2\nR2 = D2 / 2\n\n# Half profile (radius, z) revolved around the Z axis.\npts = [\n    (R1 - T, 0), (R1, 0), (R1, L1), (R2, L1 + LC), (R2, L),\n    (R2 - T, L), (R2 - T, L1 + LC), (R1 - T, L1),\n]\nresult = cq.Workplane(\"XZ\").polyline(pts).close().revolve(360, (0, 0, 0), (0, 1, 0))\n\nEXPECTED_BBOX = (D2, D2, L)\nEXPECTED_HOLES = [(D1 - 2 * T, 1), (D2 - 2 * T, 1)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"small_od\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Diàmetre exterior extrem prim\"},\n    \"large_od\": {\"value\": 50, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Diàmetre exterior extrem gros\"},\n    \"total_length\": {\"value\": 70, \"unit\": \"mm\", \"min\": 30, \"max\": 250, \"label\": \"Llargada total\"},\n    \"wall\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"small_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram prim\"},\n    \"large_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram gros\"},\n}\n\nD1 = PARAMS[\"small_od\"][\"value\"]\nD2 = PARAMS[\"large_od\"][\"value\"]\nL = PARAMS[\"total_length\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nL1 = PARAMS[\"small_len\"][\"value\"]\nL2 = PARAMS[\"large_len\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nD2 = max(D2, D1 + 1)\nT = min(T, D1 / 2 - 1)\nL1 = max(L1, 1)\nL2 = max(L2, 1)\nLC = max(L - L1 - L2, 5)           # conical section length\nL = L1 + LC + L2\n\nR1 = D1 / 2\nR2 = D2 / 2\n\n# Half profile (radius, z) revolved around the Z axis.\npts = [\n    (R1 - T, 0), (R1, 0), (R1, L1), (R2, L1 + LC), (R2, L),\n    (R2 - T, L), (R2 - T, L1 + LC), (R1 - T, L1),\n]\nresult = cq.Workplane(\"XZ\").polyline(pts).close().revolve(360, (0, 0, 0), (0, 1, 0))\n\nEXPECTED_BBOX = (D2, D2, L)\nEXPECTED_HOLES = [(D1 - 2 * T, 1), (D2 - 2 * T, 1)]\n",
+   "params": {
+    "small_od": {
+     "value": 35,
+     "unit": "mm",
+     "min": 15,
+     "max": 120,
+     "label": "Diàmetre exterior extrem prim"
+    },
+    "large_od": {
+     "value": 50,
+     "unit": "mm",
+     "min": 20,
+     "max": 150,
+     "label": "Diàmetre exterior extrem gros"
+    },
+    "total_length": {
+     "value": 70,
+     "unit": "mm",
+     "min": 30,
+     "max": 250,
+     "label": "Llargada total"
+    },
+    "wall": {
+     "value": 2.5,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 6,
+     "label": "Gruix de paret"
+    },
+    "small_len": {
+     "value": 20,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Llargada tram prim"
+    },
+    "large_len": {
+     "value": 20,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Llargada tram gros"
+    }
+   },
+   "values": {
+    "small_od": 35,
+    "large_od": 50,
+    "total_length": 70,
+    "wall": 2.5,
+    "small_len": 20,
+    "large_len": 20
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 21991.14857512857,
+    "area_mm2": 18453.286028254413,
+    "bbox": {
+     "xmin": -25.0,
+     "ymin": -25.0,
+     "zmin": 0.0,
+     "xmax": 25.0,
+     "ymax": 25.0,
+     "zmax": 70.0,
+     "size": [
+      50.0,
+      50.0,
+      70.0
+     ]
+    },
+    "expected_bbox": [
+     50.0,
+     50.0,
+     70.0
+    ],
+    "n_faces": 8,
+    "notes": [],
+    "center_of_mass": [
+     7.278886183010544e-15,
+     -4.216972565068449e-15,
+     38.080357142857146
+    ],
+    "hole_list": [
+     {
+      "diameter": 30.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       10.0
+      ],
+      "length": 20.0
+     },
+     {
+      "diameter": 45.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       60.0
+      ],
+      "length": 20.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 30.0,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 45.0,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      30.0,
+      1
+     ],
+     [
+      45.0,
+      1
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "adaptador-aspiradora-35-50",
+    "summary": "Adaptador revolucionat de 70 mm de llarg amb paret de 2,5 mm: un tram recte de Ø35 mm exterior, un tram cònic al mig i un tram recte de Ø50 mm exterior. El tub és buit de punta a punta.",
+    "changes": [],
+    "assumptions": [
+     "He interpretat que l'extrem prim entra dins del tub de 35 mm (Ø exterior 35 mm) i que l'extrem gros entra dins del tub de 50 mm (Ø exterior 50 mm). Si vols el contrari, per exemple que el tub de 35 mm entri dins l'adaptador, digues-m'ho.",
+     "Els trams rectes fan 20 mm cadascun i el con els 30 mm restants.",
+     "Les parets són de 2,5 mm a tot el recorregut, així que els diàmetres interiors són 30 i 45 mm.",
+     "No hi ha joc afegit. Mesura els tubs reals i ajusta els diàmetres.",
+     "Per imprimir-lo en 3D, posa'l dret sobre l'extrem gros. El con té menys de 45° d'inclinació i s'imprimeix sense suports."
+    ],
+    "questions": [
+     "Vols una petita nervadura o ressalt d'aturada al mig perquè els tubs no entrin massa?",
+     "Els tubs són rígids o és mànega flexible? Això em permetria afegir joc o un lleuger con d'encaix."
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": true,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927987.4918764
+  },
+  {
+   "number": 2,
+   "instruction": "Afegeix una pestanya exterior de 3 mm de gruix i 70 mm de diàmetre a l'extrem gran, amb 3 forats per a M4.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"small_od\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Diàmetre exterior extrem prim\"},\n    \"large_od\": {\"value\": 50, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Diàmetre exterior extrem gros\"},\n    \"total_length\": {\"value\": 70, \"unit\": \"mm\", \"min\": 30, \"max\": 250, \"label\": \"Llargada total\"},\n    \"wall\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"small_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram prim\"},\n    \"large_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram gros\"},\n    \"flange_diameter\": {\"value\": 70, \"unit\": \"mm\", \"min\": 30, \"max\": 200, \"label\": \"Diàmetre de la pestanya\"},\n    \"flange_thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de la pestanya\"},\n    \"flange_bcd\": {\"value\": 60, \"unit\": \"mm\", \"min\": 30, \"max\": 180, \"label\": \"Diàmetre del cercle de forats\"},\n    \"flange_hole\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Diàmetre dels forats (M4 = 4,5)\"},\n    \"flange_hole_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 2, \"max\": 8, \"label\": \"Nombre de forats\"},\n}\n\nD1 = PARAMS[\"small_od\"][\"value\"]\nD2 = PARAMS[\"large_od\"][\"value\"]\nL = PARAMS[\"total_length\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nL1 = PARAMS[\"small_len\"][\"value\"]\nL2 = PARAMS[\"large_len\"][\"value\"]\nFD = PARAMS[\"flange_diameter\"][\"value\"]\nFT = PARAMS[\"flange_thickness\"][\"value\"]\nBCD = PARAMS[\"flange_bcd\"][\"value\"]\nHOLE = PARAMS[\"flange_hole\"][\"value\"]\nN = int(PARAMS[\"flange_hole_count\"][\"value\"])\n\n# Keep the geometry valid for any slider combination.\nD2 = max(D2, D1 + 1)\nT = min(T, D1 / 2 - 1)\nL1 = max(L1, 1)\nL2 = max(L2, 1)\nLC = max(L - L1 - L2, 5)           # conical section length\nL = L1 + LC + L2\n\nR1 = D1 / 2\nR2 = D2 / 2\n\nFT = min(FT, L2)\nHOLE = min(HOLE, 10)\nFD = max(FD, D2 + 2 * HOLE + 4)\nBCD = min(max(BCD, D2 + HOLE + 2), FD - HOLE - 2)\n\n# Half profile (radius, z) revolved around the Z axis.\npts = [\n    (R1 - T, 0), (R1, 0), (R1, L1), (R2, L1 + LC), (R2, L),\n    (R2 - T, L), (R2 - T, L1 + LC), (R2 - T, L1),\n]\npts = [\n    (R1 - T, 0), (R1, 0), (R1, L1), (R2, L1 + LC), (R2, L),\n    (R2 - T, L), (R2 - T, L1 + LC), (R1 - T, L1),\n]\nbody = cq.Workplane(\"XZ\").polyline(pts).close().revolve(360, (0, 0, 0), (0, 1, 0))\n\n# Outer flange at the large end (flush with the top face), bore kept open.\nflange = (\n    cq.Workplane(\"XY\").workplane(offset=L - FT)\n    .circle(FD / 2).circle(R2 - T).extrude(FT)\n)\nbody = body.union(flange)\n\n# Bolt holes through the flange.\nholes = (\n    cq.Workplane(\"XY\").workplane(offset=L - FT - 0.01)\n    .polarArray(BCD / 2, 0, 360, N).circle(HOLE / 2).extrude(FT + 0.02)\n)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (FD, FD, L)\nEXPECTED_HOLES = [(D1 - 2 * T, 1), (D2 - 2 * T, 1), (HOLE, N)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"small_od\": {\"value\": 35, \"unit\": \"mm\", \"min\": 15, \"max\": 120, \"label\": \"Diàmetre exterior extrem prim\"},\n    \"large_od\": {\"value\": 50, \"unit\": \"mm\", \"min\": 20, \"max\": 150, \"label\": \"Diàmetre exterior extrem gros\"},\n    \"total_length\": {\"value\": 70, \"unit\": \"mm\", \"min\": 30, \"max\": 250, \"label\": \"Llargada total\"},\n    \"wall\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 6, \"label\": \"Gruix de paret\"},\n    \"small_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram prim\"},\n    \"large_len\": {\"value\": 20, \"unit\": \"mm\", \"min\": 5, \"max\": 100, \"label\": \"Llargada tram gros\"},\n    \"flange_diameter\": {\"value\": 70, \"unit\": \"mm\", \"min\": 30, \"max\": 200, \"label\": \"Diàmetre de la pestanya\"},\n    \"flange_thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de la pestanya\"},\n    \"flange_bcd\": {\"value\": 60, \"unit\": \"mm\", \"min\": 30, \"max\": 180, \"label\": \"Diàmetre del cercle de forats\"},\n    \"flange_hole\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Diàmetre dels forats (M4 = 4,5)\"},\n    \"flange_hole_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 2, \"max\": 8, \"label\": \"Nombre de forats\"},\n}\n\nD1 = PARAMS[\"small_od\"][\"value\"]\nD2 = PARAMS[\"large_od\"][\"value\"]\nL = PARAMS[\"total_length\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nL1 = PARAMS[\"small_len\"][\"value\"]\nL2 = PARAMS[\"large_len\"][\"value\"]\nFD = PARAMS[\"flange_diameter\"][\"value\"]\nFT = PARAMS[\"flange_thickness\"][\"value\"]\nBCD = PARAMS[\"flange_bcd\"][\"value\"]\nHOLE = PARAMS[\"flange_hole\"][\"value\"]\nN = int(PARAMS[\"flange_hole_count\"][\"value\"])\n\n# Keep the geometry valid for any slider combination.\nD2 = max(D2, D1 + 1)\nT = min(T, D1 / 2 - 1)\nL1 = max(L1, 1)\nL2 = max(L2, 1)\nLC = max(L - L1 - L2, 5)           # conical section length\nL = L1 + LC + L2\n\nR1 = D1 / 2\nR2 = D2 / 2\n\nFT = min(FT, L2)\nHOLE = min(HOLE, 10)\nFD = max(FD, D2 + 2 * HOLE + 4)\nBCD = min(max(BCD, D2 + HOLE + 2), FD - HOLE - 2)\n\n# Half profile (radius, z) revolved around the Z axis.\npts = [\n    (R1 - T, 0), (R1, 0), (R1, L1), (R2, L1 + LC), (R2, L),\n    (R2 - T, L), (R2 - T, L1 + LC), (R2 - T, L1),\n]\npts = [\n    (R1 - T, 0), (R1, 0), (R1, L1), (R2, L1 + LC), (R2, L),\n    (R2 - T, L), (R2 - T, L1 + LC), (R1 - T, L1),\n]\nbody = cq.Workplane(\"XZ\").polyline(pts).close().revolve(360, (0, 0, 0), (0, 1, 0))\n\n# Outer flange at the large end (flush with the top face), bore kept open.\nflange = (\n    cq.Workplane(\"XY\").workplane(offset=L - FT)\n    .circle(FD / 2).circle(R2 - T).extrude(FT)\n)\nbody = body.union(flange)\n\n# Bolt holes through the flange.\nholes = (\n    cq.Workplane(\"XY\").workplane(offset=L - FT - 0.01)\n    .polarArray(BCD / 2, 0, 360, N).circle(HOLE / 2).extrude(FT + 0.02)\n)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (FD, FD, L)\nEXPECTED_HOLES = [(D1 - 2 * T, 1), (D2 - 2 * T, 1), (HOLE, N)]\n",
+   "params": {
+    "small_od": {
+     "value": 35,
+     "unit": "mm",
+     "min": 15,
+     "max": 120,
+     "label": "Diàmetre exterior extrem prim"
+    },
+    "large_od": {
+     "value": 50,
+     "unit": "mm",
+     "min": 20,
+     "max": 150,
+     "label": "Diàmetre exterior extrem gros"
+    },
+    "total_length": {
+     "value": 70,
+     "unit": "mm",
+     "min": 30,
+     "max": 250,
+     "label": "Llargada total"
+    },
+    "wall": {
+     "value": 2.5,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 6,
+     "label": "Gruix de paret"
+    },
+    "small_len": {
+     "value": 20,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Llargada tram prim"
+    },
+    "large_len": {
+     "value": 20,
+     "unit": "mm",
+     "min": 5,
+     "max": 100,
+     "label": "Llargada tram gros"
+    },
+    "flange_diameter": {
+     "value": 70,
+     "unit": "mm",
+     "min": 30,
+     "max": 200,
+     "label": "Diàmetre de la pestanya"
+    },
+    "flange_thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gruix de la pestanya"
+    },
+    "flange_bcd": {
+     "value": 60,
+     "unit": "mm",
+     "min": 30,
+     "max": 180,
+     "label": "Diàmetre del cercle de forats"
+    },
+    "flange_hole": {
+     "value": 4.5,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Diàmetre dels forats (M4 = 4,5)"
+    },
+    "flange_hole_count": {
+     "value": 3,
+     "unit": "count",
+     "min": 2,
+     "max": 8,
+     "label": "Nombre de forats"
+    }
+   },
+   "values": {
+    "small_od": 35,
+    "large_od": 50,
+    "total_length": 70,
+    "wall": 2.5,
+    "small_len": 20,
+    "large_len": 20,
+    "flange_diameter": 70,
+    "flange_thickness": 3,
+    "flange_bcd": 60,
+    "flange_hole": 4.5,
+    "flange_hole_count": 3
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 27502.876536310992,
+    "area_mm2": 22443.501397395143,
+    "bbox": {
+     "xmin": -35.0,
+     "ymin": -35.0,
+     "zmin": 0.0,
+     "xmax": 35.0,
+     "ymax": 35.0,
+     "zmax": 70.0,
+     "size": [
+      70.0,
+      70.0,
+      70.0
+     ]
+    },
+    "expected_bbox": [
+     70.0,
+     70.0,
+     70.0
+    ],
+    "n_faces": 13,
+    "notes": [],
+    "center_of_mass": [
+     3.5177229106694796e-15,
+     -1.6947901214741324e-15,
+     44.17662114213506
+    ],
+    "hole_list": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -15.0,
+       -25.9808,
+       68.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -15.0,
+       25.9808,
+       68.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       30.0,
+       0.0,
+       68.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 30.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       10.0
+      ],
+      "length": 20.0
+     },
+     {
+      "diameter": 45.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       60.0
+      ],
+      "length": 20.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "count": 3
+     },
+     {
+      "diameter": 30.0,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 45.0,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      30.0,
+      1
+     ],
+     [
+      45.0,
+      1
+     ],
+     [
+      4.5,
+      3
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "adaptador-aspiradora-brida",
+    "summary": "He afegit una pestanya exterior de Ø70 × 3 mm a l'extrem gros de l'adaptador, amb 3 forats per a M4 repartits a 120° en un cercle de Ø60 mm. La pestanya queda a ras de l'extrem del tub i el pas interior es manté lliure.",
+    "changes": [
+     "Nova pestanya anular de Ø70 mm i 3 mm de gruix a l'extrem gros, al ras de la cara superior.",
+     "3 forats passants Ø4,5 mm (M4, joc mitjà) a la pestanya, repartits a 120°.",
+     "Nous paràmetres: diàmetre i gruix de la pestanya, diàmetre del cercle de forats, diàmetre dels forats i nombre de forats.",
+     "Mida total: Z segueix sent 70 mm; X i Y passen de 50 a 70 mm."
+    ],
+    "assumptions": [
+     "Forats M4 amb joc mitjà ISO 273: Ø4,5 mm.",
+     "Els forats són a un cercle de Ø60 mm, entre la paret del tub i la vora de la pestanya.",
+     "La pestanya és a l'extrem gros, a ras de la seva cara, i els forats són paral·lels a l'eix del tub."
+    ],
+    "questions": [
+     "Vols que els forats de la pestanya siguin ranurats o amb avellanat per a cargols de cap pla?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m4"
+   ],
+   "created": 1793927991.7297857
+  }
+ ]
+}

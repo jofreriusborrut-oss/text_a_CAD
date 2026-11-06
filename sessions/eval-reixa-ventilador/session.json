@@ -1,0 +1,632 @@
+{
+ "id": "eval-reixa-ventilador",
+ "title": "reixa-ventilador-80",
+ "created": 1793927999.6013846,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Reixa per a un ventilador de 80 mm: marc de 80 x 80 x 3 mm amb 4 forats de 4,5 mm a 71,5 mm entre centres, obertura circular de 76 mm amb 3 anells concèntrics i 4 radis.",
+   "time": 1793927999.6013937
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928002.9755487,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Posa-hi 6 radis en lloc de 4 i fes els anells d'1,5 mm d'ample.",
+   "time": 1793928004.4883263
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928007.864382,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Reixa per a un ventilador de 80 mm: marc de 80 x 80 x 3 mm amb 4 forats de 4,5 mm a 71,5 mm entre centres, obertura circular de 76 mm amb 3 anells concèntrics i 4 radis.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"frame_size\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Mida del marc (X i Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1, \"max\": 10, \"label\": \"Gruix\"},\n    \"hole_diameter\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Diàmetre dels forats de fixació\"},\n    \"hole_spacing\": {\"value\": 71.5, \"unit\": \"mm\", \"min\": 20, \"max\": 180, \"label\": \"Distància entre centres dels forats\"},\n    \"opening_diameter\": {\"value\": 76, \"unit\": \"mm\", \"min\": 20, \"max\": 190, \"label\": \"Diàmetre de l'obertura\"},\n    \"ring_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 1, \"max\": 8, \"label\": \"Nombre d'anells\"},\n    \"ring_width\": {\"value\": 1.5, \"unit\": \"mm\", \"min\": 0.8, \"max\": 5, \"label\": \"Amplada dels anells\"},\n    \"spoke_width\": {\"value\": 2, \"unit\": \"mm\", \"min\": 0.8, \"max\": 6, \"label\": \"Amplada dels radis\"},\n}\n\nL = PARAMS[\"frame_size\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nOD = PARAMS[\"opening_diameter\"][\"value\"]\nN = int(PARAMS[\"ring_count\"][\"value\"])\nRW = PARAMS[\"ring_width\"][\"value\"]\nSW = PARAMS[\"spoke_width\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nHD = min(HD, L / 4)\nHS = min(HS, L - HD - 2)\nOD = min(OD, L - 4)\nR = OD / 2\nRW = min(RW, R / (N + 1) * 0.8)\nSW = min(SW, R)\n\n# Frame with circular opening.\nframe = cq.Workplane(\"XY\").box(L, L, T, centered=(True, True, False))\nframe = frame.cut(cq.Workplane(\"XY\").circle(R).extrude(T))\n\n# Concentric rings.\ngrille = None\nfor i in range(1, N + 1):\n    r = R * i / (N + 1)\n    ring = cq.Workplane(\"XY\").circle(r + RW / 2).circle(r - RW / 2).extrude(T)\n    grille = ring if grille is None else grille.union(ring)\n\n# Four spokes (two crossing bars).\nbar1 = cq.Workplane(\"XY\").box(2 * R + 2, SW, T, centered=(True, True, False))\nbar2 = cq.Workplane(\"XY\").box(SW, 2 * R + 2, T, centered=(True, True, False))\ngrille = grille.union(bar1).union(bar2)\n\n# Trim the grille so it overlaps the frame slightly and does not stick out.\ntrim = cq.Workplane(\"XY\").circle(R + 0.5).extrude(T)\ngrille = grille.intersect(trim)\n\nbody = frame.union(grille)\n\n# Mounting holes in a square.\npts = [(sx * HS / 2, sy * HS / 2) for sx in (-1, 1) for sy in (-1, 1)]\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(T)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, L, T)\nEXPECTED_HOLES = [(HD, 4)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"frame_size\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Mida del marc (X i Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1, \"max\": 10, \"label\": \"Gruix\"},\n    \"hole_diameter\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Diàmetre dels forats de fixació\"},\n    \"hole_spacing\": {\"value\": 71.5, \"unit\": \"mm\", \"min\": 20, \"max\": 180, \"label\": \"Distància entre centres dels forats\"},\n    \"opening_diameter\": {\"value\": 76, \"unit\": \"mm\", \"min\": 20, \"max\": 190, \"label\": \"Diàmetre de l'obertura\"},\n    \"ring_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 1, \"max\": 8, \"label\": \"Nombre d'anells\"},\n    \"ring_width\": {\"value\": 1.5, \"unit\": \"mm\", \"min\": 0.8, \"max\": 5, \"label\": \"Amplada dels anells\"},\n    \"spoke_width\": {\"value\": 2, \"unit\": \"mm\", \"min\": 0.8, \"max\": 6, \"label\": \"Amplada dels radis\"},\n}\n\nL = PARAMS[\"frame_size\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nOD = PARAMS[\"opening_diameter\"][\"value\"]\nN = int(PARAMS[\"ring_count\"][\"value\"])\nRW = PARAMS[\"ring_width\"][\"value\"]\nSW = PARAMS[\"spoke_width\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nHD = min(HD, L / 4)\nHS = min(HS, L - HD - 2)\nOD = min(OD, L - 4)\nR = OD / 2\nRW = min(RW, R / (N + 1) * 0.8)\nSW = min(SW, R)\n\n# Frame with circular opening.\nframe = cq.Workplane(\"XY\").box(L, L, T, centered=(True, True, False))\nframe = frame.cut(cq.Workplane(\"XY\").circle(R).extrude(T))\n\n# Concentric rings.\ngrille = None\nfor i in range(1, N + 1):\n    r = R * i / (N + 1)\n    ring = cq.Workplane(\"XY\").circle(r + RW / 2).circle(r - RW / 2).extrude(T)\n    grille = ring if grille is None else grille.union(ring)\n\n# Four spokes (two crossing bars).\nbar1 = cq.Workplane(\"XY\").box(2 * R + 2, SW, T, centered=(True, True, False))\nbar2 = cq.Workplane(\"XY\").box(SW, 2 * R + 2, T, centered=(True, True, False))\ngrille = grille.union(bar1).union(bar2)\n\n# Trim the grille so it overlaps the frame slightly and does not stick out.\ntrim = cq.Workplane(\"XY\").circle(R + 0.5).extrude(T)\ngrille = grille.intersect(trim)\n\nbody = frame.union(grille)\n\n# Mounting holes in a square.\npts = [(sx * HS / 2, sy * HS / 2) for sx in (-1, 1) for sy in (-1, 1)]\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(T)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, L, T)\nEXPECTED_HOLES = [(HD, 4)]\n",
+   "params": {
+    "frame_size": {
+     "value": 80,
+     "unit": "mm",
+     "min": 40,
+     "max": 200,
+     "label": "Mida del marc (X i Y)"
+    },
+    "thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1,
+     "max": 10,
+     "label": "Gruix"
+    },
+    "hole_diameter": {
+     "value": 4.5,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Diàmetre dels forats de fixació"
+    },
+    "hole_spacing": {
+     "value": 71.5,
+     "unit": "mm",
+     "min": 20,
+     "max": 180,
+     "label": "Distància entre centres dels forats"
+    },
+    "opening_diameter": {
+     "value": 76,
+     "unit": "mm",
+     "min": 20,
+     "max": 190,
+     "label": "Diàmetre de l'obertura"
+    },
+    "ring_count": {
+     "value": 3,
+     "unit": "count",
+     "min": 1,
+     "max": 8,
+     "label": "Nombre d'anells"
+    },
+    "ring_width": {
+     "value": 1.5,
+     "unit": "mm",
+     "min": 0.8,
+     "max": 5,
+     "label": "Amplada dels anells"
+    },
+    "spoke_width": {
+     "value": 2,
+     "unit": "mm",
+     "min": 0.8,
+     "max": 6,
+     "label": "Amplada dels radis"
+    }
+   },
+   "values": {
+    "frame_size": 80,
+    "thickness": 3,
+    "hole_diameter": 4.5,
+    "hole_spacing": 71.5,
+    "opening_diameter": 76,
+    "ring_count": 3,
+    "ring_width": 1.5,
+    "spoke_width": 2
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 7803.209325006652,
+    "area_mm2": 9808.20183392294,
+    "bbox": {
+     "xmin": -40.0,
+     "ymin": -40.0,
+     "zmin": 0.0,
+     "xmax": 40.0,
+     "ymax": 40.0,
+     "zmax": 3.0,
+     "size": [
+      80.0,
+      80.0,
+      3.0
+     ]
+    },
+    "expected_bbox": [
+     80.0,
+     80.0,
+     3.0
+    ],
+    "n_faces": 70,
+    "notes": [],
+    "center_of_mass": [
+     -7.130186576266356e-14,
+     -4.399910801047077e-15,
+     1.5000000000000013
+    ],
+    "hole_list": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -35.75,
+       -35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -35.75,
+       35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       35.75,
+       -35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       35.75,
+       35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 17.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 36.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 55.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 76.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 17.5,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 36.5,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 55.5,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 76.0,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      4.5,
+      4
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "reixa-ventilador-80",
+    "summary": "Reixa per a ventilador de 80 mm: marc de 80 × 80 × 3 mm amb 4 forats de Ø4,5 mm a 71,5 mm entre centres, obertura circular de Ø76 mm amb 3 anells concèntrics i 4 radis.",
+    "changes": [],
+    "assumptions": [
+     "Els 3 anells estan repartits a intervals iguals dins l'obertura (a 1/4, 2/4 i 3/4 del radi).",
+     "Amplada dels anells 1,5 mm i dels radis 2 mm; les mides són orientatives, ajusta-les als sliders.",
+     "Els 4 radis són dues barres creuades (a 0° i 90°), alineades amb els eixos X i Y.",
+     "Reixa de gruix uniforme (3 mm): anells i radis tenen el mateix gruix que el marc.",
+     "Els forats formen un quadrat de 71,5 mm entre centres, centrat a l'origen.",
+     "Per imprimir-la en 3D, l'he plantejada plana sobre el llit."
+    ],
+    "questions": [
+     "Vols que els anells i els radis siguin més prims que el marc (per exemple 1,5 mm) per no frenar tant el flux d'aire?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": true,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928002.9736521
+  },
+  {
+   "number": 2,
+   "instruction": "Posa-hi 6 radis en lloc de 4 i fes els anells d'1,5 mm d'ample.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"frame_size\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Mida del marc (X i Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1, \"max\": 10, \"label\": \"Gruix\"},\n    \"hole_diameter\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Diàmetre dels forats de fixació\"},\n    \"hole_spacing\": {\"value\": 71.5, \"unit\": \"mm\", \"min\": 20, \"max\": 180, \"label\": \"Distància entre centres dels forats\"},\n    \"opening_diameter\": {\"value\": 76, \"unit\": \"mm\", \"min\": 20, \"max\": 190, \"label\": \"Diàmetre de l'obertura\"},\n    \"ring_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 1, \"max\": 8, \"label\": \"Nombre d'anells\"},\n    \"ring_width\": {\"value\": 1.5, \"unit\": \"mm\", \"min\": 0.8, \"max\": 5, \"label\": \"Amplada dels anells\"},\n    \"spoke_count\": {\"value\": 6, \"unit\": \"count\", \"min\": 2, \"max\": 12, \"label\": \"Nombre de radis\"},\n    \"spoke_width\": {\"value\": 2, \"unit\": \"mm\", \"min\": 0.8, \"max\": 6, \"label\": \"Amplada dels radis\"},\n}\n\nL = PARAMS[\"frame_size\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nOD = PARAMS[\"opening_diameter\"][\"value\"]\nN = int(PARAMS[\"ring_count\"][\"value\"])\nRW = PARAMS[\"ring_width\"][\"value\"]\nNS = int(PARAMS[\"spoke_count\"][\"value\"])\nSW = PARAMS[\"spoke_width\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nHD = min(HD, L / 4)\nHS = min(HS, L - HD - 2)\nOD = min(OD, L - 4)\nR = OD / 2\nRW = min(RW, R / (N + 1) * 0.8)\nSW = min(SW, R)\nNS = max(NS, 1)\n\n# Frame with circular opening.\nframe = cq.Workplane(\"XY\").box(L, L, T, centered=(True, True, False))\nframe = frame.cut(cq.Workplane(\"XY\").circle(R).extrude(T))\n\n# Concentric rings.\ngrille = None\nfor i in range(1, N + 1):\n    r = R * i / (N + 1)\n    ring = cq.Workplane(\"XY\").circle(r + RW / 2).circle(r - RW / 2).extrude(T)\n    grille = ring if grille is None else grille.union(ring)\n\n# Spokes: radial bars evenly spaced around the centre.\nfor k in range(NS):\n    bar = (\n        cq.Workplane(\"XY\")\n        .box(R + 1, SW, T, centered=(False, True, False))\n        .rotate((0, 0, 0), (0, 0, 1), k * 360.0 / NS)\n    )\n    grille = grille.union(bar)\n\n# Trim the grille so it overlaps the frame slightly and does not stick out.\ntrim = cq.Workplane(\"XY\").circle(R + 0.5).extrude(T)\ngrille = grille.intersect(trim)\n\nbody = frame.union(grille)\n\n# Mounting holes in a square.\npts = [(sx * HS / 2, sy * HS / 2) for sx in (-1, 1) for sy in (-1, 1)]\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(T)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, L, T)\nEXPECTED_HOLES = [(HD, 4)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"frame_size\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Mida del marc (X i Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1, \"max\": 10, \"label\": \"Gruix\"},\n    \"hole_diameter\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 2, \"max\": 8, \"label\": \"Diàmetre dels forats de fixació\"},\n    \"hole_spacing\": {\"value\": 71.5, \"unit\": \"mm\", \"min\": 20, \"max\": 180, \"label\": \"Distància entre centres dels forats\"},\n    \"opening_diameter\": {\"value\": 76, \"unit\": \"mm\", \"min\": 20, \"max\": 190, \"label\": \"Diàmetre de l'obertura\"},\n    \"ring_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 1, \"max\": 8, \"label\": \"Nombre d'anells\"},\n    \"ring_width\": {\"value\": 1.5, \"unit\": \"mm\", \"min\": 0.8, \"max\": 5, \"label\": \"Amplada dels anells\"},\n    \"spoke_count\": {\"value\": 6, \"unit\": \"count\", \"min\": 2, \"max\": 12, \"label\": \"Nombre de radis\"},\n    \"spoke_width\": {\"value\": 2, \"unit\": \"mm\", \"min\": 0.8, \"max\": 6, \"label\": \"Amplada dels radis\"},\n}\n\nL = PARAMS[\"frame_size\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHS = PARAMS[\"hole_spacing\"][\"value\"]\nOD = PARAMS[\"opening_diameter\"][\"value\"]\nN = int(PARAMS[\"ring_count\"][\"value\"])\nRW = PARAMS[\"ring_width\"][\"value\"]\nNS = int(PARAMS[\"spoke_count\"][\"value\"])\nSW = PARAMS[\"spoke_width\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nHD = min(HD, L / 4)\nHS = min(HS, L - HD - 2)\nOD = min(OD, L - 4)\nR = OD / 2\nRW = min(RW, R / (N + 1) * 0.8)\nSW = min(SW, R)\nNS = max(NS, 1)\n\n# Frame with circular opening.\nframe = cq.Workplane(\"XY\").box(L, L, T, centered=(True, True, False))\nframe = frame.cut(cq.Workplane(\"XY\").circle(R).extrude(T))\n\n# Concentric rings.\ngrille = None\nfor i in range(1, N + 1):\n    r = R * i / (N + 1)\n    ring = cq.Workplane(\"XY\").circle(r + RW / 2).circle(r - RW / 2).extrude(T)\n    grille = ring if grille is None else grille.union(ring)\n\n# Spokes: radial bars evenly spaced around the centre.\nfor k in range(NS):\n    bar = (\n        cq.Workplane(\"XY\")\n        .box(R + 1, SW, T, centered=(False, True, False))\n        .rotate((0, 0, 0), (0, 0, 1), k * 360.0 / NS)\n    )\n    grille = grille.union(bar)\n\n# Trim the grille so it overlaps the frame slightly and does not stick out.\ntrim = cq.Workplane(\"XY\").circle(R + 0.5).extrude(T)\ngrille = grille.intersect(trim)\n\nbody = frame.union(grille)\n\n# Mounting holes in a square.\npts = [(sx * HS / 2, sy * HS / 2) for sx in (-1, 1) for sy in (-1, 1)]\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(T)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, L, T)\nEXPECTED_HOLES = [(HD, 4)]\n",
+   "params": {
+    "frame_size": {
+     "value": 80,
+     "unit": "mm",
+     "min": 40,
+     "max": 200,
+     "label": "Mida del marc (X i Y)"
+    },
+    "thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1,
+     "max": 10,
+     "label": "Gruix"
+    },
+    "hole_diameter": {
+     "value": 4.5,
+     "unit": "mm",
+     "min": 2,
+     "max": 8,
+     "label": "Diàmetre dels forats de fixació"
+    },
+    "hole_spacing": {
+     "value": 71.5,
+     "unit": "mm",
+     "min": 20,
+     "max": 180,
+     "label": "Distància entre centres dels forats"
+    },
+    "opening_diameter": {
+     "value": 76,
+     "unit": "mm",
+     "min": 20,
+     "max": 190,
+     "label": "Diàmetre de l'obertura"
+    },
+    "ring_count": {
+     "value": 3,
+     "unit": "count",
+     "min": 1,
+     "max": 8,
+     "label": "Nombre d'anells"
+    },
+    "ring_width": {
+     "value": 1.5,
+     "unit": "mm",
+     "min": 0.8,
+     "max": 5,
+     "label": "Amplada dels anells"
+    },
+    "spoke_count": {
+     "value": 6,
+     "unit": "count",
+     "min": 2,
+     "max": 12,
+     "label": "Nombre de radis"
+    },
+    "spoke_width": {
+     "value": 2,
+     "unit": "mm",
+     "min": 0.8,
+     "max": 6,
+     "label": "Amplada dels radis"
+    }
+   },
+   "values": {
+    "frame_size": 80,
+    "thickness": 3,
+    "hole_diameter": 4.5,
+    "hole_spacing": 71.5,
+    "opening_diameter": 76,
+    "ring_count": 3,
+    "ring_width": 1.5,
+    "spoke_count": 6,
+    "spoke_width": 2
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 8185.934121856238,
+    "area_mm2": 10342.639759692236,
+    "bbox": {
+     "xmin": -40.0,
+     "ymin": -40.0,
+     "zmin": 0.0,
+     "xmax": 40.0,
+     "ymax": 40.0,
+     "zmax": 3.0,
+     "size": [
+      80.0,
+      80.0,
+      3.0
+     ]
+    },
+    "expected_bbox": [
+     80.0,
+     80.0,
+     3.0
+    ],
+    "n_faces": 100,
+    "notes": [],
+    "center_of_mass": [
+     -2.1757052686162763e-13,
+     -2.797057583935389e-14,
+     1.5000000000000004
+    ],
+    "hole_list": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -35.75,
+       -35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -35.75,
+       35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       35.75,
+       -35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       35.75,
+       35.75,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 17.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 36.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 55.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 76.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       0.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 17.5,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 36.5,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 55.5,
+      "axis": "z",
+      "count": 1
+     },
+     {
+      "diameter": 76.0,
+      "axis": "z",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      4.5,
+      4
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "reixa-ventilador-80",
+    "summary": "La reixa ara té 6 radis repartits cada 60° en lloc de 4. Els anells ja eren d'1,5 mm d'ample, així que es queden igual.",
+    "changes": [
+     "Radis: de 4 a 6, repartits uniformement cada 60°. Hi ha un paràmetre nou \"Nombre de radis\".",
+     "Amplada dels anells: ja era 1,5 mm, sense canvis."
+    ],
+    "assumptions": [
+     "L'amplada dels radis es manté en 2 mm."
+    ],
+    "questions": [],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928007.8595476
+  }
+ ]
+}

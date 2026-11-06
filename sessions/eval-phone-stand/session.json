@@ -1,0 +1,453 @@
+{
+ "id": "eval-phone-stand",
+ "title": "phone-stand-20deg",
+ "created": 1793927984.8882594,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Phone stand: 80 mm wide, back leaning 20 degrees from vertical, a 12 mm slot for the phone with a 10 mm front lip, and a 15 mm wide cut-out in the middle of the lip for the charging cable.",
+   "time": 1793927984.8882694
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927987.3139408,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Make it 100 mm wide and add four round pockets, 8 mm diameter and 1 mm deep, under the base for rubber feet.",
+   "time": 1793927987.8954682
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927990.5163057,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Phone stand: 80 mm wide, back leaning 20 degrees from vertical, a 12 mm slot for the phone with a 10 mm front lip, and a 15 mm wide cut-out in the middle of the lip for the charging cable.",
+   "parent": null,
+   "base_code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 80, \"unit\": \"mm\", \"min\": 50, \"max\": 150, \"label\": \"Width (X)\"},\n    \"base_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Base thickness\"},\n    \"slot_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 25, \"label\": \"Phone slot width\"},\n    \"lip_height\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 30, \"label\": \"Front lip height\"},\n    \"lip_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Front lip thickness\"},\n    \"back_height\": {\"value\": 90, \"unit\": \"mm\", \"min\": 40, \"max\": 160, \"label\": \"Back plate height above base\"},\n    \"back_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Back plate thickness\"},\n    \"back_angle\": {\"value\": 20, \"unit\": \"deg\", \"min\": 5, \"max\": 40, \"label\": \"Back lean from vertical\"},\n    \"rear_extension\": {\"value\": 25, \"unit\": \"mm\", \"min\": 0, \"max\": 60, \"label\": \"Base extension behind the back plate\"},\n    \"cable_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Cable cut-out width\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"base_thickness\"][\"value\"]\nS = PARAMS[\"slot_width\"][\"value\"]\nLH = PARAMS[\"lip_height\"][\"value\"]\nLT = PARAMS[\"lip_thickness\"][\"value\"]\nBH = PARAMS[\"back_height\"][\"value\"]\nBT = PARAMS[\"back_thickness\"][\"value\"]\nANG = PARAMS[\"back_angle\"][\"value\"]\nEXT = PARAMS[\"rear_extension\"][\"value\"]\nCW = PARAMS[\"cable_width\"][\"value\"]\n\nCW = min(CW, W - 10)\noff = BH * math.tan(math.radians(ANG))   # how far the top of the plate leans back\nyf = LT + S                              # front face of the back plate at the floor\nyb = yf + BT                             # rear face of the back plate at the floor\nD = yb + max(EXT, off)                   # total depth\n\n# Side profile in the YZ plane (local x = Y, local y = Z), extruded along X.\nprofile = [\n    (0, 0), (D, 0), (D, T), (yb, T),\n    (yb + off, T + BH), (yf + off, T + BH),\n    (yf, T), (LT, T), (LT, T + LH), (0, T + LH),\n]\nbody = cq.Workplane(\"YZ\").polyline(profile).close().extrude(W / 2, both=True)\n\n# Cable cut-out in the middle of the lip, down to the slot floor.\ncut = (\n    cq.Workplane(\"XY\")\n    .box(CW, LT + 2, LH + 1, centered=(True, False, False))\n    .translate((0, -1, T))\n)\nresult = body.cut(cut).translate((0, -D / 2, 0))\n\nEXPECTED_BBOX = (W, D, T + BH)\nEXPECTED_HOLES = []\n",
+   "code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 80, \"unit\": \"mm\", \"min\": 50, \"max\": 150, \"label\": \"Width (X)\"},\n    \"base_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Base thickness\"},\n    \"slot_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 25, \"label\": \"Phone slot width\"},\n    \"lip_height\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 30, \"label\": \"Front lip height\"},\n    \"lip_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Front lip thickness\"},\n    \"back_height\": {\"value\": 90, \"unit\": \"mm\", \"min\": 40, \"max\": 160, \"label\": \"Back plate height above base\"},\n    \"back_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Back plate thickness\"},\n    \"back_angle\": {\"value\": 20, \"unit\": \"deg\", \"min\": 5, \"max\": 40, \"label\": \"Back lean from vertical\"},\n    \"rear_extension\": {\"value\": 25, \"unit\": \"mm\", \"min\": 0, \"max\": 60, \"label\": \"Base extension behind the back plate\"},\n    \"cable_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Cable cut-out width\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"base_thickness\"][\"value\"]\nS = PARAMS[\"slot_width\"][\"value\"]\nLH = PARAMS[\"lip_height\"][\"value\"]\nLT = PARAMS[\"lip_thickness\"][\"value\"]\nBH = PARAMS[\"back_height\"][\"value\"]\nBT = PARAMS[\"back_thickness\"][\"value\"]\nANG = PARAMS[\"back_angle\"][\"value\"]\nEXT = PARAMS[\"rear_extension\"][\"value\"]\nCW = PARAMS[\"cable_width\"][\"value\"]\n\nCW = min(CW, W - 10)\noff = BH * math.tan(math.radians(ANG))   # how far the top of the plate leans back\nyf = LT + S                              # front face of the back plate at the floor\nyb = yf + BT                             # rear face of the back plate at the floor\nD = yb + max(EXT, off)                   # total depth\n\n# Side profile in the YZ plane (local x = Y, local y = Z), extruded along X.\nprofile = [\n    (0, 0), (D, 0), (D, T), (yb, T),\n    (yb + off, T + BH), (yf + off, T + BH),\n    (yf, T), (LT, T), (LT, T + LH), (0, T + LH),\n]\nbody = cq.Workplane(\"YZ\").polyline(profile).close().extrude(W / 2, both=True)\n\n# Cable cut-out in the middle of the lip, down to the slot floor.\ncut = (\n    cq.Workplane(\"XY\")\n    .box(CW, LT + 2, LH + 1, centered=(True, False, False))\n    .translate((0, -1, T))\n)\nresult = body.cut(cut).translate((0, -D / 2, 0))\n\nEXPECTED_BBOX = (W, D, T + BH)\nEXPECTED_HOLES = []\n",
+   "params": {
+    "width": {
+     "value": 80,
+     "unit": "mm",
+     "min": 50,
+     "max": 150,
+     "label": "Width (X)"
+    },
+    "base_thickness": {
+     "value": 6,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Base thickness"
+    },
+    "slot_width": {
+     "value": 12,
+     "unit": "mm",
+     "min": 6,
+     "max": 25,
+     "label": "Phone slot width"
+    },
+    "lip_height": {
+     "value": 10,
+     "unit": "mm",
+     "min": 4,
+     "max": 30,
+     "label": "Front lip height"
+    },
+    "lip_thickness": {
+     "value": 8,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Front lip thickness"
+    },
+    "back_height": {
+     "value": 90,
+     "unit": "mm",
+     "min": 40,
+     "max": 160,
+     "label": "Back plate height above base"
+    },
+    "back_thickness": {
+     "value": 8,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Back plate thickness"
+    },
+    "back_angle": {
+     "value": 20,
+     "unit": "deg",
+     "min": 5,
+     "max": 40,
+     "label": "Back lean from vertical"
+    },
+    "rear_extension": {
+     "value": 25,
+     "unit": "mm",
+     "min": 0,
+     "max": 60,
+     "label": "Base extension behind the back plate"
+    },
+    "cable_width": {
+     "value": 15,
+     "unit": "mm",
+     "min": 5,
+     "max": 40,
+     "label": "Cable cut-out width"
+    }
+   },
+   "values": {
+    "width": 80,
+    "base_thickness": 6,
+    "slot_width": 12,
+    "lip_height": 10,
+    "lip_thickness": 8,
+    "back_height": 90,
+    "back_thickness": 8,
+    "back_angle": 20,
+    "rear_extension": 25,
+    "cable_width": 15
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 91963.51412029997,
+    "area_mm2": 29794.41915009395,
+    "bbox": {
+     "xmin": -40.0,
+     "ymin": -30.378660541979105,
+     "zmin": 0.0,
+     "xmax": 40.0,
+     "ymax": 30.378660541979105,
+     "zmax": 96.0,
+     "size": [
+      80.0,
+      60.75732108395821,
+      96.0
+     ]
+    },
+    "expected_bbox": [
+     80.0,
+     60.75732108395821,
+     96.0
+    ],
+    "n_faces": 16,
+    "notes": [],
+    "center_of_mass": [
+     7.120608553734684e-16,
+     4.771794220560796,
+     33.516450212296945
+    ],
+    "hole_list": [],
+    "holes": [],
+    "expected_holes": [],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "phone-stand-20deg",
+    "summary": "Phone stand 80 mm wide. The back plate leans 20° from vertical. A 12 mm slot sits between the back plate and a 10 mm front lip. A 15 mm wide cut-out in the middle of the lip lets the charging cable through.",
+    "changes": [],
+    "assumptions": [
+     "I measured the 12 mm slot along the base, from the lip to the back plate. The phone is about 12 mm thick, or a bit less when it leans.",
+     "I chose the base thickness (6 mm), lip thickness (8 mm), back plate height above the base (90 mm) and back plate thickness (8 mm). These are all sliders.",
+     "The base extends 25 mm behind the back plate, or as far as the leaning plate reaches if that is more. This keeps the stand from tipping backwards.",
+     "The cable cut-out goes down to the floor of the slot.",
+     "For FDM, print it lying on its side, with the profile in the XY plane of the bed, so the layers don't split along the lean of the back plate. I made no stress simulation, since no load was specified."
+    ],
+    "questions": [
+     "What is the thickness of your phone, with its case? I can adjust the slot to fit.",
+     "Do you want the back plate higher or lower than 90 mm?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927987.312746
+  },
+  {
+   "number": 2,
+   "instruction": "Make it 100 mm wide and add four round pockets, 8 mm diameter and 1 mm deep, under the base for rubber feet.",
+   "parent": 1,
+   "base_code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 100, \"unit\": \"mm\", \"min\": 50, \"max\": 150, \"label\": \"Width (X)\"},\n    \"base_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Base thickness\"},\n    \"slot_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 25, \"label\": \"Phone slot width\"},\n    \"lip_height\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 30, \"label\": \"Front lip height\"},\n    \"lip_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Front lip thickness\"},\n    \"back_height\": {\"value\": 90, \"unit\": \"mm\", \"min\": 40, \"max\": 160, \"label\": \"Back plate height above base\"},\n    \"back_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Back plate thickness\"},\n    \"back_angle\": {\"value\": 20, \"unit\": \"deg\", \"min\": 5, \"max\": 40, \"label\": \"Back lean from vertical\"},\n    \"rear_extension\": {\"value\": 25, \"unit\": \"mm\", \"min\": 0, \"max\": 60, \"label\": \"Base extension behind the back plate\"},\n    \"cable_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Cable cut-out width\"},\n    \"foot_diameter\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 20, \"label\": \"Rubber foot pocket diameter\"},\n    \"foot_depth\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0.5, \"max\": 4, \"label\": \"Rubber foot pocket depth\"},\n    \"foot_inset\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 30, \"label\": \"Foot pocket distance from edges\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"base_thickness\"][\"value\"]\nS = PARAMS[\"slot_width\"][\"value\"]\nLH = PARAMS[\"lip_height\"][\"value\"]\nLT = PARAMS[\"lip_thickness\"][\"value\"]\nBH = PARAMS[\"back_height\"][\"value\"]\nBT = PARAMS[\"back_thickness\"][\"value\"]\nANG = PARAMS[\"back_angle\"][\"value\"]\nEXT = PARAMS[\"rear_extension\"][\"value\"]\nCW = PARAMS[\"cable_width\"][\"value\"]\nFD = PARAMS[\"foot_diameter\"][\"value\"]\nFDEP = PARAMS[\"foot_depth\"][\"value\"]\nFIN = PARAMS[\"foot_inset\"][\"value\"]\n\nCW = min(CW, W - 10)\noff = BH * math.tan(math.radians(ANG))   # how far the top of the plate leans back\nyf = LT + S                              # front face of the back plate at the floor\nyb = yf + BT                             # rear face of the back plate at the floor\nD = yb + max(EXT, off)                   # total depth\n\n# Keep the foot pockets inside the base and the base solid.\nFDEP = min(FDEP, T - 2)\nFD = min(FD, W / 2 - 2, D / 2 - 2)\nFIN = max(FIN, FD / 2 + 2)\nFIN = min(FIN, D / 2 - FD / 2 - 1, W / 2 - FD / 2 - 1)\n\n# Side profile in the YZ plane (local x = Y, local y = Z), extruded along X.\nprofile = [\n    (0, 0), (D, 0), (D, T), (yb, T),\n    (yb + off, T + BH), (yf + off, T + BH),\n    (yf, T), (LT, T), (LT, T + LH), (0, T + LH),\n]\nbody = cq.Workplane(\"YZ\").polyline(profile).close().extrude(W / 2, both=True)\n\n# Cable cut-out in the middle of the lip, down to the slot floor.\ncut = (\n    cq.Workplane(\"XY\")\n    .box(CW, LT + 2, LH + 1, centered=(True, False, False))\n    .translate((0, -1, T))\n)\nresult = body.cut(cut).translate((0, -D / 2, 0))\n\n# Four round pockets under the base for rubber feet.\npts = [(sx * (W / 2 - FIN), sy * (D / 2 - FIN)) for sx in (-1, 1) for sy in (-1, 1)]\nfeet = cq.Workplane(\"XY\").pushPoints(pts).circle(FD / 2).extrude(FDEP)\nresult = result.cut(feet)\n\nEXPECTED_BBOX = (W, D, T + BH)\nEXPECTED_HOLES = [(FD, 4)]\n",
+   "code": "import math\nimport cadquery as cq\n\nPARAMS = {\n    \"width\": {\"value\": 100, \"unit\": \"mm\", \"min\": 50, \"max\": 150, \"label\": \"Width (X)\"},\n    \"base_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Base thickness\"},\n    \"slot_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 25, \"label\": \"Phone slot width\"},\n    \"lip_height\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 30, \"label\": \"Front lip height\"},\n    \"lip_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Front lip thickness\"},\n    \"back_height\": {\"value\": 90, \"unit\": \"mm\", \"min\": 40, \"max\": 160, \"label\": \"Back plate height above base\"},\n    \"back_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Back plate thickness\"},\n    \"back_angle\": {\"value\": 20, \"unit\": \"deg\", \"min\": 5, \"max\": 40, \"label\": \"Back lean from vertical\"},\n    \"rear_extension\": {\"value\": 25, \"unit\": \"mm\", \"min\": 0, \"max\": 60, \"label\": \"Base extension behind the back plate\"},\n    \"cable_width\": {\"value\": 15, \"unit\": \"mm\", \"min\": 5, \"max\": 40, \"label\": \"Cable cut-out width\"},\n    \"foot_diameter\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 20, \"label\": \"Rubber foot pocket diameter\"},\n    \"foot_depth\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0.5, \"max\": 4, \"label\": \"Rubber foot pocket depth\"},\n    \"foot_inset\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 30, \"label\": \"Foot pocket distance from edges\"},\n}\n\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"base_thickness\"][\"value\"]\nS = PARAMS[\"slot_width\"][\"value\"]\nLH = PARAMS[\"lip_height\"][\"value\"]\nLT = PARAMS[\"lip_thickness\"][\"value\"]\nBH = PARAMS[\"back_height\"][\"value\"]\nBT = PARAMS[\"back_thickness\"][\"value\"]\nANG = PARAMS[\"back_angle\"][\"value\"]\nEXT = PARAMS[\"rear_extension\"][\"value\"]\nCW = PARAMS[\"cable_width\"][\"value\"]\nFD = PARAMS[\"foot_diameter\"][\"value\"]\nFDEP = PARAMS[\"foot_depth\"][\"value\"]\nFIN = PARAMS[\"foot_inset\"][\"value\"]\n\nCW = min(CW, W - 10)\noff = BH * math.tan(math.radians(ANG))   # how far the top of the plate leans back\nyf = LT + S                              # front face of the back plate at the floor\nyb = yf + BT                             # rear face of the back plate at the floor\nD = yb + max(EXT, off)                   # total depth\n\n# Keep the foot pockets inside the base and the base solid.\nFDEP = min(FDEP, T - 2)\nFD = min(FD, W / 2 - 2, D / 2 - 2)\nFIN = max(FIN, FD / 2 + 2)\nFIN = min(FIN, D / 2 - FD / 2 - 1, W / 2 - FD / 2 - 1)\n\n# Side profile in the YZ plane (local x = Y, local y = Z), extruded along X.\nprofile = [\n    (0, 0), (D, 0), (D, T), (yb, T),\n    (yb + off, T + BH), (yf + off, T + BH),\n    (yf, T), (LT, T), (LT, T + LH), (0, T + LH),\n]\nbody = cq.Workplane(\"YZ\").polyline(profile).close().extrude(W / 2, both=True)\n\n# Cable cut-out in the middle of the lip, down to the slot floor.\ncut = (\n    cq.Workplane(\"XY\")\n    .box(CW, LT + 2, LH + 1, centered=(True, False, False))\n    .translate((0, -1, T))\n)\nresult = body.cut(cut).translate((0, -D / 2, 0))\n\n# Four round pockets under the base for rubber feet.\npts = [(sx * (W / 2 - FIN), sy * (D / 2 - FIN)) for sx in (-1, 1) for sy in (-1, 1)]\nfeet = cq.Workplane(\"XY\").pushPoints(pts).circle(FD / 2).extrude(FDEP)\nresult = result.cut(feet)\n\nEXPECTED_BBOX = (W, D, T + BH)\nEXPECTED_HOLES = [(FD, 4)]\n",
+   "params": {
+    "width": {
+     "value": 100,
+     "unit": "mm",
+     "min": 50,
+     "max": 150,
+     "label": "Width (X)"
+    },
+    "base_thickness": {
+     "value": 6,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Base thickness"
+    },
+    "slot_width": {
+     "value": 12,
+     "unit": "mm",
+     "min": 6,
+     "max": 25,
+     "label": "Phone slot width"
+    },
+    "lip_height": {
+     "value": 10,
+     "unit": "mm",
+     "min": 4,
+     "max": 30,
+     "label": "Front lip height"
+    },
+    "lip_thickness": {
+     "value": 8,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Front lip thickness"
+    },
+    "back_height": {
+     "value": 90,
+     "unit": "mm",
+     "min": 40,
+     "max": 160,
+     "label": "Back plate height above base"
+    },
+    "back_thickness": {
+     "value": 8,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Back plate thickness"
+    },
+    "back_angle": {
+     "value": 20,
+     "unit": "deg",
+     "min": 5,
+     "max": 40,
+     "label": "Back lean from vertical"
+    },
+    "rear_extension": {
+     "value": 25,
+     "unit": "mm",
+     "min": 0,
+     "max": 60,
+     "label": "Base extension behind the back plate"
+    },
+    "cable_width": {
+     "value": 15,
+     "unit": "mm",
+     "min": 5,
+     "max": 40,
+     "label": "Cable cut-out width"
+    },
+    "foot_diameter": {
+     "value": 8,
+     "unit": "mm",
+     "min": 4,
+     "max": 20,
+     "label": "Rubber foot pocket diameter"
+    },
+    "foot_depth": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0.5,
+     "max": 4,
+     "label": "Rubber foot pocket depth"
+    },
+    "foot_inset": {
+     "value": 12,
+     "unit": "mm",
+     "min": 6,
+     "max": 30,
+     "label": "Foot pocket distance from edges"
+    }
+   },
+   "values": {
+    "width": 100,
+    "base_thickness": 6,
+    "slot_width": 12,
+    "lip_height": 10,
+    "lip_thickness": 8,
+    "back_height": 90,
+    "back_thickness": 8,
+    "back_angle": 20,
+    "rear_extension": 25,
+    "cable_width": 15,
+    "foot_diameter": 8,
+    "foot_depth": 1,
+    "foot_inset": 12
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 115053.33072054519,
+    "area_mm2": 36796.282939280434,
+    "bbox": {
+     "xmin": -50.0,
+     "ymin": -30.378660541979105,
+     "zmin": 0.0,
+     "xmax": 50.0,
+     "ymax": 30.378660541979105,
+     "zmax": 96.0,
+     "size": [
+      100.0,
+      60.75732108395821,
+      96.0
+     ]
+    },
+    "expected_bbox": [
+     100.0,
+     60.75732108395821,
+     96.0
+    ],
+    "n_faces": 24,
+    "notes": [],
+    "center_of_mass": [
+     1.6916665077011199e-15,
+     4.698908801064392,
+     33.51543690944733
+    ],
+    "hole_list": [
+     {
+      "diameter": 8.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -38.0,
+       -18.3787,
+       0.5
+      ],
+      "length": 1.0
+     },
+     {
+      "diameter": 8.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -38.0,
+       18.3787,
+       0.5
+      ],
+      "length": 1.0
+     },
+     {
+      "diameter": 8.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       38.0,
+       -18.3787,
+       0.5
+      ],
+      "length": 1.0
+     },
+     {
+      "diameter": 8.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       38.0,
+       18.3787,
+       0.5
+      ],
+      "length": 1.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 8.0,
+      "axis": "z",
+      "count": 4
+     }
+    ],
+    "expected_holes": [
+     [
+      8.0,
+      4
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-mobil",
+    "summary": "El suport ara fa 100 mm d'ample i té quatre encaixos rodons de Ø8 × 1 mm sota la base, a prop de les cantonades, per enganxar-hi peus de goma.",
+    "changes": [
+     "Amplada: de 80 a 100 mm.",
+     "Quatre encaixos rodons a la cara inferior: Ø8 mm i 1 mm de fondària.",
+     "Nous paràmetres: diàmetre, fondària i distància a les vores dels encaixos."
+    ],
+    "assumptions": [
+     "Els encaixos són a 12 mm de cada vora de la base, un a cada cantonada.",
+     "La fondària màxima queda limitada a la base menys 2 mm, perquè la base no es debiliti.",
+     "El tall del cable segueix centrat i amb 15 mm d'ample."
+    ],
+    "questions": [
+     "Quin diàmetre i gruix tenen els peus de goma? Si no són de Ø8 × 1 mm, ajusto els encaixos."
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927990.514463
+  }
+ ]
+}

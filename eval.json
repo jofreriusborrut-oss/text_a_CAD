@@ -1,0 +1,4460 @@
+{
+ "summary": {
+  "cases": 17,
+  "turns_played": 34,
+  "parts_built": 33,
+  "first_attempt": 32,
+  "needed_corrections": 1,
+  "built_without_warnings": 31,
+  "failed": 0,
+  "questions_only": 1,
+  "pending_cases": []
+ },
+ "cases": [
+  {
+   "id": "sensor-forquilla",
+   "turns": [
+    {
+     "text": "Necessito un suport per al sensor de recorregut lineal de la forquilla de la moto de MotoStudent. És un potenciòmetre AiM de 150 mm amb ròtules M4. Vull una abraçadora per a la barra de 43 mm amb un braç que deixi el pern de la ròtula a 40 mm de l'eix de la barra. La imprimirem en 3D i va a prop del fre.",
+     "seconds": 2.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "abracadora-sensor-forquilla-43",
+      "summary": "Abraçadora partida per a barra de Ø43 mm: anell de 20 mm d'alçada i 5 mm de paret, dues orelles amb cargol de tancament M5 i un braç pla amb forat roscat M4 (Ø3,3 mm) per a la ròtula, amb la cara del pern a 40 mm de l'eix de la barra.",
+      "changes": [],
+      "assumptions": [
+       "Diàmetre de la barra 43 mm amb 0,3 mm de joc: mesura-la amb un peu de rei on aniran les abraçadores.",
+       "El braç és radial cap a +X i el forat M4 va a mitja alçada, en direcció X. El forat no és passant, només entra al braç.",
+       "Cargol de tancament M5 amb forat de 5,5 mm a través de les orelles (cap a -X).",
+       "Gruix de l'anell 5 mm, orelles de 14 mm i 6 mm de gruix, tall de 2 mm.",
+       "Imprimeix-la amb l'eix de la barra vertical (anell pla sobre el llit) perquè les capes treballin al llarg de l'anell.",
+       "Material: ASA o PA-CF, perquè és a prop del fre (PLA no).",
+       "Càrrega de comprovació: 30 N al pern en direcció de la barra.",
+       "Per a un segon suport al peu de la forquilla cal el mateix desplaçament de 40 mm, perquè el sensor quedi paral·lel a la barra. El sensor de 150 mm necessita 5 mm de marge a cada extrem."
+      ],
+      "questions": [
+       "Quin és el recorregut real de la teva forquilla? Si passa de 140 mm, el sensor de 150 mm no té marge.",
+       "On vols posar l'abraçadora, i a quina distància queda de la pinça de fre?",
+       "Vols que dissenyi també el suport inferior, al peu de la forquilla?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 100.0,
+       "outdoor": true,
+       "fluids": false,
+       "vibration": true,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "aim-eclipse-150",
+      "guide-fork-travel-sensor",
+      "metric-m4"
+     ],
+     "n_params": 11,
+     "code_lines": 64,
+     "size": [
+      80.65,
+      53.3,
+      20.0
+     ],
+     "expected_bbox": [
+      80.65,
+      53.3,
+      20.0
+     ],
+     "volume_cm3": 22.42,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "x",
+       "count": 1
+      },
+      {
+       "diameter": 5.5,
+       "axis": "y",
+       "count": 1
+      },
+      {
+       "diameter": 43.3,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       43.3,
+       1
+      ],
+      [
+       5.5,
+       1
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 72610.06020609409,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.7 × 53.3 × 20.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3 (X), 1 × Ø5.5 (Y), 1 × Ø43.3 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.42 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra",
+      "max_stress_mpa": 0.3842,
+      "max_displacement_mm": 0.004719,
+      "safety_factor": 82.0,
+      "n_elements": 3718,
+      "volume_error": -0.0002,
+      "equilibrium_error": 1.7e-14,
+      "warnings": [],
+      "seconds": 1.0
+     },
+     "material": [
+      "pa-cf",
+      "pc"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 86.7,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 18.4,
+      "minutes": 41
+     }
+    },
+    {
+     "text": "Fes l'abraçadora 6 mm més alta i posa-hi dos cargols de tancament en lloc d'un.",
+     "seconds": 2.7,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "abracadora-sensor-forquilla",
+      "summary": "L'abraçadora té ara 26 mm d'alçada (6 mm més) i dos cargols de tancament a les orelles, un a sobre de l'altre, en lloc d'un de sol.",
+      "changes": [
+       "Alçada de l'anell: de 20 a 26 mm.",
+       "Cargols de tancament: d'1 a 2, repartits en alçada i centrats respecte a l'abraçadora.",
+       "Nou paràmetre \"separació dels cargols\" (14 mm), limitat perquè els forats no toquin les vores.",
+       "El forat del pern de la ròtula continua a mitja alçada i s'ha actualitzat la llista de forats."
+      ],
+      "assumptions": [
+       "Separació de 14 mm entre els eixos dels dos cargols (M5, forat de 5,5 mm). Els cargols queden a ±7 mm del centre de l'alçada.",
+       "Els dos cargols són del mateix diàmetre que l'anterior."
+      ],
+      "questions": [
+       "Vols que els cargols siguin M5 o prefereixes M4 per deixar més material a les orelles?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 90.0,
+       "outdoor": true,
+       "fluids": true,
+       "vibration": true
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 12,
+     "code_lines": 70,
+     "size": [
+      80.65,
+      53.3,
+      26.0
+     ],
+     "expected_bbox": [
+      80.65,
+      53.3,
+      26.0
+     ],
+     "volume_cm3": 28.98,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "x",
+       "count": 1
+      },
+      {
+       "diameter": 5.5,
+       "axis": "y",
+       "count": 2
+      },
+      {
+       "diameter": 43.3,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       43.3,
+       1
+      ],
+      [
+       5.5,
+       2
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 81323.26743082538,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.7 × 53.3 × 26.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3 (X), 2 × Ø5.5 (Y), 1 × Ø43.3 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 3.72 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Abraçadora subjecta a la barra de la forquilla, 30 N al pern en la direcció de la barra",
+      "max_stress_mpa": 0.2538,
+      "max_displacement_mm": 0.002957,
+      "safety_factor": 124.0,
+      "n_elements": 3556,
+      "volume_error": 0.0006,
+      "equilibrium_error": 1.9e-14,
+      "warnings": [],
+      "seconds": 0.93
+     },
+     "material": [
+      "pa-cf",
+      "pc"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 137.7,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 23.1,
+      "minutes": 51
+     }
+    },
+    {
+     "text": "El pern ha d'anar paral·lel a la barra, no radial: posa el forat roscat vertical a l'extrem del braç i allarga el braç 10 mm.",
+     "seconds": 2.7,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "abracadora-sensor-barra",
+      "summary": "He allargat el braç 10 mm (fins a 50 mm de l'eix de la barra) i el forat roscat del pern M4 ara és vertical, paral·lel a la barra, a l'extrem del braç i centrat en la seva amplada.",
+      "changes": [
+       "Distància de l'eix al final del braç: de 40 a 50 mm.",
+       "Forat roscat del pern: de radial (eix X) a vertical (eix Z), cec des de la cara superior, centrat a l'extrem del braç.",
+       "Nou paràmetre: profunditat del forat roscat (14 mm).",
+       "Càrrega de la simulació: ara 30 N en direcció Z aplicats a la paret del forat vertical."
+      ],
+      "assumptions": [
+       "El centre del forat és a mig braç de l'extrem, és a dir a 42 mm de l'eix (50 − 16/2). Si vols el pern exactament a 40 mm de l'eix, baixa la distància a 48 mm.",
+       "Forat cec de 14 mm des de la cara superior; la mida és la de rosca M4 (Ø3,3 mm).",
+       "Per imprimir-la, posa-la amb l'anell pla sobre el llit, de manera que el forat del pern quedi vertical."
+      ],
+      "questions": [
+       "Vols que la distància de 40 mm sigui fins al centre del pern i no fins al final del braç?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 90.0,
+       "outdoor": true,
+       "fluids": false,
+       "vibration": true
+      }
+     },
+     "version": 3,
+     "components": [],
+     "n_params": 13,
+     "code_lines": 74,
+     "size": [
+      90.65,
+      53.3,
+      26.0
+     ],
+     "expected_bbox": [
+      90.65,
+      53.3,
+      26.0
+     ],
+     "volume_cm3": 33.14,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 5.5,
+       "axis": "y",
+       "count": 2
+      },
+      {
+       "diameter": 43.3,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       43.3,
+       1
+      ],
+      [
+       5.5,
+       2
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 81323.26743082538,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "90.7 × 53.3 × 26.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3 (Z), 2 × Ø5.5 (Y), 1 × Ø43.3 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 3.36 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Abraçadora subjecta a la barra de la forquilla, 30 N al pern vertical en la direcció de la barra",
+      "max_stress_mpa": 0.3181,
+      "max_displacement_mm": 0.00487,
+      "safety_factor": 99.0,
+      "n_elements": 2548,
+      "volume_error": 0.0011,
+      "equilibrium_error": 5e-14,
+      "warnings": [],
+      "seconds": 0.53
+     },
+     "material": [
+      "pc",
+      "pa-cf"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 102.0,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 25.2,
+      "minutes": 56
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "suport-cos-sensor",
+   "turns": [
+    {
+     "text": "Suport en L d'alumini per a l'altre extrem del sensor: base de 60 x 25 x 5 mm amb dos forats M6 separats 40 mm, i una ala vertical de 35 mm d'alçada al final de la base amb un forat roscat M4 a 25 mm de la base per a la ròtula. Radi interior de 3 mm. El mecanitzarem.",
+     "seconds": 2.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-l-sensor",
+      "summary": "Suport en L per mecanitzar: base de 60 × 25 × 5 mm amb dos forats per a M6 separats 40 mm, ala vertical de 35 mm d'alçada al final de la base amb un forat roscat M4 (broca de 3,3 mm) a 25 mm de la base, i radi interior de 3 mm.",
+      "changes": [],
+      "assumptions": [
+       "Els forats M6 són passants amb joc mitjà (Ø6,6 mm), alineats a l'eix X i centrats a l'amplada.",
+       "Els dos forats M6 queden centrats a la part lliure de la base, abans de l'ala.",
+       "L'ala fa 5 mm de gruix, com la base.",
+       "L'alçada de 35 mm és total, mesurada des de la cara inferior de la base.",
+       "Els 25 mm del forat M4 es mesuren des de la cara inferior de la base (z = 25). Si volies comptar des de la cara superior, puja aquest valor 5 mm.",
+       "El forat M4 és a mig ample i va en direcció X, perpendicular a l'ala.",
+       "Per a la comprovació he suposat una càrrega de 30 N sobre la ròtula, en direcció X. No és una dada teva.",
+       "El forat M4 es dibuixa al diàmetre de la broca (3,3 mm) i caldrà roscar-lo."
+      ],
+      "questions": [
+       "El forat M4 s'ha de comptar des de la cara inferior o des de la superior de la base?",
+       "Quin gruix té l'ala? Ara és de 5 mm."
+      ],
+      "use": {
+       "process": "cnc",
+       "max_temp_c": 80.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "metric-m4",
+      "metric-m6"
+     ],
+     "n_params": 9,
+     "code_lines": 69,
+     "size": [
+      60.0,
+      25.0,
+      35.0
+     ],
+     "expected_bbox": [
+      60.0,
+      25.0,
+      35.0
+     ],
+     "volume_cm3": 10.91,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "x",
+       "count": 1
+      },
+      {
+       "diameter": 6.6,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       6.6,
+       2
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "60.0 × 25.0 × 35.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3 (X), 2 × Ø6.6 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.39 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X",
+      "max_stress_mpa": 8.139,
+      "max_displacement_mm": 0.5109,
+      "safety_factor": 3.87,
+      "n_elements": 2752,
+      "volume_error": -0.0008,
+      "equilibrium_error": 3.4e-12,
+      "warnings": [],
+      "seconds": 0.91
+     },
+     "material": [
+      "s235",
+      "al6061",
+      "al7075"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 12.8,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 9.8,
+      "minutes": 22
+     }
+    },
+    {
+     "text": "Afegeix un nervi triangular de reforç de 4 mm de gruix a cada costat.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-L-nervis",
+      "summary": "He afegit dos nervis triangulars de reforç de 4 mm de gruix, un a cada costat de l'ala (a les vores Y de la base). Cada nervi uneix la base amb l'ala i queda enrasat amb els cantells laterals.",
+      "changes": [
+       "Dos nervis triangulars nous de 4 mm de gruix, a y = ±W/2, entre la base i la cara interior de l'ala.",
+       "Nous paràmetres: gruix del nervi, llargada sobre la base (20 mm) i alçada sobre l'ala (20 mm)."
+      ],
+      "assumptions": [
+       "Llargada del nervi sobre la base: 20 mm, i alçada sobre l'ala: 20 mm (triangle isòsceles).",
+       "Els nervis van enrasats amb els cantells exteriors de la base, de manera que no interfereixen amb el forat M4 central ni amb els forats M6.",
+       "Al mecanitzar-los, els nervis necessiten el radi interior de la fresa a la unió amb la base i l'ala. Ara tenen cantonada viva."
+      ],
+      "questions": [
+       "Vols nervis més grans (p. ex. 30 mm de llarg i 25 mm d'alt) per a més rigidesa?"
+      ],
+      "use": {
+       "process": "cnc",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": true,
+       "flexible": false,
+       "material": "al6061"
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 12,
+     "code_lines": 86,
+     "size": [
+      60.0,
+      25.0,
+      35.0
+     ],
+     "expected_bbox": [
+      60.0,
+      25.0,
+      35.0
+     ],
+     "volume_cm3": 12.5,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "x",
+       "count": 1
+      },
+      {
+       "diameter": 6.6,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       6.6,
+       2
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "60.0 × 25.0 × 35.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3 (X), 2 × Ø6.6 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Fixat pels dos forats M6 de la base, 30 N a la ròtula en direcció X",
+      "max_stress_mpa": 2.317,
+      "max_displacement_mm": 0.1121,
+      "safety_factor": 13.6,
+      "n_elements": 2578,
+      "volume_error": -0.0029,
+      "equilibrium_error": 1.1e-12,
+      "warnings": [],
+      "seconds": 1.01
+     },
+     "material": [
+      "s235",
+      "al6061",
+      "ss304"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 12.8,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 11.0,
+      "minutes": 24
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "suport-nema17",
+   "turns": [
+    {
+     "text": "Suport en L per a un motor NEMA 17. Placa vertical de 5 mm amb el forat central del motor i els 4 forats M3, i una base de 50 mm de fons amb 4 forats M5 per cargolar-la a un perfil. Amb dos nervis triangulars als costats.",
+     "seconds": 2.5,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-l-nema17",
+      "summary": "Suport en L per a un motor NEMA 17. La placa vertical és de 5 mm, amb forat central de 22,5 mm i 4 forats de 3,4 mm per als M3 sobre un quadrat de 31 mm. La base fa 50 mm de fons i té 4 forats M5. Dos nervis triangulars reforcen els costats.",
+      "changes": [],
+      "assumptions": [
+       "El motor va a la cara davantera de la placa (+Y). La base s'estén cap enrere (−Y), perquè el cos del motor no toqui la base.",
+       "Mides del NEMA 17 de la referència: pilot de 22,5 mm i forats de 3,4 mm sobre un quadrat de 31 mm.",
+       "Forats M5 amb joc mitjà (5,5 mm), a 8 mm de les vores de la base.",
+       "Amplada 60 mm i alçada 56 mm de la placa, amb el centre del motor a 31 mm del terra. Són valors meus: ajusta'ls als sliders.",
+       "Els nervis fan 5 mm de gruix, 40 mm de llarg i 35 mm d'alt, i van als dos costats exteriors.",
+       "Impressió FDM: imprimeix-la estirada sobre la base perquè les capes no treballin a tracció al colze.",
+       "Càrrega estimada: 30 N cap avall al motor, amb la base fixada pels forats M5."
+      ],
+      "questions": [
+       "Quin perfil fas servir (20x20, 30x30, 2020...)? Cal per ajustar la posició dels forats M5, i per si en vols de ranurats.",
+       "Vols ranures als forats del motor per tensar la corretja?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": true,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "nema17",
+      "metric-m3",
+      "metric-m5"
+     ],
+     "n_params": 14,
+     "code_lines": 79,
+     "size": [
+      60.0,
+      50.0,
+      56.0
+     ],
+     "expected_bbox": [
+      60.0,
+      50.0,
+      56.0
+     ],
+     "volume_cm3": 32.4,
+     "holes": [
+      {
+       "diameter": 3.4,
+       "axis": "y",
+       "count": 4
+      },
+      {
+       "diameter": 5.5,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 22.5,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       22.5,
+       1
+      ],
+      [
+       3.4,
+       4
+      ],
+      [
+       5.5,
+       4
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "60.0 × 50.0 × 56.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø3.4 (Y), 4 × Ø5.5 (Z), 1 × Ø22.5 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 5.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Base fixed by the M5 bolts, 30 N downwards at the motor",
+      "max_stress_mpa": 0.2912,
+      "max_displacement_mm": 0.01266,
+      "safety_factor": 108.0,
+      "n_elements": 2528,
+      "volume_error": -0.004,
+      "equilibrium_error": 2e-13,
+      "warnings": [
+       "load_moved"
+      ],
+      "seconds": 0.92
+     },
+     "material": [
+      "asa",
+      "pc",
+      "pa12"
+     ],
+     "print": {
+      "up": "-y",
+      "support_mm2": 85.0,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 26.9,
+      "minutes": 60
+     }
+    },
+    {
+     "text": "Canvia els forats M3 del motor per ranures verticals de 8 mm de llarg per poder tensar la corretja.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-motor-nema17",
+      "summary": "Els quatre forats M3 del motor són ara quatre ranures verticals de 8 mm de llarg i 3,4 mm d'ample. Així el motor es pot pujar o baixar per tensar la corretja.",
+      "changes": [
+       "Els 4 forats M3 rodons del motor passen a ser 4 ranures verticals (eix Z) de 8 mm de llarg total, centrades a les posicions dels forats anteriors.",
+       "Nou paràmetre \"slot_length\" (8 mm).",
+       "He ampliat el marge del centre del motor perquè les ranures no surtin de la placa.",
+       "EXPECTED_HOLES ja no inclou els forats de 3,4 mm, perquè ara són ranures."
+      ],
+      "assumptions": [
+       "Interpreto \"8 mm de llarg\" com la longitud total de cada ranura, amb extrems arrodonits. Fa 4 mm de recorregut de cada banda respecte a la posició nominal.",
+       "L'ample de la ranura és el mateix que tenien els forats (3,4 mm, joc mitjà M3).",
+       "He mantingut les quatre ranures separades, sense unir les de dalt amb les de baix."
+      ],
+      "questions": [
+       "Vols que la ranura sigui més llarga (el recorregut és ±4 mm)? El forat central de Ø22,5 només deixa uns 0,25 mm de joc al coll del motor. Per desplaçar el motor, probablement l'hauràs d'allargar també en vertical."
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": true
+      }
+     },
+     "version": 2,
+     "components": [
+      "metric-m3"
+     ],
+     "n_params": 15,
+     "code_lines": 84,
+     "size": [
+      60.0,
+      50.0,
+      56.0
+     ],
+     "expected_bbox": [
+      60.0,
+      50.0,
+      56.0
+     ],
+     "volume_cm3": 32.08,
+     "holes": [
+      {
+       "diameter": 5.5,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 22.5,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       22.5,
+       1
+      ],
+      [
+       5.5,
+       4
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "60.0 × 50.0 × 56.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø5.5 (Z), 1 × Ø22.5 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 5.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Base fixed by the M5 bolts, 30 N downwards at the motor",
+      "max_stress_mpa": 0.2968,
+      "max_displacement_mm": 0.0138,
+      "safety_factor": 106.0,
+      "n_elements": 2632,
+      "volume_error": -0.0136,
+      "equilibrium_error": 2e-13,
+      "warnings": [
+       "load_moved"
+      ],
+      "seconds": 0.97
+     },
+     "material": [
+      "asa",
+      "pc",
+      "pa12"
+     ],
+     "print": {
+      "up": "-y",
+      "support_mm2": 85.0,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 26.9,
+      "minutes": 60
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "soporte-rodamiento",
+   "turns": [
+    {
+     "text": "Soporte de pie para un rodamiento 608 con dos agujeros M5 en la base. La altura del eje es de 25 mm. Lo voy a imprimir en PETG.",
+     "seconds": 2.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-rodament-608",
+      "summary": "Suport de peu per a un rodament 608 amb la base plana de 60 × 30 × 5 mm, dos forats per a M5 i un bloc amb seient de Ø22,1 mm. L'eix queda a 25 mm de la base.",
+      "changes": [],
+      "assumptions": [
+       "Seient del rodament de Ø22,1 mm (22 + 0,1 de joc per a premsat en impressió). Prova'l abans amb un anell petit.",
+       "Profunditat del seient de 7,2 mm, amb un ressalt de 2,8 mm i un forat passant de Ø16 mm que només toca l'anell exterior.",
+       "L'eix del rodament va al llarg de Y. El bloc fa 10 mm de gruix i 32 mm d'amplada, amb la part superior arrodonida.",
+       "Forats M5 amb joc mitjà de 5,5 mm a x = ±22 mm. Base de 60 × 30 × 5 mm.",
+       "Impressió en PETG: imprimeix-lo amb la base sobre el llit. Així les capes queden en el sentit de l'esforç del bloc.",
+       "Càrrega estimada de 50 N cap avall sobre el rodament, a tall d'indicació."
+      ],
+      "questions": [
+       "Vols que el rodament quedi fix amb una tapa o un cargol, o només amb ajust premsat?",
+       "Necessites una altra distància entre els forats M5 o una base més ample?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "bearing-608",
+      "metric-m5"
+     ],
+     "n_params": 12,
+     "code_lines": 72,
+     "size": [
+      60.0,
+      30.0,
+      41.05
+     ],
+     "expected_bbox": [
+      60.0,
+      30.0,
+      41.05
+     ],
+     "volume_cm3": 15.9,
+     "holes": [
+      {
+       "diameter": 5.5,
+       "axis": "z",
+       "count": 2
+      },
+      {
+       "diameter": 16.0,
+       "axis": "y",
+       "count": 1
+      },
+      {
+       "diameter": 22.1,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       22.1,
+       1
+      ],
+      [
+       16.0,
+       1
+      ],
+      [
+       5.5,
+       2
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 2309.070600388498,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "60.0 × 30.0 × 41.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø5.5 (Z), 1 × Ø16 (Y), 1 × Ø22.1 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.80 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Base fixed by the two M5 screws, 50 N downwards on the bearing seat",
+      "max_stress_mpa": 2.019,
+      "max_displacement_mm": 0.05239,
+      "safety_factor": 15.6,
+      "n_elements": 3212,
+      "volume_error": 0.0032,
+      "equilibrium_error": 4.4e-13,
+      "warnings": [],
+      "seconds": 1.1
+     },
+     "material": [
+      "asa",
+      "abs",
+      "pc"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 157.6,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 13.2,
+      "minutes": 29
+     }
+    },
+    {
+     "text": "Hazlo 6 mm más ancho y añade un chaflán de 1 mm en las aristas de arriba.",
+     "seconds": 2.3,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-rodament-608",
+      "summary": "He ampliado la base 6 mm en Y, de 30 a 36 mm. He añadido un chaflán de 1 mm en las aristas superiores: el perímetro de la base y el contorno del bloque y del arco en sus dos caras.",
+      "changes": [
+       "Ancho de la base (Y): de 30 a 36 mm.",
+       "Nuevo parámetro \"chamfer\" de 1 mm.",
+       "Chaflán en el perímetro superior de la base.",
+       "Chaflán en las aristas del bloque y del arco en las caras frontal y trasera, excepto las de abajo."
+      ],
+      "assumptions": [
+       "\"Más ancho\" lo he entendido como el ancho de la base en Y (la longitud en X no cambia). El grosor del bloque sigue en 10 mm.",
+       "Los chaflanes se limitan automáticamente para que no superen el grosor de la base ni un cuarto del bloque.",
+       "Para imprimirlo en PETG, pon la base plana sobre la cama."
+      ],
+      "questions": [
+       "¿Querías ensanchar la base en X o aumentar el grosor del bloque en lugar del ancho en Y?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false,
+       "material": "petg"
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 13,
+     "code_lines": 82,
+     "size": [
+      60.0,
+      36.0,
+      41.05
+     ],
+     "expected_bbox": [
+      60.0,
+      36.0,
+      41.05
+     ],
+     "volume_cm3": 17.52,
+     "holes": [
+      {
+       "diameter": 5.5,
+       "axis": "z",
+       "count": 2
+      },
+      {
+       "diameter": 16.0,
+       "axis": "y",
+       "count": 1
+      },
+      {
+       "diameter": 22.1,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       22.1,
+       1
+      ],
+      [
+       16.0,
+       1
+      ],
+      [
+       5.5,
+       2
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 2309.070600388498,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "60.0 × 36.0 × 41.1 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø5.5 (Z), 1 × Ø16 (Y), 1 × Ø22.1 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.80 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Base fixed by the two M5 screws, 50 N downwards on the bearing seat",
+      "max_stress_mpa": 1.972,
+      "max_displacement_mm": 0.05099,
+      "safety_factor": 16.0,
+      "n_elements": 3416,
+      "volume_error": 0.0134,
+      "equilibrium_error": 4.1e-13,
+      "warnings": [],
+      "seconds": 1.01
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 157.6,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 14.3,
+      "minutes": 32
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "phone-stand",
+   "turns": [
+    {
+     "text": "Phone stand: 80 mm wide, back leaning 20 degrees from vertical, a 12 mm slot for the phone with a 10 mm front lip, and a 15 mm wide cut-out in the middle of the lip for the charging cable.",
+     "seconds": 2.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "phone-stand-20deg",
+      "summary": "Phone stand 80 mm wide. The back plate leans 20° from vertical. A 12 mm slot sits between the back plate and a 10 mm front lip. A 15 mm wide cut-out in the middle of the lip lets the charging cable through.",
+      "changes": [],
+      "assumptions": [
+       "I measured the 12 mm slot along the base, from the lip to the back plate. The phone is about 12 mm thick, or a bit less when it leans.",
+       "I chose the base thickness (6 mm), lip thickness (8 mm), back plate height above the base (90 mm) and back plate thickness (8 mm). These are all sliders.",
+       "The base extends 25 mm behind the back plate, or as far as the leaning plate reaches if that is more. This keeps the stand from tipping backwards.",
+       "The cable cut-out goes down to the floor of the slot.",
+       "For FDM, print it lying on its side, with the profile in the XY plane of the bed, so the layers don't split along the lean of the back plate. I made no stress simulation, since no load was specified."
+      ],
+      "questions": [
+       "What is the thickness of your phone, with its case? I can adjust the slot to fit.",
+       "Do you want the back plate higher or lower than 90 mm?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 10,
+     "code_lines": 51,
+     "size": [
+      80.0,
+      60.757,
+      96.0
+     ],
+     "expected_bbox": [
+      80.0,
+      60.75732108395821,
+      96.0
+     ],
+     "volume_cm3": 91.96,
+     "holes": [],
+     "expected_holes": [],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.0 × 60.8 × 96.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_none",
+       "detail": "The part has no cylindrical holes."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.40 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 6.555,
+      "max_displacement_mm": 3.256,
+      "safety_factor": 4.81,
+      "n_elements": 3055,
+      "volume_error": 0.0022,
+      "equilibrium_error": 9.5e-11,
+      "warnings": [],
+      "seconds": 0.57
+     },
+     "material": [
+      "asa",
+      "abs",
+      "pc"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 59.7,
+      "minutes": 132
+     }
+    },
+    {
+     "text": "Make it 100 mm wide and add four round pockets, 8 mm diameter and 1 mm deep, under the base for rubber feet.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-mobil",
+      "summary": "El suport ara fa 100 mm d'ample i té quatre encaixos rodons de Ø8 × 1 mm sota la base, a prop de les cantonades, per enganxar-hi peus de goma.",
+      "changes": [
+       "Amplada: de 80 a 100 mm.",
+       "Quatre encaixos rodons a la cara inferior: Ø8 mm i 1 mm de fondària.",
+       "Nous paràmetres: diàmetre, fondària i distància a les vores dels encaixos."
+      ],
+      "assumptions": [
+       "Els encaixos són a 12 mm de cada vora de la base, un a cada cantonada.",
+       "La fondària màxima queda limitada a la base menys 2 mm, perquè la base no es debiliti.",
+       "El tall del cable segueix centrat i amb 15 mm d'ample."
+      ],
+      "questions": [
+       "Quin diàmetre i gruix tenen els peus de goma? Si no són de Ø8 × 1 mm, ajusto els encaixos."
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 13,
+     "code_lines": 68,
+     "size": [
+      100.0,
+      60.757,
+      96.0
+     ],
+     "expected_bbox": [
+      100.0,
+      60.75732108395821,
+      96.0
+     ],
+     "volume_cm3": 115.05,
+     "holes": [
+      {
+       "diameter": 8.0,
+       "axis": "z",
+       "count": 4
+      }
+     ],
+     "expected_holes": [
+      [
+       8.0,
+       4
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "100.0 × 60.8 × 96.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø8 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 3.50 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 4.766,
+      "max_displacement_mm": 3.049,
+      "safety_factor": 6.61,
+      "n_elements": 3186,
+      "volume_error": -0.0031,
+      "equilibrium_error": 1.5e-10,
+      "warnings": [],
+      "seconds": 0.82
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 105.5,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 74.1,
+      "minutes": 164
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "adaptador-aspiradora",
+   "turns": [
+    {
+     "text": "Adaptador per a l'aspiradora: d'un tub de 35 mm de diàmetre exterior a un de 50 mm de diàmetre interior, 70 mm de llarg en total, paret de 2,5 mm, amb un tram cònic al mig.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "adaptador-aspiradora-35-50",
+      "summary": "Adaptador revolucionat de 70 mm de llarg amb paret de 2,5 mm: un tram recte de Ø35 mm exterior, un tram cònic al mig i un tram recte de Ø50 mm exterior. El tub és buit de punta a punta.",
+      "changes": [],
+      "assumptions": [
+       "He interpretat que l'extrem prim entra dins del tub de 35 mm (Ø exterior 35 mm) i que l'extrem gros entra dins del tub de 50 mm (Ø exterior 50 mm). Si vols el contrari, per exemple que el tub de 35 mm entri dins l'adaptador, digues-m'ho.",
+       "Els trams rectes fan 20 mm cadascun i el con els 30 mm restants.",
+       "Les parets són de 2,5 mm a tot el recorregut, així que els diàmetres interiors són 30 i 45 mm.",
+       "No hi ha joc afegit. Mesura els tubs reals i ajusta els diàmetres.",
+       "Per imprimir-lo en 3D, posa'l dret sobre l'extrem gros. El con té menys de 45° d'inclinació i s'imprimeix sense suports."
+      ],
+      "questions": [
+       "Vols una petita nervadura o ressalt d'aturada al mig perquè els tubs no entrin massa?",
+       "Els tubs són rígids o és mànega flexible? Això em permetria afegir joc o un lleuger con d'encaix."
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": true,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 6,
+     "code_lines": 38,
+     "size": [
+      50.0,
+      50.0,
+      70.0
+     ],
+     "expected_bbox": [
+      50.0,
+      50.0,
+      70.0
+     ],
+     "volume_cm3": 21.99,
+     "holes": [
+      {
+       "diameter": 30.0,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 45.0,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       30.0,
+       1
+      ],
+      [
+       45.0,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "50.0 × 50.0 × 70.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø30 (Z), 1 × Ø45 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.42 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 1.584,
+      "max_displacement_mm": 0.08405,
+      "safety_factor": 19.9,
+      "n_elements": 2834,
+      "volume_error": -0.0294,
+      "equilibrium_error": 5.9e-13,
+      "warnings": [],
+      "seconds": 1.04
+     },
+     "material": [
+      "asa",
+      "pc",
+      "pa12"
+     ],
+     "print": {
+      "up": "-z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 27.9,
+      "minutes": 62
+     }
+    },
+    {
+     "text": "Afegeix una pestanya exterior de 3 mm de gruix i 70 mm de diàmetre a l'extrem gran, amb 3 forats per a M4.",
+     "seconds": 2.7,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "adaptador-aspiradora-brida",
+      "summary": "He afegit una pestanya exterior de Ø70 × 3 mm a l'extrem gros de l'adaptador, amb 3 forats per a M4 repartits a 120° en un cercle de Ø60 mm. La pestanya queda a ras de l'extrem del tub i el pas interior es manté lliure.",
+      "changes": [
+       "Nova pestanya anular de Ø70 mm i 3 mm de gruix a l'extrem gros, al ras de la cara superior.",
+       "3 forats passants Ø4,5 mm (M4, joc mitjà) a la pestanya, repartits a 120°.",
+       "Nous paràmetres: diàmetre i gruix de la pestanya, diàmetre del cercle de forats, diàmetre dels forats i nombre de forats.",
+       "Mida total: Z segueix sent 70 mm; X i Y passen de 50 a 70 mm."
+      ],
+      "assumptions": [
+       "Forats M4 amb joc mitjà ISO 273: Ø4,5 mm.",
+       "Els forats són a un cercle de Ø60 mm, entre la paret del tub i la vora de la pestanya.",
+       "La pestanya és a l'extrem gros, a ras de la seva cara, i els forats són paral·lels a l'eix del tub."
+      ],
+      "questions": [
+       "Vols que els forats de la pestanya siguin ranurats o amb avellanat per a cargols de cap pla?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [
+      "metric-m4"
+     ],
+     "n_params": 11,
+     "code_lines": 71,
+     "size": [
+      70.0,
+      70.0,
+      70.0
+     ],
+     "expected_bbox": [
+      70.0,
+      70.0,
+      70.0
+     ],
+     "volume_cm3": 27.5,
+     "holes": [
+      {
+       "diameter": 4.5,
+       "axis": "z",
+       "count": 3
+      },
+      {
+       "diameter": 30.0,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 45.0,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       30.0,
+       1
+      ],
+      [
+       45.0,
+       1
+      ],
+      [
+       4.5,
+       3
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "70.0 × 70.0 × 70.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 3 × Ø4.5 (Z), 1 × Ø30 (Z), 1 × Ø45 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.42 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 1.383,
+      "max_displacement_mm": 0.082,
+      "safety_factor": 22.8,
+      "n_elements": 2476,
+      "volume_error": -0.0174,
+      "equilibrium_error": 2.1e-13,
+      "warnings": [],
+      "seconds": 0.65
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "-z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 34.3,
+      "minutes": 76
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "caixa-arduino",
+   "turns": [
+    {
+     "text": "Caixa per a un Arduino Uno: base amb les 4 torretes als forats de la placa, parets de 2 mm, obertures per al USB i el connector d'alimentació, i 30 mm d'alçada interior.",
+     "seconds": 2.7,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "caixa-arduino-uno",
+      "summary": "Caixa oberta per a un Arduino Uno R3 amb parets i fons de 2 mm, 30 mm d'alçada interior, quatre torretes de Ø6 mm als forats de la placa (forat de 2,5 mm per a M3 autoroscant) i dues obertures a la paret del costat USB: una pel USB i una pel connector d'alimentació.",
+      "changes": [],
+      "assumptions": [
+       "Les posicions dels forats i les mides de la placa són les de les dades de referència de l'Arduino Uno R3.",
+       "Les torretes fan 5 mm d'alçada, Ø6 mm, amb forat cec de 2,5 mm per a cargols M3 autoroscants.",
+       "Hi ha 1 mm de joc entre la placa i les parets interiors. La placa té 1,6 mm de gruix.",
+       "Les posicions i mides de les obertures són valors típics, no vénen de les dades de referència. Mesura-les a la teva placa:",
+       "USB: centre a 38,5 mm del cantó, 12 mm d'ample.",
+       "Alimentació: centre a 7,5 mm del cantó, 9 mm d'ample.",
+       "Cada obertura té 1 mm de joc, 11 mm d'alçada i comença sobre la cara superior de la placa.",
+       "Les obertures són a la paret del costat X mínim. Les 30 mm d'alçada interior es compten des de la cara superior del fons.",
+       "Impressió FDM amb la caixa a pla sobre el llit, sense suports."
+      ],
+      "questions": [
+       "Vols una tapa amb cargols o un tancament a pressió?",
+       "Necessites ventilació o accés als pins (capçaleres) amb obertures laterals?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "arduino-uno"
+     ],
+     "n_params": 15,
+     "code_lines": 90,
+     "size": [
+      74.6,
+      59.4,
+      32.0
+     ],
+     "expected_bbox": [
+      74.6,
+      59.4,
+      32.0
+     ],
+     "volume_cm3": 24.31,
+     "holes": [
+      {
+       "diameter": 2.5,
+       "axis": "z",
+       "count": 4
+      }
+     ],
+     "expected_holes": [
+      [
+       2.5,
+       4
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 5861.183999999998,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "74.6 × 59.4 × 32.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø2.5 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 1.75 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB",
+      "max_stress_mpa": 2.595,
+      "max_displacement_mm": 0.1628,
+      "safety_factor": 12.1,
+      "n_elements": 2898,
+      "volume_error": 0.0011,
+      "equilibrium_error": 7.7e-13,
+      "warnings": [],
+      "seconds": 0.99
+     },
+     "material": [
+      "asa",
+      "abs",
+      "pc"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 50.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 30.9,
+      "minutes": 68
+     }
+    },
+    {
+     "text": "Afegeix ranures de ventilació a les dues parets llargues.",
+     "seconds": 2.8,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "caixa-arduino-ventilacio",
+      "summary": "He afegit ranures de ventilació horitzontals amb extrems arrodonits a les dues parets llargues (les dels costats ±Y). La resta de la caixa no ha canviat.",
+      "changes": [
+       "Nova família de ranures passants a les dues parets llargues: 3 ranures de 40 × 3 mm, amb pas de 7 mm.",
+       "Noves variables: nombre de ranures, llargada, amplada, pas i alçada de la primera ranura."
+      ],
+      "assumptions": [
+       "Les ranures van centrades en X i la primera és a 12 mm del fons exterior, per sobre de les torretes i de la placa.",
+       "Les dues parets tenen les mateixes ranures. El nombre es limita automàticament perquè les ranures càpiguen sota el cantell superior.",
+       "Les ranures no toquen les obertures USB i d'alimentació de la paret -X."
+      ],
+      "questions": [
+       "Prefereixes ranures verticals o més ranures més curtes?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 20,
+     "code_lines": 118,
+     "size": [
+      74.6,
+      59.4,
+      32.0
+     ],
+     "expected_bbox": [
+      74.6,
+      59.4,
+      32.0
+     ],
+     "volume_cm3": 22.9,
+     "holes": [
+      {
+       "diameter": 2.5,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 3.0,
+       "axis": "y",
+       "count": 6
+      }
+     ],
+     "expected_holes": [
+      [
+       2.5,
+       4
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 5861.183999999998,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "74.6 × 59.4 × 32.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø2.5 (Z), 6 × Ø3 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 1.75 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB",
+      "max_stress_mpa": 2.642,
+      "max_displacement_mm": 0.1669,
+      "safety_factor": 11.9,
+      "n_elements": 3340,
+      "volume_error": 0.0003,
+      "equilibrium_error": 1.6e-12,
+      "warnings": [],
+      "seconds": 1.49
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 522.7,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 29.1,
+      "minutes": 64
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "ganxo-auriculars",
+   "turns": [
+    {
+     "text": "Fes-me un ganxo per penjar els auriculars a sota de la taula.",
+     "seconds": 2.5,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "ganxo-auriculars-taula",
+      "summary": "Ganxo en forma de J per cargolar sota la taula: una placa de 60 × 30 × 6 mm amb dos forats per a cargols M4 i un braç que baixa 70 mm i acaba en un bec cap amunt de 40 mm de fons on es penja la diadema dels auriculars.",
+      "changes": [],
+      "assumptions": [
+       "Mides triades per mi: placa de 60 × 30 mm i 6 mm de gruix, alçada total de 70 mm, braç i bec de 8 mm de gruix, fons de la J de 40 mm i bec de 25 mm d'alçada.",
+       "Dos forats de Ø4,5 mm (M4, joc mitjà) amb avellanat cilíndric de Ø9 mm i 3 mm de fondària per sota, perquè el cap del cargol no sobresurti de la placa.",
+       "Impressió en 3D (FDM): imprimeix-lo estirat de costat (perfil J sobre el llit), així les capes van al llarg del braç i aguanta més pes.",
+       "Càrrega estimada: 20 N cap avall al bec (uns 2 kg, més del que pesen uns auriculars), amb la placa fixada a la taula."
+      ],
+      "questions": [
+       "Quin gruix té la diadema dels teus auriculars? Si és gran, caldria ampliar el fons de la J.",
+       "Vols que la taula sigui de fusta (cargols directes) o prefereixes adhesiu o cinta de doble cara?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 11,
+     "code_lines": 66,
+     "size": [
+      100.0,
+      30.0,
+      70.0
+     ],
+     "expected_bbox": [
+      100.0,
+      30.0,
+      70.0
+     ],
+     "volume_cm3": 41.28,
+     "holes": [
+      {
+       "diameter": 4.5,
+       "axis": "z",
+       "count": 2
+      },
+      {
+       "diameter": 9.0,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       4.5,
+       2
+      ],
+      [
+       9.0,
+       2
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "100.0 × 30.0 × 70.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø4.5 (Z), 2 × Ø9 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 3.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Plate screwed under the desk, 20 N downwards on the bottom of the hook (headphones)",
+      "max_stress_mpa": 1.586,
+      "max_displacement_mm": 0.6952,
+      "safety_factor": 19.9,
+      "n_elements": 2650,
+      "volume_error": 0.0005,
+      "equilibrium_error": 3.2e-11,
+      "warnings": [],
+      "seconds": 0.47
+     },
+     "material": [
+      "asa",
+      "abs",
+      "pc"
+     ],
+     "print": {
+      "up": "+y",
+      "support_mm2": 62.6,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 28.4,
+      "minutes": 63
+     }
+    },
+    {
+     "text": "Més gran, i que es pugui cargolar amb dos cargols de fusta.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "ganxo-auriculars-gran",
+      "summary": "He fet el ganxo un 25 % més gran (75 mm de placa, 88 mm d'alçada, 50 mm de sortida). La placa té dos forats Ø4,5 mm amb avellanat cònic per a dos cargols de fusta de cap avellanat.",
+      "changes": [
+       "Llargada de la placa: de 60 a 75 mm.",
+       "Amplada del ganxo: de 30 a 38 mm.",
+       "Gruix de la placa: de 6 a 8 mm.",
+       "Alçada total: de 70 a 88 mm.",
+       "Gruix del braç i del bec: de 8 a 10 mm.",
+       "Fons de la J: de 40 a 50 mm.",
+       "Alçada del bec: de 25 a 32 mm.",
+       "Distància dels forats a l'extrem: de 12 a 15 mm.",
+       "L'avellanat cilíndric (Ø9 × 3 mm) passa a ser cònic a 90°, de Ø9 mm, que és el que fan servir els cargols de fusta. Això treu el paràmetre de fondària de l'avellanat.",
+       "Càrrega de la simulació: de 20 a 30 N, per la mida més gran."
+      ],
+      "assumptions": [
+       "Cargols de fusta de cap avellanat de Ø4 mm (per exemple 4 × 30 o 4 × 40), amb forat de Ø4,5 mm.",
+       "Si la taula és de tauler tou, pots fer el forat una mica més petit amb el control corresponent.",
+       "Els cargols entren des de sota i es cargolen cap amunt a la taula.",
+       "Per imprimir-lo en FDM, la placa ha d'anar plana sobre la base. Així les capes del braç treballen millor."
+      ],
+      "questions": [
+       "Quin diàmetre de cargol de fusta tens (3,5, 4, 5 mm)? Ho ajusto al forat i a l'avellanat.",
+       "Vols que el ganxo sigui encara més ample per poder penjar-hi més d'uns auriculars?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 10,
+     "code_lines": 68,
+     "size": [
+      125.0,
+      38.0,
+      88.0
+     ],
+     "expected_bbox": [
+      125.0,
+      38.0,
+      88.0
+     ],
+     "volume_cm3": 84.01,
+     "holes": [
+      {
+       "diameter": 4.5,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       4.5,
+       2
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "125.0 × 38.0 × 88.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø4.5 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 7.79 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Plate screwed under the desk with two wood screws, 30 N downwards on the bottom of the hook (headphones)",
+      "max_stress_mpa": 1.528,
+      "max_displacement_mm": 0.837,
+      "safety_factor": 20.6,
+      "n_elements": 3026,
+      "volume_error": -0.0004,
+      "equilibrium_error": 5.1e-11,
+      "warnings": [],
+      "seconds": 0.51
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+y",
+      "support_mm2": 41.8,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 49.6,
+      "minutes": 110
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "pom-estrellat",
+   "turns": [
+    {
+     "text": "Pom estrellat de 5 lòbuls, 40 mm de diàmetre i 15 mm d'alçada, amb allotjament hexagonal per a una femella M6 a sota i forat passant per al cargol.",
+     "seconds": 2.8,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "pom-estrellat-5-lobuls",
+      "summary": "Pom de 5 lòbuls rodons de 40 mm de diàmetre i 15 mm d'alçada, amb un allotjament hexagonal per a una femella M6 a la cara inferior i un forat passant de 6,6 mm per al cargol.",
+      "changes": [],
+      "assumptions": [
+       "Forat del cargol de 6,6 mm (joc mitjà ISO 273 per a M6). En FDM pot sortir uns 0,2 mm més petit.",
+       "Allotjament hexagonal de 10,3 mm entre cares (10 + 0,3) i 5,5 mm de fondària (femella de 5,2 mm + 0,3).",
+       "Lòbuls circulars de radi 7 mm sobre un nucli central de radi 11 mm. Els 40 mm són el diàmetre circumscrit, mesurat des de l'eix fins a la punta d'un lòbul.",
+       "El pom es posa a la cama de la femella cap avall, sobre el pla XY. Per imprimir-lo, col·loca'l amb la cara plana a sota."
+      ],
+      "questions": [
+       "Vols que el pom tingui els lòbuls més marcats (més separats) o més arrodonits, amb un filet a la cara superior?",
+       "Cal un allotjament per al cap del cargol a la part superior, o el cargol entra per sota?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "metric-m6"
+     ],
+     "n_params": 8,
+     "code_lines": 46,
+     "size": [
+      37.517,
+      38.727,
+      15.0
+     ],
+     "expected_bbox": [
+      37.517220926874316,
+      38.727469423673995,
+      15.0
+     ],
+     "volume_cm3": 13.32,
+     "holes": [
+      {
+       "diameter": 6.6,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       6.6,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "37.5 × 38.7 × 15.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø6.6 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 5.61 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.4176,
+      "max_displacement_mm": 0.003045,
+      "safety_factor": 75.4,
+      "n_elements": 3018,
+      "volume_error": -0.0013,
+      "equilibrium_error": 2.3e-14,
+      "warnings": [],
+      "seconds": 0.8
+     },
+     "material": [
+      "asa",
+      "abs",
+      "pc"
+     ],
+     "print": {
+      "up": "-z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 8.9,
+      "minutes": 20
+     }
+    },
+    {
+     "text": "Fes-lo de 7 lòbuls i de 50 mm.",
+     "seconds": 2.5,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "pom-estrellat-7",
+      "summary": "El pom ara té 7 lòbuls i 50 mm de diàmetre, amb la mateixa alçada de 15 mm, l'allotjament hexagonal per a la femella M6 i el forat passant.",
+      "changes": [
+       "Nombre de lòbuls: de 5 a 7.",
+       "Diàmetre total: de 40 a 50 mm.",
+       "Radi dels lòbuls: de 7 a 8,75 mm (+25 %), perquè els lòbuls es toquin bé amb 7 unitats.",
+       "Radi del nucli central: d'11 a 13,75 mm (+25 %), perquè els lòbuls se solapin amb el nucli i el pom sigui un sol sòlid."
+      ],
+      "assumptions": [
+       "He escalat lòbuls i nucli proporcionalment al nou diàmetre. Pots moure els sliders si vols lòbuls més marcats.",
+       "Alçada, forat del cargol i allotjament de la femella queden igual."
+      ],
+      "questions": [],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 8,
+     "code_lines": 46,
+     "size": [
+      48.391,
+      49.185,
+      15.0
+     ],
+     "expected_bbox": [
+      48.39074410341431,
+      49.18515714590927,
+      15.0
+     ],
+     "volume_cm3": 24.99,
+     "holes": [
+      {
+       "diameter": 6.6,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       6.6,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "48.4 × 49.2 × 15.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø6.6 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 9.50 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.1203,
+      "max_displacement_mm": 0.00131,
+      "safety_factor": 262.0,
+      "n_elements": 3313,
+      "volume_error": -0.0125,
+      "equilibrium_error": 4.5e-14,
+      "warnings": [],
+      "seconds": 1.14
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "-z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 14.0,
+      "minutes": 31
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "res-a-construir",
+   "turns": [
+    {
+     "text": "Hola! Què pots fer?",
+     "seconds": 0.0,
+     "status": "questions",
+     "attempts": [],
+     "note": {
+      "title": "",
+      "summary": "Hola! Encara no hi ha cap peça descrita, així que no he construït res. Puc dissenyar peces mecàniques (suports, brides, caixes, abraçadores, eixos...) per a impressió 3D o mecanitzat, i anar-les modificant missatge a missatge.",
+      "changes": [],
+      "assumptions": [],
+      "questions": [
+       "Quina peça vols fer? Digues-me la forma i les mides principals (llargada, amplada, gruix).",
+       "Com la fabricaràs (impressió 3D FDM, SLS o CNC) i on anirà muntada?",
+       "Ha de subjectar o fixar algun component (tub, sensor, motor, coixinet, placa) amb cargols?"
+      ],
+      "use": {}
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "engranatge",
+   "turns": [
+    {
+     "text": "Engranatge recte de mòdul 2 i 20 dents, 10 mm de gruix, amb forat de 8 mm i xaveter de 3 mm d'ample.",
+     "seconds": 3.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "engranatge-m2-z20",
+      "summary": "Engranatge recte de mòdul 2 i 20 dents (Ø primitiu 40 mm, Ø exterior 44 mm) amb perfil d'evolvent, 10 mm de gruix, forat central de Ø8 mm i xaveter de 3 mm d'ample.",
+      "changes": [],
+      "assumptions": [
+       "Angle de pressió de 20° i addendum 1·m, dedendum 1,25·m (Ø d'arrel 35 mm).",
+       "Profunditat del xaveter 1,4 mm per sobre del forat (DIN 6885 per a eix de 8 mm), situat al costat +X.",
+       "El perfil d'evolvent és aproximat amb segments rectes; no hi ha joc entre dents ni arrodoniment del peu.",
+       "El nombre de dents ha de ser múltiple de 4 perquè la mida total coincideixi exactament amb el Ø exterior."
+      ],
+      "questions": [
+       "Quin material i procés (impressió 3D o mecanitzat)? Cal una cubeta amb cargol de fixació?"
+      ],
+      "use": {
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 7,
+     "code_lines": 64,
+     "size": [
+      43.978,
+      43.978,
+      10.0
+     ],
+     "expected_bbox": [
+      44.0,
+      44.0,
+      10.0
+     ],
+     "volume_cm3": 11.7,
+     "holes": [
+      {
+       "diameter": 8.0,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       8.0,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "44.0 × 44.0 × 10.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø8 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.26 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.2495,
+      "max_displacement_mm": 0.002864,
+      "safety_factor": 126.0,
+      "n_elements": 2808,
+      "volume_error": -0.0141,
+      "equilibrium_error": 9.1e-15,
+      "warnings": [],
+      "seconds": 0.55
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 9.4,
+      "minutes": 21
+     }
+    },
+    {
+     "text": "Fes-lo de 24 dents i afegeix-hi un cub de 20 mm de diàmetre i 8 mm d'alçada a una cara, amb un forat roscat M4 radial per al presoner.",
+     "seconds": 3.5,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "engranatge-m2-z24-cub",
+      "summary": "Engranatge recte de mòdul 2 ara amb 24 dents i gruix 10 mm. Té un cub de Ø20 × 8 mm a la cara superior. El forat de Ø8 mm i el xaveter de 3 mm travessen engranatge i cub. Al cub hi ha un forat roscat M4 (Ø3,3 mm) radial per al presoner.",
+      "changes": [
+       "Nombre de dents: de 20 a 24, amb diàmetre exterior de 52 mm.",
+       "Cub nou de Ø20 mm i 8 mm d'alçada sobre la cara superior (paràmetres nous: diàmetre i alçada del cub).",
+       "El forat i el xaveter ara travessen també el cub, així que l'alçada total és de 18 mm.",
+       "Forat roscat M4 radial (Ø3,3 mm) al mig del cub (paràmetre nou: forat del presoner)."
+      ],
+      "assumptions": [
+       "Interpreto \"cub\" com un cub de fixació (hub) cilíndric.",
+       "El cub és a la cara superior (+Z) i concèntric amb el forat.",
+       "El presoner va en direcció +Y, a 90° del xaveter (que és a +X), a mitja alçada del cub. Hi ha 6 mm de paret entre el forat i l'exterior.",
+       "Forat roscat M4 = broca de 3,3 mm. Cal roscar-lo després d'imprimir o mecanitzar."
+      ],
+      "questions": [
+       "Vols el presoner just sobre el xaveter (a 0°) en lloc de a 90°?"
+      ],
+      "use": {}
+     },
+     "version": 2,
+     "components": [
+      "metric-m4"
+     ],
+     "n_params": 10,
+     "code_lines": 87,
+     "size": [
+      51.98,
+      51.98,
+      18.0
+     ],
+     "expected_bbox": [
+      52.0,
+      52.0,
+      18.0
+     ],
+     "volume_cm3": 19.21,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "y",
+       "count": 1
+      },
+      {
+       "diameter": 8.0,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       8.0,
+       1
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "52.0 × 52.0 × 18.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3 (Y), 1 × Ø8 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.19 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 1.204,
+      "max_displacement_mm": 0.009197,
+      "safety_factor": 26.2,
+      "n_elements": 2984,
+      "volume_error": -0.0103,
+      "equilibrium_error": 1.6e-14,
+      "warnings": [],
+      "seconds": 0.63
+     },
+     "material": [
+      "pla",
+      "petg",
+      "asa"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 15.7,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 14.2,
+      "minutes": 31
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "maneta-porta",
+   "turns": [
+    {
+     "text": "Maneta per a una porta corredissa: barra de 120 mm de llarg i secció de 20 x 12 mm, amb totes les arestes arrodonides a radi 3, sobre dos peus de 15 mm d'alçada, amb un forat roscat M4 a sota de cada peu.",
+     "seconds": 2.8,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "maneta-porta-corredissa",
+      "summary": "Maneta de barra de 120 × 20 × 12 mm amb totes les arestes arrodonides a R3, sobre dos peus cilíndrics de 15 mm d'alçada. Cada peu té un forat roscat M4 (Ø3,3 mm) a la cara inferior.",
+      "changes": [],
+      "assumptions": [
+       "Barra amb 120 mm a X, 20 mm a Y i 12 mm a Z (gruix).",
+       "Peus cilíndrics de Ø12 mm, separats 80 mm entre centres i centrats a la barra. Són els valors que he triat jo.",
+       "Els peus no tenen arrodoniments. L'R3 només s'aplica a la barra. Un arrodoniment a la base del peu tocaria el forat.",
+       "Forat M4 roscat: broca de 3,3 mm, 10 mm de fondària, cec des de sota.",
+       "Imprimeix-la amb la barra horitzontal. El pla de la base va sobre el llit, perquè els peus no tinguin voladissos."
+      ],
+      "questions": [
+       "Quin gruix té la porta i quina separació entre cargols necessites? Així ajusto la distància entre peus."
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "metric-m4"
+     ],
+     "n_params": 9,
+     "code_lines": 45,
+     "size": [
+      120.0,
+      20.0,
+      27.0
+     ],
+     "expected_bbox": [
+      120.0,
+      20.0,
+      27.0
+     ],
+     "volume_cm3": 30.88,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       3.3,
+       2
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "120.0 × 20.0 × 27.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø3.3 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.35 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 2.111,
+      "max_displacement_mm": 0.02941,
+      "safety_factor": 14.9,
+      "n_elements": 3664,
+      "volume_error": 0.0414,
+      "equilibrium_error": 1.1e-13,
+      "warnings": [],
+      "seconds": 1.76
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 432.1,
+      "notes": [
+       "needs_support",
+       "small_bed_contact",
+       "tall_and_thin"
+      ],
+      "mass_g": 18.5,
+      "minutes": 41
+     }
+    },
+    {
+     "text": "Separa els peus fins a 96 mm entre centres i fes la barra de 140 mm.",
+     "seconds": 2.9,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "maneta-porta-corredissa",
+      "summary": "La barra ara fa 140 mm de llarg i els peus estan separats 96 mm entre centres; la resta es manté igual.",
+      "changes": [
+       "Llargada de la barra: de 120 a 140 mm.",
+       "Distància entre peus: de 80 a 96 mm."
+      ],
+      "assumptions": [
+       "Els peus queden centrats respecte a la barra (22 mm de marge a cada extrem)."
+      ],
+      "questions": [],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 9,
+     "code_lines": 45,
+     "size": [
+      140.0,
+      20.0,
+      27.0
+     ],
+     "expected_bbox": [
+      140.0,
+      20.0,
+      27.0
+     ],
+     "volume_cm3": 35.53,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       3.3,
+       2
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "140.0 × 20.0 × 27.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø3.3 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.35 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 2.03,
+      "max_displacement_mm": 0.02848,
+      "safety_factor": 15.5,
+      "n_elements": 2981,
+      "volume_error": 0.0384,
+      "equilibrium_error": 3.7e-14,
+      "warnings": [],
+      "seconds": 1.23
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 432.1,
+      "notes": [
+       "needs_support",
+       "small_bed_contact",
+       "tall_and_thin"
+      ],
+      "mass_g": 21.1,
+      "minutes": 47
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "colze-tub",
+   "turns": [
+    {
+     "text": "Colze de 90 graus per a tub de 20 mm de diàmetre exterior: paret de 2 mm, radi de curvatura de 30 mm i una boca femella de 12 mm de fondària a cada extrem perquè hi entri el tub.",
+     "seconds": 6.2,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": "EXPECTED_HOLES says 2 round hole(s) of diameter 16 mm but the solid has 0.\nRound holes actually found on the solid: 1 x d20.3 (axis x), 1 x d20.3 (axis y)."
+      },
+      {
+       "number": 2,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "colze-90-tub-20",
+      "summary": "Colze de 90° per a tub de Ø20 mm, amb paret de 2 mm, radi de curvatura de 30 mm a l'eix i una boca femella de 12 mm de fondària a cada extrem.",
+      "changes": [
+       "EXPECTED_HOLES: he tret l'entrada del conducte de Ø16 mm. Dins del tram corbat és toroïdal, no un forat cilíndric, i per això el mesurador no el comptava. Només queden les dues boques cilíndriques.",
+       "REFERENCE: ara són dos trams de tub, un a cada boca, i no se solapen amb el colze."
+      ],
+      "assumptions": [
+       "Joc de 0,3 mm a la boca perquè el tub hi entri (Ø20,3 mm).",
+       "El conducte interior del tram corbat té Ø16 mm (Ø20 menys 2 × 2 mm de paret).",
+       "Entre cada boca i el conducte queda un petit sortint plànol on el tub fa topall.",
+       "Si imprimeixes el colze en 3D, comprova el joc amb el teu tub."
+      ],
+      "questions": [
+       "Vols que el tub faci topall al fons de la boca, com ara, o que el conducte tingui el mateix diàmetre que el tub?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 5,
+     "code_lines": 55,
+     "size": [
+      54.15,
+      54.15,
+      24.3
+     ],
+     "expected_bbox": [
+      54.15,
+      54.15,
+      24.3
+     ],
+     "volume_cm3": 15.74,
+     "holes": [
+      {
+       "diameter": 20.3,
+       "axis": "x",
+       "count": 1
+      },
+      {
+       "diameter": 20.3,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       20.3,
+       2
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 7464.424144929349,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "54.1 × 54.2 × 24.3 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø20.3 (X), 1 × Ø20.3 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 4.609,
+      "max_displacement_mm": 0.3459,
+      "safety_factor": 6.83,
+      "n_elements": 2786,
+      "volume_error": 0.0297,
+      "equilibrium_error": 3.2e-12,
+      "warnings": [],
+      "seconds": 1.11
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 1076.1,
+      "notes": [
+       "needs_support",
+       "small_bed_contact"
+      ],
+      "mass_g": 16.0,
+      "minutes": 35
+     }
+    },
+    {
+     "text": "Afegeix una orella amb un forat de 5 mm a la part exterior del colze per fixar-lo a la paret.",
+     "seconds": 3.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "colze-90-orella",
+      "summary": "He afegit una orella plana amb un forat de Ø5 mm a la part exterior del colze, a 45°. Queda enrasada amb la cara inferior (z = 0) perquè el colze es cargoli pla contra la paret.",
+      "changes": [
+       "Orella nova de 4 mm de gruix i 16 mm d'ample, amb l'extrem arrodonit, que surt radialment de l'exterior del colze.",
+       "Forat passant de Ø5 mm a l'orella, amb l'eix en Z (perpendicular a la paret).",
+       "Paràmetres nous: gruix, ample, sortint i diàmetre del forat de l'orella.",
+       "Mida total actualitzada: l'orella allarga un poc X i Y.",
+       "Càrrega d'estudi afegida: orella fixa i 20 N de tracció al tub."
+      ],
+      "assumptions": [
+       "L'orella és a la cara inferior (z = 0) i el forat va en Z. Així el pla del colze queda paral·lel a la paret.",
+       "L'orella és a 45°, al punt més exterior de la corba.",
+       "El forat de 5 mm és per a un cargol M4 (joc mitjà 4,5 mm) o per a un cargol de fusta. Si vols un M5, puja'l a 5,5 mm.",
+       "La mida de l'orella (4 mm de gruix, 16 mm d'ample, 12 mm del tub al centre del forat) és una estimació meva.",
+       "La càrrega de 20 N és una estimació."
+      ],
+      "questions": [
+       "Vols una orella a cada banda, o una de sola al centre del colze és suficient?",
+       "La paret és a la cara inferior, o prefereixes que el forat sigui paral·lel al pla del colze?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 9,
+     "code_lines": 89,
+     "size": [
+      58.29,
+      58.29,
+      24.3
+     ],
+     "expected_bbox": [
+      58.28983220125155,
+      58.28983220125155,
+      24.3
+     ],
+     "volume_cm3": 17.23,
+     "holes": [
+      {
+       "diameter": 5.0,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 20.3,
+       "axis": "x",
+       "count": 1
+      },
+      {
+       "diameter": 20.3,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       20.3,
+       2
+      ],
+      [
+       5.0,
+       1
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 7464.424144929349,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "58.3 × 58.3 × 24.3 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø5 (Z), 1 × Ø20.3 (X), 1 × Ø20.3 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Colze cargolat a la paret per l'orella; 20 N de tracció al tub d'una boca",
+      "max_stress_mpa": 4.91,
+      "max_displacement_mm": 0.6559,
+      "safety_factor": 6.42,
+      "n_elements": 2936,
+      "volume_error": 0.0185,
+      "equilibrium_error": 1.5e-11,
+      "warnings": [],
+      "seconds": 1.1
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 1113.1,
+      "notes": [
+       "needs_support",
+       "small_bed_contact"
+      ],
+      "mass_g": 17.5,
+      "minutes": 39
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "reixa-ventilador",
+   "turns": [
+    {
+     "text": "Reixa per a un ventilador de 80 mm: marc de 80 x 80 x 3 mm amb 4 forats de 4,5 mm a 71,5 mm entre centres, obertura circular de 76 mm amb 3 anells concèntrics i 4 radis.",
+     "seconds": 3.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "reixa-ventilador-80",
+      "summary": "Reixa per a ventilador de 80 mm: marc de 80 × 80 × 3 mm amb 4 forats de Ø4,5 mm a 71,5 mm entre centres, obertura circular de Ø76 mm amb 3 anells concèntrics i 4 radis.",
+      "changes": [],
+      "assumptions": [
+       "Els 3 anells estan repartits a intervals iguals dins l'obertura (a 1/4, 2/4 i 3/4 del radi).",
+       "Amplada dels anells 1,5 mm i dels radis 2 mm; les mides són orientatives, ajusta-les als sliders.",
+       "Els 4 radis són dues barres creuades (a 0° i 90°), alineades amb els eixos X i Y.",
+       "Reixa de gruix uniforme (3 mm): anells i radis tenen el mateix gruix que el marc.",
+       "Els forats formen un quadrat de 71,5 mm entre centres, centrat a l'origen.",
+       "Per imprimir-la en 3D, l'he plantejada plana sobre el llit."
+      ],
+      "questions": [
+       "Vols que els anells i els radis siguin més prims que el marc (per exemple 1,5 mm) per no frenar tant el flux d'aire?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 60.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": true,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 8,
+     "code_lines": 59,
+     "size": [
+      80.0,
+      80.0,
+      3.0
+     ],
+     "expected_bbox": [
+      80.0,
+      80.0,
+      3.0
+     ],
+     "volume_cm3": 7.8,
+     "holes": [
+      {
+       "diameter": 4.5,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 17.5,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 36.5,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 55.5,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 76.0,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       4.5,
+       4
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.0 × 80.0 × 3.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø4.5 (Z), 1 × Ø17.5 (Z), 1 × Ø36.5 (Z), 1 × Ø55.5 (Z), 1 × Ø76 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 1.49 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.206,
+      "max_displacement_mm": 0.0008758,
+      "safety_factor": 153.0,
+      "n_elements": 2474,
+      "volume_error": -0.0094,
+      "equilibrium_error": 2.4e-14,
+      "warnings": [],
+      "seconds": 0.6
+     },
+     "material": [
+      "asa",
+      "pc",
+      "pa12"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 9.9,
+      "minutes": 22
+     }
+    },
+    {
+     "text": "Posa-hi 6 radis en lloc de 4 i fes els anells d'1,5 mm d'ample.",
+     "seconds": 3.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "reixa-ventilador-80",
+      "summary": "La reixa ara té 6 radis repartits cada 60° en lloc de 4. Els anells ja eren d'1,5 mm d'ample, així que es queden igual.",
+      "changes": [
+       "Radis: de 4 a 6, repartits uniformement cada 60°. Hi ha un paràmetre nou \"Nombre de radis\".",
+       "Amplada dels anells: ja era 1,5 mm, sense canvis."
+      ],
+      "assumptions": [
+       "L'amplada dels radis es manté en 2 mm."
+      ],
+      "questions": [],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 9,
+     "code_lines": 66,
+     "size": [
+      80.0,
+      80.0,
+      3.0
+     ],
+     "expected_bbox": [
+      80.0,
+      80.0,
+      3.0
+     ],
+     "volume_cm3": 8.19,
+     "holes": [
+      {
+       "diameter": 4.5,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 17.5,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 36.5,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 55.5,
+       "axis": "z",
+       "count": 1
+      },
+      {
+       "diameter": 76.0,
+       "axis": "z",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       4.5,
+       4
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.0 × 80.0 × 3.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø4.5 (Z), 1 × Ø17.5 (Z), 1 × Ø36.5 (Z), 1 × Ø55.5 (Z), 1 × Ø76 (Z)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 1.50 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.1987,
+      "max_displacement_mm": 0.0008072,
+      "safety_factor": 159.0,
+      "n_elements": 2662,
+      "volume_error": 0.0024,
+      "equilibrium_error": 1.2e-14,
+      "warnings": [],
+      "seconds": 0.59
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 10.4,
+      "minutes": 23
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "suport-tub-inclinat",
+   "turns": [
+    {
+     "text": "Suport de paret per a un tub de 25 mm que surt inclinat 30 graus respecte a l'horitzontal: placa de 60 x 40 x 5 mm amb dos forats M5 i un casquet de 40 mm de llarg on entra el tub.",
+     "seconds": 2.8,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-paret-tub-25",
+      "summary": "Suport de paret amb placa de 60 × 40 × 5 mm, dos forats per a M5 i un casquet de 40 mm de llarg inclinat 30° respecte a l'horitzontal, on entra un tub de Ø25 mm.",
+      "changes": [],
+      "assumptions": [
+       "La placa va dreta contra una paret vertical: gruix 5 mm en X (la cara de paret és x = 0), 60 mm d'ample en Y i 40 mm d'alçada en Z. El tub surt cap a +X i cap amunt.",
+       "Els 40 mm del casquet són mesurats sobre l'eix inclinat, des de la cara de la paret.",
+       "Joc de 0,3 mm al forat del tub i paret del casquet de 4 mm (Ø exterior ≈ 33,3 mm).",
+       "Forats M5 amb joc mitjà de Ø5,5 mm, separats 44 mm en Y i centrats en alçada.",
+       "El forat del casquet acaba en un fons que deixa la placa tancada (no passa fins a la paret).",
+       "Càrrega estimada: 50 N cap avall a l'extrem del casquet. Per imprimir-lo, col·loca'l estirat sobre la cara posterior (la de la paret)."
+      ],
+      "questions": [
+       "El tub s'ha de poder encolar o collar dins del casquet? Podria afegir un cargol de fixació.",
+       "Vols el casquet més llarg o amb nervis de reforç a la placa?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "metric-m5"
+     ],
+     "n_params": 10,
+     "code_lines": 76,
+     "size": [
+      42.966,
+      60.0,
+      54.645
+     ],
+     "expected_bbox": [
+      42.966016151377545,
+      60.0,
+      54.64508693702544
+     ],
+     "volume_cm3": 28.0,
+     "holes": [
+      {
+       "diameter": 5.5,
+       "axis": "x",
+       "count": 2
+      },
+      {
+       "diameter": 25.3,
+       "axis": "oblique",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       25.3,
+       1
+      ],
+      [
+       5.5,
+       2
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 18124.5432936851,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "43.0 × 60.0 × 54.6 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø5.5 (X), 1 × Ø25.3."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet",
+      "max_stress_mpa": 4.034,
+      "max_displacement_mm": 0.2093,
+      "safety_factor": 7.81,
+      "n_elements": 2810,
+      "volume_error": 0.0017,
+      "equilibrium_error": 1.4e-12,
+      "warnings": [],
+      "seconds": 1.21
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 123.6,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 21.4,
+      "minutes": 47
+     }
+    },
+    {
+     "text": "Afegeix-hi un forat roscat M4 al casquet per a un cargol presoner que bloquegi el tub.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "suport-tub-inclinat",
+      "summary": "He afegit un forat roscat M4 (broca de 3,3 mm) a la paret del casquet, a la part superior i perpendicular a l'eix del tub, per a un cargol presoner que bloquegi el tub.",
+      "changes": [
+       "Nou forat radial de Ø3,3 mm (rosca M4) al casquet, a 12 mm de l'extrem lliure, cap amunt.",
+       "Nous paràmetres: diàmetre del forat roscat i distància a l'extrem del casquet.",
+       "EXPECTED_HOLES actualitzat amb el nou forat."
+      ],
+      "assumptions": [
+       "El forat és perpendicular a l'eix del casquet i mira cap amunt (cap a la part superior del casquet).",
+       "Es posa a 12 mm de l'extrem lliure; la posició queda limitada perquè no toqui la placa.",
+       "Paret de 4 mm: dona uns 5 filets de M4 (pas 0,7). Si vols més subjecció, augmenta la paret del casquet.",
+       "En una impressió 3D, rosca el forat amb el mateix cargol o fes servir un inserts termofusibles M4 (forat de 5,6 mm)."
+      ],
+      "questions": [
+       "Prefereixes el cargol presoner a dalt, o a un costat del casquet?",
+       "El casquet s'imprimirà o es mecanitzarà? Si és impres, t'afegeixo un reforç (coll) al voltant del forat."
+      ],
+      "use": {
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [
+      "metric-m4"
+     ],
+     "n_params": 12,
+     "code_lines": 88,
+     "size": [
+      42.966,
+      60.0,
+      54.645
+     ],
+     "expected_bbox": [
+      42.966016151377545,
+      60.0,
+      54.64508693702544
+     ],
+     "volume_cm3": 27.97,
+     "holes": [
+      {
+       "diameter": 3.3,
+       "axis": "oblique",
+       "count": 1
+      },
+      {
+       "diameter": 5.5,
+       "axis": "x",
+       "count": 2
+      },
+      {
+       "diameter": 25.3,
+       "axis": "oblique",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       25.3,
+       1
+      ],
+      [
+       5.5,
+       2
+      ],
+      [
+       3.3,
+       1
+      ]
+     ],
+     "reference": {
+      "volume_mm3": 18124.5432936851,
+      "interference_mm3": 0.0
+     },
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "43.0 × 60.0 × 54.6 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 1 × Ø3.3, 2 × Ø5.5 (X), 1 × Ø25.3."
+      },
+      {
+       "level": "ok",
+       "code": "fit_ok",
+       "detail": "The part and the reference component do not overlap."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 4.00 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Placa fixada per dos cargols M5; 50 N cap avall a l'extrem del casquet",
+      "max_stress_mpa": 4.034,
+      "max_displacement_mm": 0.2093,
+      "safety_factor": 7.81,
+      "n_elements": 2806,
+      "volume_error": 0.0016,
+      "equilibrium_error": 1.3e-12,
+      "warnings": [],
+      "seconds": 1.33
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+x",
+      "support_mm2": 132.0,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 21.4,
+      "minutes": 47
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "placa-nom",
+   "turns": [
+    {
+     "text": "Placa identificativa de 80 x 30 x 3 mm amb el text MOTOSTUDENT en relleu d'1 mm i un forat de 3 mm a cada extrem.",
+     "seconds": 4.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "placa-motostudent",
+      "summary": "Placa de 80 × 30 × 3 mm amb el text MOTOSTUDENT en relleu d'1 mm a la cara superior i un forat de Ø3 mm a cada extrem.",
+      "changes": [],
+      "assumptions": [
+       "Els forats són a 6 mm de la vora curta (centre), centrats en l'amplada.",
+       "El text va centrat, en lletra per defecte, de 6 mm de mida; el text és curt per no tocar els forats.",
+       "Forats de Ø3 mm tal com s'ha indicat (sense joc extra); en FDM sortiran una mica petits.",
+       "Impressió en pla amb el relleu cap amunt."
+      ],
+      "questions": [
+       "Vols cantonades arrodonides o forats per a cargols M3 (Ø3,4 mm)?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 1,
+     "components": [
+      "guide-fork-travel-sensor"
+     ],
+     "n_params": 7,
+     "code_lines": 43,
+     "size": [
+      80.0,
+      30.0,
+      4.0
+     ],
+     "expected_bbox": [
+      80.0,
+      30.0,
+      4.0
+     ],
+     "volume_cm3": 7.22,
+     "holes": [
+      {
+       "diameter": 3.0,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       3.0,
+       2
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.0 × 30.0 × 4.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø3 (Z)."
+      },
+      {
+       "level": "warning",
+       "code": "walls_thin",
+       "detail": "4 % of the surface is thinner than 1.2 mm (thinnest: about 0.49 mm). It may print badly or be fragile."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.9619,
+      "max_displacement_mm": 0.01208,
+      "safety_factor": 32.7,
+      "n_elements": 3341,
+      "volume_error": 0.0003,
+      "equilibrium_error": 1.9e-15,
+      "warnings": [],
+      "seconds": 0.59
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 8.8,
+      "minutes": 20
+     }
+    },
+    {
+     "text": "Canvia el text per EPSEVG RACING i fes-lo gravat cap endins en lloc de relleu.",
+     "seconds": 2.6,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "placa-epsevg-racing",
+      "summary": "La placa de 80 × 30 × 3 mm ara porta el text EPSEVG RACING gravat 1 mm cap endins, en lloc de MOTOSTUDENT en relleu. Els dos forats d'extrem es mantenen.",
+      "changes": [
+       "Text: de MOTOSTUDENT a EPSEVG RACING.",
+       "El text passa de relleu a gravat: es talla dins la placa i ja no en sobresurt.",
+       "El paràmetre \"text_height\" es diu ara \"text_depth\" (profunditat del gravat), amb el mateix valor d'1 mm. La profunditat es limita a gruix − 1 mm.",
+       "La mida del text es limita perquè càpiga entre els dos forats.",
+       "L'alçada total és ara igual al gruix de la placa (3 mm)."
+      ],
+      "assumptions": [
+       "Profunditat del gravat d'1 mm, el mateix valor que tenia el relleu.",
+       "El text queda centrat a la placa i amb la mida de 6 mm que ja hi havia."
+      ],
+      "questions": [],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 7,
+     "code_lines": 45,
+     "size": [
+      80.0,
+      30.0,
+      3.0
+     ],
+     "expected_bbox": [
+      80.0,
+      30.0,
+      3.0
+     ],
+     "volume_cm3": 7.09,
+     "holes": [
+      {
+       "diameter": 3.0,
+       "axis": "z",
+       "count": 2
+      }
+     ],
+     "expected_holes": [
+      [
+       3.0,
+       2
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "80.0 × 30.0 × 3.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 2 × Ø3 (Z)."
+      },
+      {
+       "level": "warning",
+       "code": "walls_thin",
+       "detail": "1 % of the surface is thinner than 1.2 mm (thinnest: about 0.91 mm). It may print badly or be fragile."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": false,
+      "description": "auto",
+      "max_stress_mpa": 0.1258,
+      "max_displacement_mm": 0.0003381,
+      "safety_factor": 250.0,
+      "n_elements": 4997,
+      "volume_error": -0.0004,
+      "equilibrium_error": 2.1e-14,
+      "warnings": [],
+      "seconds": 0.77
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 0.0,
+      "notes": [
+       "no_support"
+      ],
+      "mass_g": 8.8,
+      "minutes": 20
+     }
+    }
+   ],
+   "pending": false
+  },
+  {
+   "id": "action-cam-mount",
+   "turns": [
+    {
+     "text": "Action camera mount: two prongs 3 mm thick with a 3.2 mm gap between them and a 5 mm cross hole, standing on a 30 x 30 x 4 mm base with rounded corners and four 3.4 mm holes.",
+     "seconds": 2.4,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "action-camera-mount",
+      "summary": "Action camera mount with a 30 × 30 × 4 mm base with rounded corners and four 3.4 mm holes. Two 3 mm prongs stand on it with a 3.2 mm gap and a 5 mm cross hole through both.",
+      "changes": [],
+      "assumptions": [
+       "Prong height is 15 mm and prong width (along X) is 15 mm. The user did not give them.",
+       "The cross hole is along Y, through both prongs, 9 mm above the base top. Its centre is 9 mm from the base top, so the prong top is 6 mm above the hole centre.",
+       "The prong top is rounded (radius = half the prong width) to follow the hole.",
+       "Base corner radius is 4 mm. The four holes are 4 mm from the edges.",
+       "Print with the base flat on the bed. The prongs then run along the layers in the weak direction, so use thick walls and 100% infill near the hole if it carries load.",
+       "Hole sizes are as given: 3.4 mm for M3 and 5 mm for the cross screw (an M5 screw is normally used)."
+      ],
+      "questions": [
+       "What are the prong height and width of your camera mount standard?",
+       "Do you want a counterbore or a nut pocket on the cross hole?"
+      ],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 70.0,
+       "outdoor": true,
+       "fluids": false,
+       "vibration": true
+      }
+     },
+     "version": 1,
+     "components": [],
+     "n_params": 12,
+     "code_lines": 83,
+     "size": [
+      30.0,
+      30.0,
+      19.0
+     ],
+     "expected_bbox": [
+      30.0,
+      30.0,
+      19.0
+     ],
+     "volume_cm3": 4.57,
+     "holes": [
+      {
+       "diameter": 3.4,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 5.0,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       3.4,
+       4
+      ],
+      [
+       5.0,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "30.0 × 30.0 × 19.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø3.4 (Z), 1 × Ø5 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.30 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Base screwed down by four bolts; 30 N pull on the cross screw (camera load)",
+      "max_stress_mpa": 1.342,
+      "max_displacement_mm": 0.0126,
+      "safety_factor": 23.5,
+      "n_elements": 2937,
+      "volume_error": -0.0033,
+      "equilibrium_error": 1.6e-13,
+      "warnings": [],
+      "seconds": 0.91
+     },
+     "material": [
+      "asa",
+      "pc",
+      "abs"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 23.2,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 5.2,
+      "minutes": 12
+     }
+    },
+    {
+     "text": "Add a third prong and make the base 40 x 30 mm.",
+     "seconds": 1.8,
+     "status": "version",
+     "attempts": [
+      {
+       "number": 1,
+       "error": null
+      }
+     ],
+     "note": {
+      "title": "action-camera-mount-3-prongs",
+      "summary": "The action camera mount now has three prongs, each 3 mm thick, with a 3.2 mm gap between neighbouring prongs. The base is 40 x 30 mm. The 5 mm cross hole passes through all three prongs.",
+      "changes": [
+       "Base length (X): 30 → 40 mm.",
+       "Added a third prong. The prongs are now centred in Y with a gap between each pair, so the prong block is 15.4 mm wide in Y.",
+       "The cross hole now goes through all three prongs.",
+       "The size limits on prong thickness and gap now take three prongs into account.",
+       "The four base holes now sit at the corners of the longer base, so they are 32 mm apart in X."
+      ],
+      "assumptions": [
+       "The 3.2 mm gap is the same between both pairs of prongs.",
+       "The middle prong has the same thickness and size as the outer two."
+      ],
+      "questions": [],
+      "use": {
+       "process": "fdm",
+       "max_temp_c": 40.0,
+       "outdoor": false,
+       "fluids": false,
+       "vibration": false,
+       "flexible": false
+      }
+     },
+     "version": 2,
+     "components": [],
+     "n_params": 12,
+     "code_lines": 83,
+     "size": [
+      40.0,
+      30.0,
+      19.0
+     ],
+     "expected_bbox": [
+      40.0,
+      30.0,
+      19.0
+     ],
+     "volume_cm3": 6.35,
+     "holes": [
+      {
+       "diameter": 3.4,
+       "axis": "z",
+       "count": 4
+      },
+      {
+       "diameter": 5.0,
+       "axis": "y",
+       "count": 1
+      }
+     ],
+     "expected_holes": [
+      [
+       3.4,
+       4
+      ],
+      [
+       5.0,
+       1
+      ]
+     ],
+     "reference": null,
+     "runner_notes": [],
+     "checks": [
+      {
+       "level": "ok",
+       "code": "solid_ok",
+       "detail": "One single solid with no gaps in its surface."
+      },
+      {
+       "level": "ok",
+       "code": "size_ok",
+       "detail": "40.0 × 30.0 × 19.0 mm"
+      },
+      {
+       "level": "ok",
+       "code": "holes_ok",
+       "detail": "Found: 4 × Ø3.4 (Z), 1 × Ø5 (Y)."
+      },
+      {
+       "level": "ok",
+       "code": "walls_ok",
+       "detail": "Thinnest wall found: about 2.30 mm."
+      },
+      {
+       "level": "info",
+       "code": "mass",
+       "detail": "Solid part (100 % infill), density 1.27 g/cm³. With partial infill it weighs less."
+      }
+     ],
+     "simulation": {
+      "own_load_case": true,
+      "description": "Base screwed down by four bolts; 30 N pull on the cross screw (camera load)",
+      "max_stress_mpa": 1.313,
+      "max_displacement_mm": 0.015,
+      "safety_factor": 24.0,
+      "n_elements": 2736,
+      "volume_error": -0.0042,
+      "equilibrium_error": 3.1e-13,
+      "warnings": [],
+      "seconds": 0.61
+     },
+     "material": [
+      "petg",
+      "asa",
+      "pla"
+     ],
+     "print": {
+      "up": "+z",
+      "support_mm2": 34.8,
+      "notes": [
+       "small_overhangs"
+      ],
+      "mass_g": 7.2,
+      "minutes": 16
+     }
+    }
+   ],
+   "pending": false
+  }
+ ]
+}

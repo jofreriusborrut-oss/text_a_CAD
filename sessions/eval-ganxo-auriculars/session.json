@@ -1,0 +1,576 @@
+{
+ "id": "eval-ganxo-auriculars",
+ "title": "ganxo-auriculars-taula",
+ "created": 1793927989.1714776,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Fes-me un ganxo per penjar els auriculars a sota de la taula.",
+   "time": 1793927989.1714895
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927991.6912327,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Més gran, i que es pugui cargolar amb dos cargols de fusta.",
+   "time": 1793927992.5063336
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927995.0812716,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Fes-me un ganxo per penjar els auriculars a sota de la taula.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"plate_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la placa (X)\"},\n    \"plate_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 80, \"label\": \"Amplada de la placa i del ganxo (Y)\"},\n    \"plate_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de la placa\"},\n    \"total_height\": {\"value\": 70, \"unit\": \"mm\", \"min\": 40, \"max\": 150, \"label\": \"Alçada total\"},\n    \"arm_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Gruix del braç i del bec\"},\n    \"hook_depth\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Fons de la J (sortida)\"},\n    \"lip_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 10, \"max\": 60, \"label\": \"Alçada del bec\"},\n    \"screw_hole\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 3, \"max\": 8, \"label\": \"Forat del cargol (M4 = 4,5)\"},\n    \"cbore_diameter\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Avellanat del cap del cargol\"},\n    \"cbore_depth\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1, \"max\": 6, \"label\": \"Fondària de l'avellanat\"},\n    \"hole_edge\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 30, \"label\": \"Distància del forat a l'extrem\"},\n}\n\nL = PARAMS[\"plate_length\"][\"value\"]\nW = PARAMS[\"plate_width\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nH = PARAMS[\"total_height\"][\"value\"]\nA = PARAMS[\"arm_thickness\"][\"value\"]\nD = PARAMS[\"hook_depth\"][\"value\"]\nLIP = PARAMS[\"lip_height\"][\"value\"]\nHD = PARAMS[\"screw_hole\"][\"value\"]\nCB = PARAMS[\"cbore_diameter\"][\"value\"]\nCD = PARAMS[\"cbore_depth\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nA = min(A, L / 4, W / 2)\nT = min(T, H / 3)\nD = max(D, A + 5)\nLIP = max(min(LIP, H - T - A - 10), 2)\nCB = min(max(CB, HD + 1), W - 4)\nHD = min(HD, CB - 1)\nCD = min(CD, T - 2)\nHE = min(max(HE, CB / 2 + 2), (L - A - CB - 2) / 2)\n\n# Mounting plate on top (against the underside of the desk), z = H-T .. H.\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(False, True, False)).translate((0, 0, H - T))\n# Vertical arm at the +X end of the plate, hanging down to z = 0.\narm = cq.Workplane(\"XY\").box(A, W, H, centered=(False, True, False)).translate((L - A, 0, 0))\n# Bottom of the J, going outwards (+X).\nbottom = cq.Workplane(\"XY\").box(D + A, W, A, centered=(False, True, False)).translate((L - A, 0, 0))\n# Lip at the end, going up.\nlip = cq.Workplane(\"XY\").box(A, W, A + LIP, centered=(False, True, False)).translate((L + D - A, 0, 0))\n\nbody = plate.union(arm).union(bottom).union(lip)\n\n# Screw holes through the plate with counterbore from below.\nxs = [HE, L - A - HE]\nfor x in xs:\n    hole = cq.Workplane(\"XY\").workplane(offset=H - T).center(x, 0).circle(HD / 2).extrude(T)\n    cbore = cq.Workplane(\"XY\").workplane(offset=H - T).center(x, 0).circle(CB / 2).extrude(CD)\n    body = body.cut(hole).cut(cbore)\n\nresult = body\n\nEXPECTED_BBOX = (L + D, W, H)\nEXPECTED_HOLES = [(HD, 2), (CB, 2)]\n\nLOAD_CASE = {\n    \"description\": \"Plate screwed under the desk, 20 N downwards on the bottom of the hook (headphones)\",\n    \"fixed\": [{\"type\": \"box\", \"min\": [0, -W / 2, H - 0.5], \"max\": [L, W / 2, H + 0.01]}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [L + D / 2, 0, A / 2], \"radius\": 6}, \"force\": [0, 0, -20]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"plate_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la placa (X)\"},\n    \"plate_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 80, \"label\": \"Amplada de la placa i del ganxo (Y)\"},\n    \"plate_thickness\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de la placa\"},\n    \"total_height\": {\"value\": 70, \"unit\": \"mm\", \"min\": 40, \"max\": 150, \"label\": \"Alçada total\"},\n    \"arm_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Gruix del braç i del bec\"},\n    \"hook_depth\": {\"value\": 40, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Fons de la J (sortida)\"},\n    \"lip_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 10, \"max\": 60, \"label\": \"Alçada del bec\"},\n    \"screw_hole\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 3, \"max\": 8, \"label\": \"Forat del cargol (M4 = 4,5)\"},\n    \"cbore_diameter\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Avellanat del cap del cargol\"},\n    \"cbore_depth\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1, \"max\": 6, \"label\": \"Fondària de l'avellanat\"},\n    \"hole_edge\": {\"value\": 12, \"unit\": \"mm\", \"min\": 6, \"max\": 30, \"label\": \"Distància del forat a l'extrem\"},\n}\n\nL = PARAMS[\"plate_length\"][\"value\"]\nW = PARAMS[\"plate_width\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nH = PARAMS[\"total_height\"][\"value\"]\nA = PARAMS[\"arm_thickness\"][\"value\"]\nD = PARAMS[\"hook_depth\"][\"value\"]\nLIP = PARAMS[\"lip_height\"][\"value\"]\nHD = PARAMS[\"screw_hole\"][\"value\"]\nCB = PARAMS[\"cbore_diameter\"][\"value\"]\nCD = PARAMS[\"cbore_depth\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nA = min(A, L / 4, W / 2)\nT = min(T, H / 3)\nD = max(D, A + 5)\nLIP = max(min(LIP, H - T - A - 10), 2)\nCB = min(max(CB, HD + 1), W - 4)\nHD = min(HD, CB - 1)\nCD = min(CD, T - 2)\nHE = min(max(HE, CB / 2 + 2), (L - A - CB - 2) / 2)\n\n# Mounting plate on top (against the underside of the desk), z = H-T .. H.\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(False, True, False)).translate((0, 0, H - T))\n# Vertical arm at the +X end of the plate, hanging down to z = 0.\narm = cq.Workplane(\"XY\").box(A, W, H, centered=(False, True, False)).translate((L - A, 0, 0))\n# Bottom of the J, going outwards (+X).\nbottom = cq.Workplane(\"XY\").box(D + A, W, A, centered=(False, True, False)).translate((L - A, 0, 0))\n# Lip at the end, going up.\nlip = cq.Workplane(\"XY\").box(A, W, A + LIP, centered=(False, True, False)).translate((L + D - A, 0, 0))\n\nbody = plate.union(arm).union(bottom).union(lip)\n\n# Screw holes through the plate with counterbore from below.\nxs = [HE, L - A - HE]\nfor x in xs:\n    hole = cq.Workplane(\"XY\").workplane(offset=H - T).center(x, 0).circle(HD / 2).extrude(T)\n    cbore = cq.Workplane(\"XY\").workplane(offset=H - T).center(x, 0).circle(CB / 2).extrude(CD)\n    body = body.cut(hole).cut(cbore)\n\nresult = body\n\nEXPECTED_BBOX = (L + D, W, H)\nEXPECTED_HOLES = [(HD, 2), (CB, 2)]\n\nLOAD_CASE = {\n    \"description\": \"Plate screwed under the desk, 20 N downwards on the bottom of the hook (headphones)\",\n    \"fixed\": [{\"type\": \"box\", \"min\": [0, -W / 2, H - 0.5], \"max\": [L, W / 2, H + 0.01]}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [L + D / 2, 0, A / 2], \"radius\": 6}, \"force\": [0, 0, -20]}],\n}\n",
+   "params": {
+    "plate_length": {
+     "value": 60,
+     "unit": "mm",
+     "min": 40,
+     "max": 120,
+     "label": "Llargada de la placa (X)"
+    },
+    "plate_width": {
+     "value": 30,
+     "unit": "mm",
+     "min": 20,
+     "max": 80,
+     "label": "Amplada de la placa i del ganxo (Y)"
+    },
+    "plate_thickness": {
+     "value": 6,
+     "unit": "mm",
+     "min": 4,
+     "max": 12,
+     "label": "Gruix de la placa"
+    },
+    "total_height": {
+     "value": 70,
+     "unit": "mm",
+     "min": 40,
+     "max": 150,
+     "label": "Alçada total"
+    },
+    "arm_thickness": {
+     "value": 8,
+     "unit": "mm",
+     "min": 4,
+     "max": 15,
+     "label": "Gruix del braç i del bec"
+    },
+    "hook_depth": {
+     "value": 40,
+     "unit": "mm",
+     "min": 20,
+     "max": 100,
+     "label": "Fons de la J (sortida)"
+    },
+    "lip_height": {
+     "value": 25,
+     "unit": "mm",
+     "min": 10,
+     "max": 60,
+     "label": "Alçada del bec"
+    },
+    "screw_hole": {
+     "value": 4.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 8,
+     "label": "Forat del cargol (M4 = 4,5)"
+    },
+    "cbore_diameter": {
+     "value": 9,
+     "unit": "mm",
+     "min": 6,
+     "max": 16,
+     "label": "Avellanat del cap del cargol"
+    },
+    "cbore_depth": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1,
+     "max": 6,
+     "label": "Fondària de l'avellanat"
+    },
+    "hole_edge": {
+     "value": 12,
+     "unit": "mm",
+     "min": 6,
+     "max": 30,
+     "label": "Distància del forat a l'extrem"
+    }
+   },
+   "values": {
+    "plate_length": 60,
+    "plate_width": 30,
+    "plate_thickness": 6,
+    "total_height": 70,
+    "arm_thickness": 8,
+    "hook_depth": 40,
+    "lip_height": 25,
+    "screw_hole": 4.5,
+    "cbore_diameter": 9,
+    "cbore_depth": 3,
+    "hole_edge": 12
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 41282.87061573605,
+    "area_mm2": 14674.851753705581,
+    "bbox": {
+     "xmin": 0.0,
+     "ymin": -15.0,
+     "zmin": 0.0,
+     "xmax": 100.0,
+     "ymax": 15.0,
+     "zmax": 70.0,
+     "size": [
+      100.0,
+      30.0,
+      70.0
+     ]
+    },
+    "expected_bbox": [
+     100.0,
+     30.0,
+     70.0
+    ],
+    "n_faces": 18,
+    "notes": [],
+    "center_of_mass": [
+     60.93943077326101,
+     -3.0068192906963597e-16,
+     32.57965658975948
+    ],
+    "hole_list": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       12.0,
+       0.0,
+       68.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       40.0,
+       0.0,
+       68.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 9.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       12.0,
+       0.0,
+       65.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 9.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       40.0,
+       0.0,
+       65.5
+      ],
+      "length": 3.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "count": 2
+     },
+     {
+      "diameter": 9.0,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      4.5,
+      2
+     ],
+     [
+      9.0,
+      2
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Plate screwed under the desk, 20 N downwards on the bottom of the hook (headphones)",
+     "fixed": [
+      {
+       "type": "box",
+       "min": [
+        0.0,
+        -15.0,
+        69.5
+       ],
+       "max": [
+        60.0,
+        15.0,
+        70.01
+       ]
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         80.0,
+         0.0,
+         4.0
+        ],
+        "radius": 6.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        -20.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "ganxo-auriculars-taula",
+    "summary": "Ganxo en forma de J per cargolar sota la taula: una placa de 60 × 30 × 6 mm amb dos forats per a cargols M4 i un braç que baixa 70 mm i acaba en un bec cap amunt de 40 mm de fons on es penja la diadema dels auriculars.",
+    "changes": [],
+    "assumptions": [
+     "Mides triades per mi: placa de 60 × 30 mm i 6 mm de gruix, alçada total de 70 mm, braç i bec de 8 mm de gruix, fons de la J de 40 mm i bec de 25 mm d'alçada.",
+     "Dos forats de Ø4,5 mm (M4, joc mitjà) amb avellanat cilíndric de Ø9 mm i 3 mm de fondària per sota, perquè el cap del cargol no sobresurti de la placa.",
+     "Impressió en 3D (FDM): imprimeix-lo estirat de costat (perfil J sobre el llit), així les capes van al llarg del braç i aguanta més pes.",
+     "Càrrega estimada: 20 N cap avall al bec (uns 2 kg, més del que pesen uns auriculars), amb la placa fixada a la taula."
+    ],
+    "questions": [
+     "Quin gruix té la diadema dels teus auriculars? Si és gran, caldria ampliar el fons de la J.",
+     "Vols que la taula sigui de fusta (cargols directes) o prefereixes adhesiu o cinta de doble cara?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927991.6896064
+  },
+  {
+   "number": 2,
+   "instruction": "Més gran, i que es pugui cargolar amb dos cargols de fusta.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"plate_length\": {\"value\": 75, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la placa (X)\"},\n    \"plate_width\": {\"value\": 38, \"unit\": \"mm\", \"min\": 20, \"max\": 80, \"label\": \"Amplada de la placa i del ganxo (Y)\"},\n    \"plate_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de la placa\"},\n    \"total_height\": {\"value\": 88, \"unit\": \"mm\", \"min\": 40, \"max\": 150, \"label\": \"Alçada total\"},\n    \"arm_thickness\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Gruix del braç i del bec\"},\n    \"hook_depth\": {\"value\": 50, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Fons de la J (sortida)\"},\n    \"lip_height\": {\"value\": 32, \"unit\": \"mm\", \"min\": 10, \"max\": 60, \"label\": \"Alçada del bec\"},\n    \"screw_hole\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 3, \"max\": 8, \"label\": \"Forat del cargol de fusta\"},\n    \"csk_diameter\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Diàmetre de l'avellanat cònic\"},\n    \"hole_edge\": {\"value\": 15, \"unit\": \"mm\", \"min\": 6, \"max\": 30, \"label\": \"Distància del forat a l'extrem\"},\n}\n\nL = PARAMS[\"plate_length\"][\"value\"]\nW = PARAMS[\"plate_width\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nH = PARAMS[\"total_height\"][\"value\"]\nA = PARAMS[\"arm_thickness\"][\"value\"]\nD = PARAMS[\"hook_depth\"][\"value\"]\nLIP = PARAMS[\"lip_height\"][\"value\"]\nHD = PARAMS[\"screw_hole\"][\"value\"]\nCS = PARAMS[\"csk_diameter\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nA = min(A, L / 4, W / 2)\nT = min(T, H / 3)\nD = max(D, A + 5)\nLIP = max(min(LIP, H - T - A - 10), 2)\nCS = min(max(CS, HD + 1), W - 4)\nHD = min(HD, CS - 1)\nCDEPTH = min((CS - HD) / 2, T - 2)      # 90 degree countersink depth\nCS = HD + 2 * CDEPTH\nHE = min(max(HE, CS / 2 + 2), (L - A - CS - 2) / 2)\n\n# Mounting plate on top (against the underside of the desk), z = H-T .. H.\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(False, True, False)).translate((0, 0, H - T))\n# Vertical arm at the +X end of the plate, hanging down to z = 0.\narm = cq.Workplane(\"XY\").box(A, W, H, centered=(False, True, False)).translate((L - A, 0, 0))\n# Bottom of the J, going outwards (+X).\nbottom = cq.Workplane(\"XY\").box(D + A, W, A, centered=(False, True, False)).translate((L - A, 0, 0))\n# Lip at the end, going up.\nlip = cq.Workplane(\"XY\").box(A, W, A + LIP, centered=(False, True, False)).translate((L + D - A, 0, 0))\n\nbody = plate.union(arm).union(bottom).union(lip)\n\n# Wood screw holes through the plate with a conical countersink from below.\nxs = [HE, L - A - HE]\nfor x in xs:\n    hole = cq.Workplane(\"XY\").workplane(offset=H - T).center(x, 0).circle(HD / 2).extrude(T)\n    cone = cq.Workplane(\"XY\").add(\n        cq.Solid.makeCone(CS / 2 + 0.01, HD / 2, CDEPTH + 0.01,\n                          pnt=cq.Vector(x, 0, H - T - 0.01))\n    )\n    body = body.cut(hole).cut(cone)\n\nresult = body\n\nEXPECTED_BBOX = (L + D, W, H)\nEXPECTED_HOLES = [(HD, 2)]\n\nLOAD_CASE = {\n    \"description\": \"Plate screwed under the desk with two wood screws, 30 N downwards on the bottom of the hook (headphones)\",\n    \"fixed\": [{\"type\": \"box\", \"min\": [0, -W / 2, H - 0.5], \"max\": [L, W / 2, H + 0.01]}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [L + D / 2, 0, A / 2], \"radius\": 6}, \"force\": [0, 0, -30]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"plate_length\": {\"value\": 75, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la placa (X)\"},\n    \"plate_width\": {\"value\": 38, \"unit\": \"mm\", \"min\": 20, \"max\": 80, \"label\": \"Amplada de la placa i del ganxo (Y)\"},\n    \"plate_thickness\": {\"value\": 8, \"unit\": \"mm\", \"min\": 4, \"max\": 12, \"label\": \"Gruix de la placa\"},\n    \"total_height\": {\"value\": 88, \"unit\": \"mm\", \"min\": 40, \"max\": 150, \"label\": \"Alçada total\"},\n    \"arm_thickness\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Gruix del braç i del bec\"},\n    \"hook_depth\": {\"value\": 50, \"unit\": \"mm\", \"min\": 20, \"max\": 100, \"label\": \"Fons de la J (sortida)\"},\n    \"lip_height\": {\"value\": 32, \"unit\": \"mm\", \"min\": 10, \"max\": 60, \"label\": \"Alçada del bec\"},\n    \"screw_hole\": {\"value\": 4.5, \"unit\": \"mm\", \"min\": 3, \"max\": 8, \"label\": \"Forat del cargol de fusta\"},\n    \"csk_diameter\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Diàmetre de l'avellanat cònic\"},\n    \"hole_edge\": {\"value\": 15, \"unit\": \"mm\", \"min\": 6, \"max\": 30, \"label\": \"Distància del forat a l'extrem\"},\n}\n\nL = PARAMS[\"plate_length\"][\"value\"]\nW = PARAMS[\"plate_width\"][\"value\"]\nT = PARAMS[\"plate_thickness\"][\"value\"]\nH = PARAMS[\"total_height\"][\"value\"]\nA = PARAMS[\"arm_thickness\"][\"value\"]\nD = PARAMS[\"hook_depth\"][\"value\"]\nLIP = PARAMS[\"lip_height\"][\"value\"]\nHD = PARAMS[\"screw_hole\"][\"value\"]\nCS = PARAMS[\"csk_diameter\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\n\n# Keep the geometry valid for any slider combination.\nA = min(A, L / 4, W / 2)\nT = min(T, H / 3)\nD = max(D, A + 5)\nLIP = max(min(LIP, H - T - A - 10), 2)\nCS = min(max(CS, HD + 1), W - 4)\nHD = min(HD, CS - 1)\nCDEPTH = min((CS - HD) / 2, T - 2)      # 90 degree countersink depth\nCS = HD + 2 * CDEPTH\nHE = min(max(HE, CS / 2 + 2), (L - A - CS - 2) / 2)\n\n# Mounting plate on top (against the underside of the desk), z = H-T .. H.\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(False, True, False)).translate((0, 0, H - T))\n# Vertical arm at the +X end of the plate, hanging down to z = 0.\narm = cq.Workplane(\"XY\").box(A, W, H, centered=(False, True, False)).translate((L - A, 0, 0))\n# Bottom of the J, going outwards (+X).\nbottom = cq.Workplane(\"XY\").box(D + A, W, A, centered=(False, True, False)).translate((L - A, 0, 0))\n# Lip at the end, going up.\nlip = cq.Workplane(\"XY\").box(A, W, A + LIP, centered=(False, True, False)).translate((L + D - A, 0, 0))\n\nbody = plate.union(arm).union(bottom).union(lip)\n\n# Wood screw holes through the plate with a conical countersink from below.\nxs = [HE, L - A - HE]\nfor x in xs:\n    hole = cq.Workplane(\"XY\").workplane(offset=H - T).center(x, 0).circle(HD / 2).extrude(T)\n    cone = cq.Workplane(\"XY\").add(\n        cq.Solid.makeCone(CS / 2 + 0.01, HD / 2, CDEPTH + 0.01,\n                          pnt=cq.Vector(x, 0, H - T - 0.01))\n    )\n    body = body.cut(hole).cut(cone)\n\nresult = body\n\nEXPECTED_BBOX = (L + D, W, H)\nEXPECTED_HOLES = [(HD, 2)]\n\nLOAD_CASE = {\n    \"description\": \"Plate screwed under the desk with two wood screws, 30 N downwards on the bottom of the hook (headphones)\",\n    \"fixed\": [{\"type\": \"box\", \"min\": [0, -W / 2, H - 0.5], \"max\": [L, W / 2, H + 0.01]}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [L + D / 2, 0, A / 2], \"radius\": 6}, \"force\": [0, 0, -30]}],\n}\n",
+   "params": {
+    "plate_length": {
+     "value": 75,
+     "unit": "mm",
+     "min": 40,
+     "max": 120,
+     "label": "Llargada de la placa (X)"
+    },
+    "plate_width": {
+     "value": 38,
+     "unit": "mm",
+     "min": 20,
+     "max": 80,
+     "label": "Amplada de la placa i del ganxo (Y)"
+    },
+    "plate_thickness": {
+     "value": 8,
+     "unit": "mm",
+     "min": 4,
+     "max": 12,
+     "label": "Gruix de la placa"
+    },
+    "total_height": {
+     "value": 88,
+     "unit": "mm",
+     "min": 40,
+     "max": 150,
+     "label": "Alçada total"
+    },
+    "arm_thickness": {
+     "value": 10,
+     "unit": "mm",
+     "min": 4,
+     "max": 15,
+     "label": "Gruix del braç i del bec"
+    },
+    "hook_depth": {
+     "value": 50,
+     "unit": "mm",
+     "min": 20,
+     "max": 100,
+     "label": "Fons de la J (sortida)"
+    },
+    "lip_height": {
+     "value": 32,
+     "unit": "mm",
+     "min": 10,
+     "max": 60,
+     "label": "Alçada del bec"
+    },
+    "screw_hole": {
+     "value": 4.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 8,
+     "label": "Forat del cargol de fusta"
+    },
+    "csk_diameter": {
+     "value": 9,
+     "unit": "mm",
+     "min": 6,
+     "max": 16,
+     "label": "Diàmetre de l'avellanat cònic"
+    },
+    "hole_edge": {
+     "value": 15,
+     "unit": "mm",
+     "min": 6,
+     "max": 30,
+     "label": "Distància del forat a l'extrem"
+    }
+   },
+   "values": {
+    "plate_length": 75,
+    "plate_width": 38,
+    "plate_thickness": 8,
+    "total_height": 88,
+    "arm_thickness": 10,
+    "hook_depth": 50,
+    "lip_height": 32,
+    "screw_hole": 4.5,
+    "csk_diameter": 9,
+    "hole_edge": 15
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 84010.10511820644,
+    "area_mm2": 23198.486860981848,
+    "bbox": {
+     "xmin": 0.0,
+     "ymin": -19.0,
+     "zmin": 0.0,
+     "xmax": 125.0,
+     "ymax": 19.0,
+     "zmax": 88.0,
+     "size": [
+      125.0,
+      38.0,
+      88.0
+     ]
+    },
+    "expected_bbox": [
+     125.0,
+     38.0,
+     88.0
+    ],
+    "n_faces": 16,
+    "notes": [],
+    "center_of_mass": [
+     75.35793946970918,
+     -1.758319412073311e-16,
+     41.819771944978804
+    ],
+    "hole_list": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       15.0,
+       0.0,
+       85.125
+      ],
+      "length": 5.75
+     },
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       50.0,
+       0.0,
+       85.125
+      ],
+      "length": 5.75
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 4.5,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      4.5,
+      2
+     ]
+    ],
+    "reference": null,
+    "load_case": {
+     "description": "Plate screwed under the desk with two wood screws, 30 N downwards on the bottom of the hook (headphones)",
+     "fixed": [
+      {
+       "type": "box",
+       "min": [
+        0.0,
+        -19.0,
+        87.5
+       ],
+       "max": [
+        75.0,
+        19.0,
+        88.01
+       ]
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         100.0,
+         0.0,
+         5.0
+        ],
+        "radius": 6.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        -30.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "ganxo-auriculars-gran",
+    "summary": "He fet el ganxo un 25 % més gran (75 mm de placa, 88 mm d'alçada, 50 mm de sortida). La placa té dos forats Ø4,5 mm amb avellanat cònic per a dos cargols de fusta de cap avellanat.",
+    "changes": [
+     "Llargada de la placa: de 60 a 75 mm.",
+     "Amplada del ganxo: de 30 a 38 mm.",
+     "Gruix de la placa: de 6 a 8 mm.",
+     "Alçada total: de 70 a 88 mm.",
+     "Gruix del braç i del bec: de 8 a 10 mm.",
+     "Fons de la J: de 40 a 50 mm.",
+     "Alçada del bec: de 25 a 32 mm.",
+     "Distància dels forats a l'extrem: de 12 a 15 mm.",
+     "L'avellanat cilíndric (Ø9 × 3 mm) passa a ser cònic a 90°, de Ø9 mm, que és el que fan servir els cargols de fusta. Això treu el paràmetre de fondària de l'avellanat.",
+     "Càrrega de la simulació: de 20 a 30 N, per la mida més gran."
+    ],
+    "assumptions": [
+     "Cargols de fusta de cap avellanat de Ø4 mm (per exemple 4 × 30 o 4 × 40), amb forat de Ø4,5 mm.",
+     "Si la taula és de tauler tou, pots fer el forat una mica més petit amb el control corresponent.",
+     "Els cargols entren des de sota i es cargolen cap amunt a la taula.",
+     "Per imprimir-lo en FDM, la placa ha d'anar plana sobre la base. Així les capes del braç treballen millor."
+    ],
+    "questions": [
+     "Quin diàmetre de cargol de fusta tens (3,5, 4, 5 mm)? Ho ajusto al forat i a l'avellanat.",
+     "Vols que el ganxo sigui encara més ample per poder penjar-hi més d'uns auriculars?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927995.0761805
+  }
+ ]
+}

@@ -1,0 +1,685 @@
+{
+ "id": "eval-soporte-rodamiento",
+ "title": "suport-rodament-608",
+ "created": 1793927977.349808,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Soporte de pie para un rodamiento 608 con dos agujeros M5 en la base. La altura del eje es de 25 mm. Lo voy a imprimir en PETG.",
+   "time": 1793927977.3498955
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927979.7214422,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Hazlo 6 mm más ancho y añade un chaflán de 1 mm en las aristas de arriba.",
+   "time": 1793927981.2538073
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927983.5213356,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Soporte de pie para un rodamiento 608 con dos agujeros M5 en la base. La altura del eje es de 25 mm. Lo voy a imprimir en PETG.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"axis_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Alçada de l'eix\"},\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Amplada de la base (Y)\"},\n    \"base_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"block_thickness\": {\"value\": 10, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Gruix del bloc (Y)\"},\n    \"bearing_od\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Diàmetre exterior del rodament\"},\n    \"bearing_width\": {\"value\": 7, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Amplada del rodament\"},\n    \"seat_clearance\": {\"value\": 0.1, \"unit\": \"mm\", \"min\": 0, \"max\": 0.4, \"label\": \"Joc del seient\"},\n    \"seat_wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Paret al voltant del seient\"},\n    \"through_bore\": {\"value\": 16, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Forat passant (ressalt)\"},\n    \"screw_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat de la base (M5 = 5,5)\"},\n    \"screw_x\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 55, \"label\": \"Posició dels forats (X)\"},\n}\n\nAH = PARAMS[\"axis_height\"][\"value\"]\nBL = PARAMS[\"base_length\"][\"value\"]\nBWD = PARAMS[\"base_width\"][\"value\"]\nBT = PARAMS[\"base_thickness\"][\"value\"]\nT = PARAMS[\"block_thickness\"][\"value\"]\nOD = PARAMS[\"bearing_od\"][\"value\"]\nBRW = PARAMS[\"bearing_width\"][\"value\"]\nCL = PARAMS[\"seat_clearance\"][\"value\"]\nSW = PARAMS[\"seat_wall\"][\"value\"]\nBORE = PARAMS[\"through_bore\"][\"value\"]\nSH = PARAMS[\"screw_hole\"][\"value\"]\nSX = PARAMS[\"screw_x\"][\"value\"]\n\nPD = OD + CL                       # pocket diameter\nBW = PD + 2 * SW                   # block width\nAH = max(AH, BT + PD / 2 + 1)\nBL = max(BL, BW + 2 * (SH + 4))\nT = max(T, 6)\nBWD = max(BWD, T)\nDEPTH = min(BRW + 0.2, T - 2)\nBORE = min(BORE, PD - 3)\nSX = min(max(SX, BW / 2 + SH / 2 + 2), BL / 2 - SH / 2 - 2)\nSH = min(SH, BWD - 4)\n\nbase = cq.Workplane(\"XY\").box(BL, BWD, BT, centered=(True, True, False))\npost = cq.Workplane(\"XY\").box(BW, T, AH, centered=(True, True, False))\ntop = cq.Workplane(\"XZ\").center(0, AH).circle(BW / 2).extrude(T / 2, both=True)\nbody = base.union(post).union(top)\n\n# Bearing pocket from the -Y face, and smaller through bore leaving a shoulder.\npocket = (cq.Workplane(\"XZ\").center(0, AH).circle(PD / 2).extrude(DEPTH)\n          .translate((0, -T / 2 + DEPTH, 0)))\nbore = cq.Workplane(\"XZ\").center(0, AH).circle(BORE / 2).extrude(T, both=True)\nbody = body.cut(pocket).cut(bore)\n\n# Two M5 holes in the base.\nholes = (cq.Workplane(\"XY\").pushPoints([(-SX, 0), (SX, 0)]).circle(SH / 2).extrude(BT))\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (BL, BWD, AH + BW / 2)\nEXPECTED_HOLES = [(PD, 1), (BORE, 1), (SH, 2)]\n\n# Ghost bearing 608 in its seat (bore 8).\nREFERENCE = (cq.Workplane(\"XZ\").center(0, AH).circle(OD / 2).circle(4).extrude(BRW)\n             .translate((0, -T / 2 + BRW, 0)))\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the two M5 screws, 50 N downwards on the bearing seat\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [-SX, 0, BT / 2], \"diameter\": SH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [SX, 0, BT / 2], \"diameter\": SH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, AH], \"diameter\": BORE},\n               \"force\": [0, 0, -50]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"axis_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Alçada de l'eix\"},\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Amplada de la base (Y)\"},\n    \"base_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"block_thickness\": {\"value\": 10, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Gruix del bloc (Y)\"},\n    \"bearing_od\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Diàmetre exterior del rodament\"},\n    \"bearing_width\": {\"value\": 7, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Amplada del rodament\"},\n    \"seat_clearance\": {\"value\": 0.1, \"unit\": \"mm\", \"min\": 0, \"max\": 0.4, \"label\": \"Joc del seient\"},\n    \"seat_wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Paret al voltant del seient\"},\n    \"through_bore\": {\"value\": 16, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Forat passant (ressalt)\"},\n    \"screw_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat de la base (M5 = 5,5)\"},\n    \"screw_x\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 55, \"label\": \"Posició dels forats (X)\"},\n}\n\nAH = PARAMS[\"axis_height\"][\"value\"]\nBL = PARAMS[\"base_length\"][\"value\"]\nBWD = PARAMS[\"base_width\"][\"value\"]\nBT = PARAMS[\"base_thickness\"][\"value\"]\nT = PARAMS[\"block_thickness\"][\"value\"]\nOD = PARAMS[\"bearing_od\"][\"value\"]\nBRW = PARAMS[\"bearing_width\"][\"value\"]\nCL = PARAMS[\"seat_clearance\"][\"value\"]\nSW = PARAMS[\"seat_wall\"][\"value\"]\nBORE = PARAMS[\"through_bore\"][\"value\"]\nSH = PARAMS[\"screw_hole\"][\"value\"]\nSX = PARAMS[\"screw_x\"][\"value\"]\n\nPD = OD + CL                       # pocket diameter\nBW = PD + 2 * SW                   # block width\nAH = max(AH, BT + PD / 2 + 1)\nBL = max(BL, BW + 2 * (SH + 4))\nT = max(T, 6)\nBWD = max(BWD, T)\nDEPTH = min(BRW + 0.2, T - 2)\nBORE = min(BORE, PD - 3)\nSX = min(max(SX, BW / 2 + SH / 2 + 2), BL / 2 - SH / 2 - 2)\nSH = min(SH, BWD - 4)\n\nbase = cq.Workplane(\"XY\").box(BL, BWD, BT, centered=(True, True, False))\npost = cq.Workplane(\"XY\").box(BW, T, AH, centered=(True, True, False))\ntop = cq.Workplane(\"XZ\").center(0, AH).circle(BW / 2).extrude(T / 2, both=True)\nbody = base.union(post).union(top)\n\n# Bearing pocket from the -Y face, and smaller through bore leaving a shoulder.\npocket = (cq.Workplane(\"XZ\").center(0, AH).circle(PD / 2).extrude(DEPTH)\n          .translate((0, -T / 2 + DEPTH, 0)))\nbore = cq.Workplane(\"XZ\").center(0, AH).circle(BORE / 2).extrude(T, both=True)\nbody = body.cut(pocket).cut(bore)\n\n# Two M5 holes in the base.\nholes = (cq.Workplane(\"XY\").pushPoints([(-SX, 0), (SX, 0)]).circle(SH / 2).extrude(BT))\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (BL, BWD, AH + BW / 2)\nEXPECTED_HOLES = [(PD, 1), (BORE, 1), (SH, 2)]\n\n# Ghost bearing 608 in its seat (bore 8).\nREFERENCE = (cq.Workplane(\"XZ\").center(0, AH).circle(OD / 2).circle(4).extrude(BRW)\n             .translate((0, -T / 2 + BRW, 0)))\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the two M5 screws, 50 N downwards on the bearing seat\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [-SX, 0, BT / 2], \"diameter\": SH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [SX, 0, BT / 2], \"diameter\": SH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, AH], \"diameter\": BORE},\n               \"force\": [0, 0, -50]}],\n}\n",
+   "params": {
+    "axis_height": {
+     "value": 25,
+     "unit": "mm",
+     "min": 15,
+     "max": 80,
+     "label": "Alçada de l'eix"
+    },
+    "base_length": {
+     "value": 60,
+     "unit": "mm",
+     "min": 40,
+     "max": 120,
+     "label": "Llargada de la base (X)"
+    },
+    "base_width": {
+     "value": 30,
+     "unit": "mm",
+     "min": 15,
+     "max": 80,
+     "label": "Amplada de la base (Y)"
+    },
+    "base_thickness": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de la base"
+    },
+    "block_thickness": {
+     "value": 10,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Gruix del bloc (Y)"
+    },
+    "bearing_od": {
+     "value": 22,
+     "unit": "mm",
+     "min": 10,
+     "max": 40,
+     "label": "Diàmetre exterior del rodament"
+    },
+    "bearing_width": {
+     "value": 7,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Amplada del rodament"
+    },
+    "seat_clearance": {
+     "value": 0.1,
+     "unit": "mm",
+     "min": 0,
+     "max": 0.4,
+     "label": "Joc del seient"
+    },
+    "seat_wall": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Paret al voltant del seient"
+    },
+    "through_bore": {
+     "value": 16,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Forat passant (ressalt)"
+    },
+    "screw_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forat de la base (M5 = 5,5)"
+    },
+    "screw_x": {
+     "value": 22,
+     "unit": "mm",
+     "min": 10,
+     "max": 55,
+     "label": "Posició dels forats (X)"
+    }
+   },
+   "values": {
+    "axis_height": 25,
+    "base_length": 60,
+    "base_width": 30,
+    "base_thickness": 5,
+    "block_thickness": 10,
+    "bearing_od": 22,
+    "bearing_width": 7,
+    "seat_clearance": 0.1,
+    "seat_wall": 5,
+    "through_bore": 16,
+    "screw_hole": 5.5,
+    "screw_x": 22
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 15903.96077748918,
+    "area_mm2": 7492.771874884409,
+    "bbox": {
+     "xmin": -30.0,
+     "ymin": -15.0,
+     "zmin": 0.0,
+     "xmax": 30.0,
+     "ymax": 15.0,
+     "zmax": 41.05,
+     "size": [
+      60.0,
+      30.0,
+      41.05
+     ]
+    },
+    "expected_bbox": [
+     60.0,
+     30.0,
+     41.05
+    ],
+    "n_faces": 17,
+    "notes": [],
+    "center_of_mass": [
+     7.86316837946331e-16,
+     0.11569109407819472,
+     10.299830682348702
+    ],
+    "hole_list": [
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.0,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       22.0,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 16.0,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       3.6,
+       25.0
+      ],
+      "length": 2.8
+     },
+     {
+      "diameter": 22.1,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       -1.4,
+       25.0
+      ],
+      "length": 7.2
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "count": 2
+     },
+     {
+      "diameter": 16.0,
+      "axis": "y",
+      "count": 1
+     },
+     {
+      "diameter": 22.1,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      22.1,
+      1
+     ],
+     [
+      16.0,
+      1
+     ],
+     [
+      5.5,
+      2
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 2309.070600388498,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Base fixed by the two M5 screws, 50 N downwards on the bearing seat",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.0,
+        0.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        22.0,
+        0.0,
+        2.5
+       ],
+       "diameter": 5.5
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "y",
+        "center": [
+         0.0,
+         0.0,
+         25.0
+        ],
+        "diameter": 16.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        -50.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-rodament-608",
+    "summary": "Suport de peu per a un rodament 608 amb la base plana de 60 × 30 × 5 mm, dos forats per a M5 i un bloc amb seient de Ø22,1 mm. L'eix queda a 25 mm de la base.",
+    "changes": [],
+    "assumptions": [
+     "Seient del rodament de Ø22,1 mm (22 + 0,1 de joc per a premsat en impressió). Prova'l abans amb un anell petit.",
+     "Profunditat del seient de 7,2 mm, amb un ressalt de 2,8 mm i un forat passant de Ø16 mm que només toca l'anell exterior.",
+     "L'eix del rodament va al llarg de Y. El bloc fa 10 mm de gruix i 32 mm d'amplada, amb la part superior arrodonida.",
+     "Forats M5 amb joc mitjà de 5,5 mm a x = ±22 mm. Base de 60 × 30 × 5 mm.",
+     "Impressió en PETG: imprimeix-lo amb la base sobre el llit. Així les capes queden en el sentit de l'esforç del bloc.",
+     "Càrrega estimada de 50 N cap avall sobre el rodament, a tall d'indicació."
+    ],
+    "questions": [
+     "Vols que el rodament quedi fix amb una tapa o un cargol, o només amb ajust premsat?",
+     "Necessites una altra distància entre els forats M5 o una base més ample?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "bearing-608",
+    "metric-m5"
+   ],
+   "created": 1793927979.719348
+  },
+  {
+   "number": 2,
+   "instruction": "Hazlo 6 mm más ancho y añade un chaflán de 1 mm en las aristas de arriba.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"axis_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Alçada de l'eix\"},\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 36, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Amplada de la base (Y)\"},\n    \"base_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"block_thickness\": {\"value\": 10, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Gruix del bloc (Y)\"},\n    \"bearing_od\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Diàmetre exterior del rodament\"},\n    \"bearing_width\": {\"value\": 7, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Amplada del rodament\"},\n    \"seat_clearance\": {\"value\": 0.1, \"unit\": \"mm\", \"min\": 0, \"max\": 0.4, \"label\": \"Joc del seient\"},\n    \"seat_wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Paret al voltant del seient\"},\n    \"through_bore\": {\"value\": 16, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Forat passant (ressalt)\"},\n    \"screw_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat de la base (M5 = 5,5)\"},\n    \"screw_x\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 55, \"label\": \"Posició dels forats (X)\"},\n    \"chamfer\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 2, \"label\": \"Xamfrà superior\"},\n}\n\nAH = PARAMS[\"axis_height\"][\"value\"]\nBL = PARAMS[\"base_length\"][\"value\"]\nBWD = PARAMS[\"base_width\"][\"value\"]\nBT = PARAMS[\"base_thickness\"][\"value\"]\nT = PARAMS[\"block_thickness\"][\"value\"]\nOD = PARAMS[\"bearing_od\"][\"value\"]\nBRW = PARAMS[\"bearing_width\"][\"value\"]\nCL = PARAMS[\"seat_clearance\"][\"value\"]\nSW = PARAMS[\"seat_wall\"][\"value\"]\nBORE = PARAMS[\"through_bore\"][\"value\"]\nSH = PARAMS[\"screw_hole\"][\"value\"]\nSX = PARAMS[\"screw_x\"][\"value\"]\nCH = PARAMS[\"chamfer\"][\"value\"]\n\nPD = OD + CL                       # pocket diameter\nBW = PD + 2 * SW                   # block width\nAH = max(AH, BT + PD / 2 + 1)\nBL = max(BL, BW + 2 * (SH + 4))\nT = max(T, 6)\nBWD = max(BWD, T)\nDEPTH = min(BRW + 0.2, T - 2)\nBORE = min(BORE, PD - 3)\nSX = min(max(SX, BW / 2 + SH / 2 + 2), BL / 2 - SH / 2 - 2)\nSH = min(SH, BWD - 4)\nCH = min(CH, BT / 3, T / 4)\n\nbase = cq.Workplane(\"XY\").box(BL, BWD, BT, centered=(True, True, False))\nif CH > 0:\n    base = base.faces(\">Z\").edges().chamfer(CH)\n\npost = cq.Workplane(\"XY\").box(BW, T, AH, centered=(True, True, False))\ntop = cq.Workplane(\"XZ\").center(0, AH).circle(BW / 2).extrude(T / 2, both=True)\nupper = post.union(top)\nif CH > 0:\n    # Chamfer the outline of the front and back faces, except the bottom edges.\n    upper = upper.faces(\">Y or <Y\").edges(\"not <Z\").chamfer(CH)\nbody = base.union(upper)\n\n# Bearing pocket from the -Y face, and smaller through bore leaving a shoulder.\npocket = (cq.Workplane(\"XZ\").center(0, AH).circle(PD / 2).extrude(DEPTH)\n          .translate((0, -T / 2 + DEPTH, 0)))\nbore = cq.Workplane(\"XZ\").center(0, AH).circle(BORE / 2).extrude(T, both=True)\nbody = body.cut(pocket).cut(bore)\n\n# Two M5 holes in the base.\nholes = (cq.Workplane(\"XY\").pushPoints([(-SX, 0), (SX, 0)]).circle(SH / 2).extrude(BT))\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (BL, BWD, AH + BW / 2)\nEXPECTED_HOLES = [(PD, 1), (BORE, 1), (SH, 2)]\n\n# Ghost bearing 608 in its seat (bore 8).\nREFERENCE = (cq.Workplane(\"XZ\").center(0, AH).circle(OD / 2).circle(4).extrude(BRW)\n             .translate((0, -T / 2 + BRW, 0)))\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the two M5 screws, 50 N downwards on the bearing seat\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [-SX, 0, BT / 2], \"diameter\": SH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [SX, 0, BT / 2], \"diameter\": SH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, AH], \"diameter\": BORE},\n               \"force\": [0, 0, -50]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"axis_height\": {\"value\": 25, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Alçada de l'eix\"},\n    \"base_length\": {\"value\": 60, \"unit\": \"mm\", \"min\": 40, \"max\": 120, \"label\": \"Llargada de la base (X)\"},\n    \"base_width\": {\"value\": 36, \"unit\": \"mm\", \"min\": 15, \"max\": 80, \"label\": \"Amplada de la base (Y)\"},\n    \"base_thickness\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Gruix de la base\"},\n    \"block_thickness\": {\"value\": 10, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Gruix del bloc (Y)\"},\n    \"bearing_od\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 40, \"label\": \"Diàmetre exterior del rodament\"},\n    \"bearing_width\": {\"value\": 7, \"unit\": \"mm\", \"min\": 3, \"max\": 15, \"label\": \"Amplada del rodament\"},\n    \"seat_clearance\": {\"value\": 0.1, \"unit\": \"mm\", \"min\": 0, \"max\": 0.4, \"label\": \"Joc del seient\"},\n    \"seat_wall\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 10, \"label\": \"Paret al voltant del seient\"},\n    \"through_bore\": {\"value\": 16, \"unit\": \"mm\", \"min\": 8, \"max\": 30, \"label\": \"Forat passant (ressalt)\"},\n    \"screw_hole\": {\"value\": 5.5, \"unit\": \"mm\", \"min\": 3, \"max\": 9, \"label\": \"Forat de la base (M5 = 5,5)\"},\n    \"screw_x\": {\"value\": 22, \"unit\": \"mm\", \"min\": 10, \"max\": 55, \"label\": \"Posició dels forats (X)\"},\n    \"chamfer\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 2, \"label\": \"Xamfrà superior\"},\n}\n\nAH = PARAMS[\"axis_height\"][\"value\"]\nBL = PARAMS[\"base_length\"][\"value\"]\nBWD = PARAMS[\"base_width\"][\"value\"]\nBT = PARAMS[\"base_thickness\"][\"value\"]\nT = PARAMS[\"block_thickness\"][\"value\"]\nOD = PARAMS[\"bearing_od\"][\"value\"]\nBRW = PARAMS[\"bearing_width\"][\"value\"]\nCL = PARAMS[\"seat_clearance\"][\"value\"]\nSW = PARAMS[\"seat_wall\"][\"value\"]\nBORE = PARAMS[\"through_bore\"][\"value\"]\nSH = PARAMS[\"screw_hole\"][\"value\"]\nSX = PARAMS[\"screw_x\"][\"value\"]\nCH = PARAMS[\"chamfer\"][\"value\"]\n\nPD = OD + CL                       # pocket diameter\nBW = PD + 2 * SW                   # block width\nAH = max(AH, BT + PD / 2 + 1)\nBL = max(BL, BW + 2 * (SH + 4))\nT = max(T, 6)\nBWD = max(BWD, T)\nDEPTH = min(BRW + 0.2, T - 2)\nBORE = min(BORE, PD - 3)\nSX = min(max(SX, BW / 2 + SH / 2 + 2), BL / 2 - SH / 2 - 2)\nSH = min(SH, BWD - 4)\nCH = min(CH, BT / 3, T / 4)\n\nbase = cq.Workplane(\"XY\").box(BL, BWD, BT, centered=(True, True, False))\nif CH > 0:\n    base = base.faces(\">Z\").edges().chamfer(CH)\n\npost = cq.Workplane(\"XY\").box(BW, T, AH, centered=(True, True, False))\ntop = cq.Workplane(\"XZ\").center(0, AH).circle(BW / 2).extrude(T / 2, both=True)\nupper = post.union(top)\nif CH > 0:\n    # Chamfer the outline of the front and back faces, except the bottom edges.\n    upper = upper.faces(\">Y or <Y\").edges(\"not <Z\").chamfer(CH)\nbody = base.union(upper)\n\n# Bearing pocket from the -Y face, and smaller through bore leaving a shoulder.\npocket = (cq.Workplane(\"XZ\").center(0, AH).circle(PD / 2).extrude(DEPTH)\n          .translate((0, -T / 2 + DEPTH, 0)))\nbore = cq.Workplane(\"XZ\").center(0, AH).circle(BORE / 2).extrude(T, both=True)\nbody = body.cut(pocket).cut(bore)\n\n# Two M5 holes in the base.\nholes = (cq.Workplane(\"XY\").pushPoints([(-SX, 0), (SX, 0)]).circle(SH / 2).extrude(BT))\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (BL, BWD, AH + BW / 2)\nEXPECTED_HOLES = [(PD, 1), (BORE, 1), (SH, 2)]\n\n# Ghost bearing 608 in its seat (bore 8).\nREFERENCE = (cq.Workplane(\"XZ\").center(0, AH).circle(OD / 2).circle(4).extrude(BRW)\n             .translate((0, -T / 2 + BRW, 0)))\n\nLOAD_CASE = {\n    \"description\": \"Base fixed by the two M5 screws, 50 N downwards on the bearing seat\",\n    \"fixed\": [\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [-SX, 0, BT / 2], \"diameter\": SH},\n        {\"type\": \"hole\", \"axis\": \"z\", \"center\": [SX, 0, BT / 2], \"diameter\": SH},\n    ],\n    \"loads\": [{\"region\": {\"type\": \"hole\", \"axis\": \"y\", \"center\": [0, 0, AH], \"diameter\": BORE},\n               \"force\": [0, 0, -50]}],\n}\n",
+   "params": {
+    "axis_height": {
+     "value": 25,
+     "unit": "mm",
+     "min": 15,
+     "max": 80,
+     "label": "Alçada de l'eix"
+    },
+    "base_length": {
+     "value": 60,
+     "unit": "mm",
+     "min": 40,
+     "max": 120,
+     "label": "Llargada de la base (X)"
+    },
+    "base_width": {
+     "value": 36,
+     "unit": "mm",
+     "min": 15,
+     "max": 80,
+     "label": "Amplada de la base (Y)"
+    },
+    "base_thickness": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Gruix de la base"
+    },
+    "block_thickness": {
+     "value": 10,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Gruix del bloc (Y)"
+    },
+    "bearing_od": {
+     "value": 22,
+     "unit": "mm",
+     "min": 10,
+     "max": 40,
+     "label": "Diàmetre exterior del rodament"
+    },
+    "bearing_width": {
+     "value": 7,
+     "unit": "mm",
+     "min": 3,
+     "max": 15,
+     "label": "Amplada del rodament"
+    },
+    "seat_clearance": {
+     "value": 0.1,
+     "unit": "mm",
+     "min": 0,
+     "max": 0.4,
+     "label": "Joc del seient"
+    },
+    "seat_wall": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 10,
+     "label": "Paret al voltant del seient"
+    },
+    "through_bore": {
+     "value": 16,
+     "unit": "mm",
+     "min": 8,
+     "max": 30,
+     "label": "Forat passant (ressalt)"
+    },
+    "screw_hole": {
+     "value": 5.5,
+     "unit": "mm",
+     "min": 3,
+     "max": 9,
+     "label": "Forat de la base (M5 = 5,5)"
+    },
+    "screw_x": {
+     "value": 22,
+     "unit": "mm",
+     "min": 10,
+     "max": 55,
+     "label": "Posició dels forats (X)"
+    },
+    "chamfer": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0,
+     "max": 2,
+     "label": "Xamfrà superior"
+    }
+   },
+   "values": {
+    "axis_height": 25,
+    "base_length": 60,
+    "base_width": 36,
+    "base_thickness": 5,
+    "block_thickness": 10,
+    "bearing_od": 22,
+    "bearing_width": 7,
+    "seat_clearance": 0.1,
+    "seat_wall": 5,
+    "through_bore": 16,
+    "screw_hole": 5.5,
+    "screw_x": 22,
+    "chamfer": 1
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 17519.918746283598,
+    "area_mm2": 8053.406113270253,
+    "bbox": {
+     "xmin": -30.000000000000004,
+     "ymin": -18.0,
+     "zmin": 0.0,
+     "xmax": 30.0,
+     "ymax": 18.0,
+     "zmax": 41.0500001,
+     "size": [
+      60.0,
+      36.0,
+      41.0500001
+     ]
+    },
+    "expected_bbox": [
+     60.0,
+     36.0,
+     41.05
+    ],
+    "n_faces": 27,
+    "notes": [],
+    "center_of_mass": [
+     4.096184311756194e-17,
+     0.10502027145044425,
+     9.448554897464637
+    ],
+    "hole_list": [
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -22.0,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       22.0,
+       0.0,
+       2.5
+      ],
+      "length": 5.0
+     },
+     {
+      "diameter": 16.0,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       3.6,
+       25.0
+      ],
+      "length": 2.8
+     },
+     {
+      "diameter": 22.1,
+      "axis": "y",
+      "direction": [
+       -0.0,
+       1.0,
+       -0.0
+      ],
+      "center": [
+       0.0,
+       -1.4,
+       25.0
+      ],
+      "length": 7.2
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 5.5,
+      "axis": "z",
+      "count": 2
+     },
+     {
+      "diameter": 16.0,
+      "axis": "y",
+      "count": 1
+     },
+     {
+      "diameter": 22.1,
+      "axis": "y",
+      "count": 1
+     }
+    ],
+    "expected_holes": [
+     [
+      22.1,
+      1
+     ],
+     [
+      16.0,
+      1
+     ],
+     [
+      5.5,
+      2
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 2309.070600388498,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Base fixed by the two M5 screws, 50 N downwards on the bearing seat",
+     "fixed": [
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        -22.0,
+        0.0,
+        2.5
+       ],
+       "diameter": 5.5
+      },
+      {
+       "type": "hole",
+       "axis": "z",
+       "center": [
+        22.0,
+        0.0,
+        2.5
+       ],
+       "diameter": 5.5
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "hole",
+        "axis": "y",
+        "center": [
+         0.0,
+         0.0,
+         25.0
+        ],
+        "diameter": 16.0
+       },
+       "force": [
+        0.0,
+        0.0,
+        -50.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "suport-rodament-608",
+    "summary": "He ampliado la base 6 mm en Y, de 30 a 36 mm. He añadido un chaflán de 1 mm en las aristas superiores: el perímetro de la base y el contorno del bloque y del arco en sus dos caras.",
+    "changes": [
+     "Ancho de la base (Y): de 30 a 36 mm.",
+     "Nuevo parámetro \"chamfer\" de 1 mm.",
+     "Chaflán en el perímetro superior de la base.",
+     "Chaflán en las aristas del bloque y del arco en las caras frontal y trasera, excepto las de abajo."
+    ],
+    "assumptions": [
+     "\"Más ancho\" lo he entendido como el ancho de la base en Y (la longitud en X no cambia). El grosor del bloque sigue en 10 mm.",
+     "Los chaflanes se limitan automáticamente para que no superen el grosor de la base ni un cuarto del bloque.",
+     "Para imprimirlo en PETG, pon la base plana sobre la cama."
+    ],
+    "questions": [
+     "¿Querías ensanchar la base en X o aumentar el grosor del bloque en lugar del ancho en Y?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false,
+     "material": "petg"
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927983.5168622
+  }
+ ]
+}

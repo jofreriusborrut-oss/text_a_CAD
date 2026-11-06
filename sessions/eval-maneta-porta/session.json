@@ -1,0 +1,421 @@
+{
+ "id": "eval-maneta-porta",
+ "title": "maneta-porta-corredissa",
+ "created": 1793927995.6586044,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Maneta per a una porta corredissa: barra de 120 mm de llarg i secció de 20 x 12 mm, amb totes les arestes arrodonides a radi 3, sobre dos peus de 15 mm d'alçada, amb un forat roscat M4 a sota de cada peu.",
+   "time": 1793927995.6586127
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927998.4807508,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Separa els peus fins a 96 mm entre centres i fes la barra de 140 mm.",
+   "time": 1793928002.1465168
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928005.0329766,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Maneta per a una porta corredissa: barra de 120 mm de llarg i secció de 20 x 12 mm, amb totes les arestes arrodonides a radi 3, sobre dos peus de 15 mm d'alçada, amb un forat roscat M4 a sota de cada peu.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"bar_length\": {\"value\": 120, \"unit\": \"mm\", \"min\": 60, \"max\": 300, \"label\": \"Llargada de la barra (X)\"},\n    \"bar_width\": {\"value\": 20, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Amplada de la barra (Y)\"},\n    \"bar_thickness\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Gruix de la barra (Z)\"},\n    \"bar_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 0, \"max\": 5, \"label\": \"Radi de les arestes\"},\n    \"foot_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Alçada dels peus\"},\n    \"foot_diameter\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Diàmetre dels peus\"},\n    \"foot_spacing\": {\"value\": 80, \"unit\": \"mm\", \"min\": 20, \"max\": 250, \"label\": \"Distància entre peus\"},\n    \"tap_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat roscat M4 (broca 3,3)\"},\n    \"tap_depth\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 40, \"label\": \"Fondària del forat\"},\n}\n\nL = PARAMS[\"bar_length\"][\"value\"]\nW = PARAMS[\"bar_width\"][\"value\"]\nT = PARAMS[\"bar_thickness\"][\"value\"]\nR = PARAMS[\"bar_radius\"][\"value\"]\nFH = PARAMS[\"foot_height\"][\"value\"]\nFD = PARAMS[\"foot_diameter\"][\"value\"]\nSP = PARAMS[\"foot_spacing\"][\"value\"]\nHD = PARAMS[\"tap_hole\"][\"value\"]\nHDEP = PARAMS[\"tap_depth\"][\"value\"]\n\nR = min(R, T / 2 - 0.1, W / 2 - 0.1)\nFD = min(FD, W - 2 * R - 0.5)\nFD = max(FD, 4)\nHD = min(HD, FD - 3)\nSP = min(SP, L - FD - 2 * R)\nHDEP = min(HDEP, FH - 2)\n\nbar = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\nif R > 0:\n    bar = bar.edges().fillet(R)\nbar = bar.translate((0, 0, FH))\n\npts = [(-SP / 2, 0), (SP / 2, 0)]\nfeet = cq.Workplane(\"XY\").pushPoints(pts).circle(FD / 2).extrude(FH + 1)\nbody = bar.union(feet)\n\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(HDEP)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, W, FH + T)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"bar_length\": {\"value\": 120, \"unit\": \"mm\", \"min\": 60, \"max\": 300, \"label\": \"Llargada de la barra (X)\"},\n    \"bar_width\": {\"value\": 20, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Amplada de la barra (Y)\"},\n    \"bar_thickness\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Gruix de la barra (Z)\"},\n    \"bar_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 0, \"max\": 5, \"label\": \"Radi de les arestes\"},\n    \"foot_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Alçada dels peus\"},\n    \"foot_diameter\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Diàmetre dels peus\"},\n    \"foot_spacing\": {\"value\": 80, \"unit\": \"mm\", \"min\": 20, \"max\": 250, \"label\": \"Distància entre peus\"},\n    \"tap_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat roscat M4 (broca 3,3)\"},\n    \"tap_depth\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 40, \"label\": \"Fondària del forat\"},\n}\n\nL = PARAMS[\"bar_length\"][\"value\"]\nW = PARAMS[\"bar_width\"][\"value\"]\nT = PARAMS[\"bar_thickness\"][\"value\"]\nR = PARAMS[\"bar_radius\"][\"value\"]\nFH = PARAMS[\"foot_height\"][\"value\"]\nFD = PARAMS[\"foot_diameter\"][\"value\"]\nSP = PARAMS[\"foot_spacing\"][\"value\"]\nHD = PARAMS[\"tap_hole\"][\"value\"]\nHDEP = PARAMS[\"tap_depth\"][\"value\"]\n\nR = min(R, T / 2 - 0.1, W / 2 - 0.1)\nFD = min(FD, W - 2 * R - 0.5)\nFD = max(FD, 4)\nHD = min(HD, FD - 3)\nSP = min(SP, L - FD - 2 * R)\nHDEP = min(HDEP, FH - 2)\n\nbar = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\nif R > 0:\n    bar = bar.edges().fillet(R)\nbar = bar.translate((0, 0, FH))\n\npts = [(-SP / 2, 0), (SP / 2, 0)]\nfeet = cq.Workplane(\"XY\").pushPoints(pts).circle(FD / 2).extrude(FH + 1)\nbody = bar.union(feet)\n\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(HDEP)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, W, FH + T)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "params": {
+    "bar_length": {
+     "value": 120,
+     "unit": "mm",
+     "min": 60,
+     "max": 300,
+     "label": "Llargada de la barra (X)"
+    },
+    "bar_width": {
+     "value": 20,
+     "unit": "mm",
+     "min": 10,
+     "max": 50,
+     "label": "Amplada de la barra (Y)"
+    },
+    "bar_thickness": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Gruix de la barra (Z)"
+    },
+    "bar_radius": {
+     "value": 3,
+     "unit": "mm",
+     "min": 0,
+     "max": 5,
+     "label": "Radi de les arestes"
+    },
+    "foot_height": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 60,
+     "label": "Alçada dels peus"
+    },
+    "foot_diameter": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 20,
+     "label": "Diàmetre dels peus"
+    },
+    "foot_spacing": {
+     "value": 80,
+     "unit": "mm",
+     "min": 20,
+     "max": 250,
+     "label": "Distància entre peus"
+    },
+    "tap_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Forat roscat M4 (broca 3,3)"
+    },
+    "tap_depth": {
+     "value": 10,
+     "unit": "mm",
+     "min": 4,
+     "max": 40,
+     "label": "Fondària del forat"
+    }
+   },
+   "values": {
+    "bar_length": 120,
+    "bar_width": 20,
+    "bar_thickness": 12,
+    "bar_radius": 3,
+    "foot_height": 15,
+    "foot_diameter": 12,
+    "foot_spacing": 80,
+    "tap_hole": 3.3,
+    "tap_depth": 10
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 30883.718421647525,
+    "area_mm2": 8705.256299444682,
+    "bbox": {
+     "xmin": -60.0,
+     "ymin": -10.0,
+     "zmin": 0.0,
+     "xmax": 60.0,
+     "ymax": 10.0,
+     "zmax": 27.0,
+     "size": [
+      120.0,
+      20.0,
+      27.0
+     ]
+    },
+    "expected_bbox": [
+     120.0,
+     20.0,
+     27.0
+    ],
+    "n_faces": 34,
+    "notes": [],
+    "center_of_mass": [
+     -1.1080187199939163e-15,
+     4.196986138629365e-18,
+     19.605496113468515
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -40.0,
+       0.0,
+       5.0
+      ],
+      "length": 10.0
+     },
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       40.0,
+       0.0,
+       5.0
+      ],
+      "length": 10.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      3.3,
+      2
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "maneta-porta-corredissa",
+    "summary": "Maneta de barra de 120 × 20 × 12 mm amb totes les arestes arrodonides a R3, sobre dos peus cilíndrics de 15 mm d'alçada. Cada peu té un forat roscat M4 (Ø3,3 mm) a la cara inferior.",
+    "changes": [],
+    "assumptions": [
+     "Barra amb 120 mm a X, 20 mm a Y i 12 mm a Z (gruix).",
+     "Peus cilíndrics de Ø12 mm, separats 80 mm entre centres i centrats a la barra. Són els valors que he triat jo.",
+     "Els peus no tenen arrodoniments. L'R3 només s'aplica a la barra. Un arrodoniment a la base del peu tocaria el forat.",
+     "Forat M4 roscat: broca de 3,3 mm, 10 mm de fondària, cec des de sota.",
+     "Imprimeix-la amb la barra horitzontal. El pla de la base va sobre el llit, perquè els peus no tinguin voladissos."
+    ],
+    "questions": [
+     "Quin gruix té la porta i quina separació entre cargols necessites? Així ajusto la distància entre peus."
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "metric-m4"
+   ],
+   "created": 1793927998.4789047
+  },
+  {
+   "number": 2,
+   "instruction": "Separa els peus fins a 96 mm entre centres i fes la barra de 140 mm.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"bar_length\": {\"value\": 140, \"unit\": \"mm\", \"min\": 60, \"max\": 300, \"label\": \"Llargada de la barra (X)\"},\n    \"bar_width\": {\"value\": 20, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Amplada de la barra (Y)\"},\n    \"bar_thickness\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Gruix de la barra (Z)\"},\n    \"bar_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 0, \"max\": 5, \"label\": \"Radi de les arestes\"},\n    \"foot_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Alçada dels peus\"},\n    \"foot_diameter\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Diàmetre dels peus\"},\n    \"foot_spacing\": {\"value\": 96, \"unit\": \"mm\", \"min\": 20, \"max\": 250, \"label\": \"Distància entre peus\"},\n    \"tap_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat roscat M4 (broca 3,3)\"},\n    \"tap_depth\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 40, \"label\": \"Fondària del forat\"},\n}\n\nL = PARAMS[\"bar_length\"][\"value\"]\nW = PARAMS[\"bar_width\"][\"value\"]\nT = PARAMS[\"bar_thickness\"][\"value\"]\nR = PARAMS[\"bar_radius\"][\"value\"]\nFH = PARAMS[\"foot_height\"][\"value\"]\nFD = PARAMS[\"foot_diameter\"][\"value\"]\nSP = PARAMS[\"foot_spacing\"][\"value\"]\nHD = PARAMS[\"tap_hole\"][\"value\"]\nHDEP = PARAMS[\"tap_depth\"][\"value\"]\n\nR = min(R, T / 2 - 0.1, W / 2 - 0.1)\nFD = min(FD, W - 2 * R - 0.5)\nFD = max(FD, 4)\nHD = min(HD, FD - 3)\nSP = min(SP, L - FD - 2 * R)\nHDEP = min(HDEP, FH - 2)\n\nbar = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\nif R > 0:\n    bar = bar.edges().fillet(R)\nbar = bar.translate((0, 0, FH))\n\npts = [(-SP / 2, 0), (SP / 2, 0)]\nfeet = cq.Workplane(\"XY\").pushPoints(pts).circle(FD / 2).extrude(FH + 1)\nbody = bar.union(feet)\n\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(HDEP)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, W, FH + T)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"bar_length\": {\"value\": 140, \"unit\": \"mm\", \"min\": 60, \"max\": 300, \"label\": \"Llargada de la barra (X)\"},\n    \"bar_width\": {\"value\": 20, \"unit\": \"mm\", \"min\": 10, \"max\": 50, \"label\": \"Amplada de la barra (Y)\"},\n    \"bar_thickness\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 40, \"label\": \"Gruix de la barra (Z)\"},\n    \"bar_radius\": {\"value\": 3, \"unit\": \"mm\", \"min\": 0, \"max\": 5, \"label\": \"Radi de les arestes\"},\n    \"foot_height\": {\"value\": 15, \"unit\": \"mm\", \"min\": 8, \"max\": 60, \"label\": \"Alçada dels peus\"},\n    \"foot_diameter\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Diàmetre dels peus\"},\n    \"foot_spacing\": {\"value\": 96, \"unit\": \"mm\", \"min\": 20, \"max\": 250, \"label\": \"Distància entre peus\"},\n    \"tap_hole\": {\"value\": 3.3, \"unit\": \"mm\", \"min\": 2, \"max\": 6, \"label\": \"Forat roscat M4 (broca 3,3)\"},\n    \"tap_depth\": {\"value\": 10, \"unit\": \"mm\", \"min\": 4, \"max\": 40, \"label\": \"Fondària del forat\"},\n}\n\nL = PARAMS[\"bar_length\"][\"value\"]\nW = PARAMS[\"bar_width\"][\"value\"]\nT = PARAMS[\"bar_thickness\"][\"value\"]\nR = PARAMS[\"bar_radius\"][\"value\"]\nFH = PARAMS[\"foot_height\"][\"value\"]\nFD = PARAMS[\"foot_diameter\"][\"value\"]\nSP = PARAMS[\"foot_spacing\"][\"value\"]\nHD = PARAMS[\"tap_hole\"][\"value\"]\nHDEP = PARAMS[\"tap_depth\"][\"value\"]\n\nR = min(R, T / 2 - 0.1, W / 2 - 0.1)\nFD = min(FD, W - 2 * R - 0.5)\nFD = max(FD, 4)\nHD = min(HD, FD - 3)\nSP = min(SP, L - FD - 2 * R)\nHDEP = min(HDEP, FH - 2)\n\nbar = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\nif R > 0:\n    bar = bar.edges().fillet(R)\nbar = bar.translate((0, 0, FH))\n\npts = [(-SP / 2, 0), (SP / 2, 0)]\nfeet = cq.Workplane(\"XY\").pushPoints(pts).circle(FD / 2).extrude(FH + 1)\nbody = bar.union(feet)\n\nholes = cq.Workplane(\"XY\").pushPoints(pts).circle(HD / 2).extrude(HDEP)\nresult = body.cut(holes)\n\nEXPECTED_BBOX = (L, W, FH + T)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "params": {
+    "bar_length": {
+     "value": 140,
+     "unit": "mm",
+     "min": 60,
+     "max": 300,
+     "label": "Llargada de la barra (X)"
+    },
+    "bar_width": {
+     "value": 20,
+     "unit": "mm",
+     "min": 10,
+     "max": 50,
+     "label": "Amplada de la barra (Y)"
+    },
+    "bar_thickness": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 40,
+     "label": "Gruix de la barra (Z)"
+    },
+    "bar_radius": {
+     "value": 3,
+     "unit": "mm",
+     "min": 0,
+     "max": 5,
+     "label": "Radi de les arestes"
+    },
+    "foot_height": {
+     "value": 15,
+     "unit": "mm",
+     "min": 8,
+     "max": 60,
+     "label": "Alçada dels peus"
+    },
+    "foot_diameter": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 20,
+     "label": "Diàmetre dels peus"
+    },
+    "foot_spacing": {
+     "value": 96,
+     "unit": "mm",
+     "min": 20,
+     "max": 250,
+     "label": "Distància entre peus"
+    },
+    "tap_hole": {
+     "value": 3.3,
+     "unit": "mm",
+     "min": 2,
+     "max": 6,
+     "label": "Forat roscat M4 (broca 3,3)"
+    },
+    "tap_depth": {
+     "value": 10,
+     "unit": "mm",
+     "min": 4,
+     "max": 40,
+     "label": "Fondària del forat"
+    }
+   },
+   "values": {
+    "bar_length": 140,
+    "bar_width": 20,
+    "bar_thickness": 12,
+    "bar_radius": 3,
+    "foot_height": 15,
+    "foot_diameter": 12,
+    "foot_spacing": 96,
+    "tap_hole": 3.3,
+    "tap_depth": 10
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 35529.20509929369,
+    "area_mm2": 9882.247417875456,
+    "bbox": {
+     "xmin": -70.0,
+     "ymin": -10.0,
+     "zmin": 0.0,
+     "xmax": 70.0,
+     "ymax": 10.0,
+     "zmax": 27.0,
+     "size": [
+      140.0,
+      20.0,
+      27.0
+     ]
+    },
+    "expected_bbox": [
+     140.0,
+     20.0,
+     27.0
+    ],
+    "n_faces": 34,
+    "notes": [],
+    "center_of_mass": [
+     3.500596203035244e-15,
+     2.2767580771827993e-16,
+     19.787829188714728
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -48.0,
+       0.0,
+       5.0
+      ],
+      "length": 10.0
+     },
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       48.0,
+       0.0,
+       5.0
+      ],
+      "length": 10.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.3,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      3.3,
+      2
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "maneta-porta-corredissa",
+    "summary": "La barra ara fa 140 mm de llarg i els peus estan separats 96 mm entre centres; la resta es manté igual.",
+    "changes": [
+     "Llargada de la barra: de 120 a 140 mm.",
+     "Distància entre peus: de 80 a 96 mm."
+    ],
+    "assumptions": [
+     "Els peus queden centrats respecte a la barra (22 mm de marge a cada extrem)."
+    ],
+    "questions": [],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928005.0305765
+  }
+ ]
+}

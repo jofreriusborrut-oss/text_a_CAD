@@ -1,0 +1,791 @@
+{
+ "id": "eval-caixa-arduino",
+ "title": "caixa-arduino-uno",
+ "created": 1793927985.8562915,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Caixa per a un Arduino Uno: base amb les 4 torretes als forats de la placa, parets de 2 mm, obertures per al USB i el connector d'alimentació, i 30 mm d'alçada interior.",
+   "time": 1793927985.8563004
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927988.5354698,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Afegeix ranures de ventilació a les dues parets llargues.",
+   "time": 1793927990.2311552
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927993.0646715,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Caixa per a un Arduino Uno: base amb les 4 torretes als forats de la placa, parets de 2 mm, obertures per al USB i el connector d'alimentació, i 30 mm d'alçada interior.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"board_length\": {\"value\": 68.6, \"unit\": \"mm\", \"min\": 60, \"max\": 80, \"label\": \"Llargada de la placa\"},\n    \"board_width\": {\"value\": 53.4, \"unit\": \"mm\", \"min\": 45, \"max\": 65, \"label\": \"Amplada de la placa\"},\n    \"board_thickness\": {\"value\": 1.6, \"unit\": \"mm\", \"min\": 1, \"max\": 2.5, \"label\": \"Gruix de la placa\"},\n    \"clearance\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 3, \"label\": \"Joc placa-paret\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1.5, \"max\": 5, \"label\": \"Gruix de paret i fons\"},\n    \"inner_height\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 60, \"label\": \"Alçada interior\"},\n    \"standoff_height\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Alçada de les torretes\"},\n    \"standoff_diameter\": {\"value\": 6, \"unit\": \"mm\", \"min\": 5, \"max\": 10, \"label\": \"Diàmetre de les torretes\"},\n    \"standoff_hole\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 3.2, \"label\": \"Forat de les torretes\"},\n    \"usb_y\": {\"value\": 38.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre USB (Y des del cantó)\"},\n    \"usb_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Amplada obertura USB\"},\n    \"power_y\": {\"value\": 7.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre alimentació (Y)\"},\n    \"power_width\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Amplada obertura alimentació\"},\n    \"port_height\": {\"value\": 11, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Alçada dels connectors\"},\n    \"port_margin\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 2, \"label\": \"Joc de les obertures\"},\n}\n\nBL = PARAMS[\"board_length\"][\"value\"]\nBW = PARAMS[\"board_width\"][\"value\"]\nBT = PARAMS[\"board_thickness\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nIH = PARAMS[\"inner_height\"][\"value\"]\nSH = PARAMS[\"standoff_height\"][\"value\"]\nSD = PARAMS[\"standoff_diameter\"][\"value\"]\nSHOLE = PARAMS[\"standoff_hole\"][\"value\"]\nUSBY = PARAMS[\"usb_y\"][\"value\"]\nUSBW = PARAMS[\"usb_width\"][\"value\"]\nPWY = PARAMS[\"power_y\"][\"value\"]\nPWW = PARAMS[\"power_width\"][\"value\"]\nPH = PARAMS[\"port_height\"][\"value\"]\nPM = PARAMS[\"port_margin\"][\"value\"]\n\nSHOLE = min(SHOLE, SD - 2)\nSH = min(SH, IH - BT - PH - 2)\nIL = BL + 2 * C\nIW = BW + 2 * C\nOL = IL + 2 * T\nOW = IW + 2 * T\nH = T + IH\nUSBW = min(USBW + 2 * PM, BW - 2)\nPWW = min(PWW + 2 * PM, BW - 2)\nUSBY = min(max(USBY, USBW / 2), BW - USBW / 2)\nPWY = min(max(PWY, PWW / 2), BW - PWW / 2)\n\n# Board corner (next to USB) in box coordinates\nbx = -IL / 2 + C\nby = -IW / 2 + C\n\n# Open box\nbox = cq.Workplane(\"XY\").box(OL, OW, H, centered=(True, True, False))\nbox = box.cut(\n    cq.Workplane(\"XY\").workplane(offset=T).box(IL, IW, IH + 1, centered=(True, True, False))\n)\n\n# Standoffs at the board holes\nholes_xy = [(14.0, 2.5), (15.2, 50.8), (66.0, 7.6), (66.0, 35.6)]\npts = [(bx + x, by + y) for x, y in holes_xy]\nposts = cq.Workplane(\"XY\").workplane(offset=T / 2).pushPoints(pts).circle(SD / 2).extrude(T / 2 + SH)\nbox = box.union(posts)\ndrill = cq.Workplane(\"XY\").workplane(offset=T + 0.5).pushPoints(pts).circle(SHOLE / 2).extrude(SH + 1)\nbox = box.cut(drill)\n\n# Openings in the -X wall (USB side)\nzb = T + SH + BT - 0.5\nfor yc, w in ((USBY, USBW), (PWY, PWW)):\n    cut = cq.Workplane(\"XY\").box(T + 2 * C + 2, w, PH + PM + 0.5, centered=(False, True, False)).translate(\n        (-OL / 2 - 1, by + yc, zb)\n    )\n    box = box.cut(cut)\n\nresult = box\n\nEXPECTED_BBOX = (OL, OW, H)\nEXPECTED_HOLES = [(SHOLE, 4)]\n\nREFERENCE = (\n    cq.Workplane(\"XY\")\n    .box(BL, BW, BT, centered=(False, False, False))\n    .translate((bx, by, T + SH + 0.01))\n)\n\nLOAD_CASE = {\n    \"description\": \"Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB\",\n    \"fixed\": [{\"type\": \"side\", \"side\": \"-z\"}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [-OL / 2, 0, T + SH + BT + PH / 2], \"radius\": 6}, \"force\": [-10, 0, 0]}],\n}\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"board_length\": {\"value\": 68.6, \"unit\": \"mm\", \"min\": 60, \"max\": 80, \"label\": \"Llargada de la placa\"},\n    \"board_width\": {\"value\": 53.4, \"unit\": \"mm\", \"min\": 45, \"max\": 65, \"label\": \"Amplada de la placa\"},\n    \"board_thickness\": {\"value\": 1.6, \"unit\": \"mm\", \"min\": 1, \"max\": 2.5, \"label\": \"Gruix de la placa\"},\n    \"clearance\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 3, \"label\": \"Joc placa-paret\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1.5, \"max\": 5, \"label\": \"Gruix de paret i fons\"},\n    \"inner_height\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 60, \"label\": \"Alçada interior\"},\n    \"standoff_height\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Alçada de les torretes\"},\n    \"standoff_diameter\": {\"value\": 6, \"unit\": \"mm\", \"min\": 5, \"max\": 10, \"label\": \"Diàmetre de les torretes\"},\n    \"standoff_hole\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 3.2, \"label\": \"Forat de les torretes\"},\n    \"usb_y\": {\"value\": 38.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre USB (Y des del cantó)\"},\n    \"usb_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Amplada obertura USB\"},\n    \"power_y\": {\"value\": 7.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre alimentació (Y)\"},\n    \"power_width\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Amplada obertura alimentació\"},\n    \"port_height\": {\"value\": 11, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Alçada dels connectors\"},\n    \"port_margin\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 2, \"label\": \"Joc de les obertures\"},\n}\n\nBL = PARAMS[\"board_length\"][\"value\"]\nBW = PARAMS[\"board_width\"][\"value\"]\nBT = PARAMS[\"board_thickness\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nIH = PARAMS[\"inner_height\"][\"value\"]\nSH = PARAMS[\"standoff_height\"][\"value\"]\nSD = PARAMS[\"standoff_diameter\"][\"value\"]\nSHOLE = PARAMS[\"standoff_hole\"][\"value\"]\nUSBY = PARAMS[\"usb_y\"][\"value\"]\nUSBW = PARAMS[\"usb_width\"][\"value\"]\nPWY = PARAMS[\"power_y\"][\"value\"]\nPWW = PARAMS[\"power_width\"][\"value\"]\nPH = PARAMS[\"port_height\"][\"value\"]\nPM = PARAMS[\"port_margin\"][\"value\"]\n\nSHOLE = min(SHOLE, SD - 2)\nSH = min(SH, IH - BT - PH - 2)\nIL = BL + 2 * C\nIW = BW + 2 * C\nOL = IL + 2 * T\nOW = IW + 2 * T\nH = T + IH\nUSBW = min(USBW + 2 * PM, BW - 2)\nPWW = min(PWW + 2 * PM, BW - 2)\nUSBY = min(max(USBY, USBW / 2), BW - USBW / 2)\nPWY = min(max(PWY, PWW / 2), BW - PWW / 2)\n\n# Board corner (next to USB) in box coordinates\nbx = -IL / 2 + C\nby = -IW / 2 + C\n\n# Open box\nbox = cq.Workplane(\"XY\").box(OL, OW, H, centered=(True, True, False))\nbox = box.cut(\n    cq.Workplane(\"XY\").workplane(offset=T).box(IL, IW, IH + 1, centered=(True, True, False))\n)\n\n# Standoffs at the board holes\nholes_xy = [(14.0, 2.5), (15.2, 50.8), (66.0, 7.6), (66.0, 35.6)]\npts = [(bx + x, by + y) for x, y in holes_xy]\nposts = cq.Workplane(\"XY\").workplane(offset=T / 2).pushPoints(pts).circle(SD / 2).extrude(T / 2 + SH)\nbox = box.union(posts)\ndrill = cq.Workplane(\"XY\").workplane(offset=T + 0.5).pushPoints(pts).circle(SHOLE / 2).extrude(SH + 1)\nbox = box.cut(drill)\n\n# Openings in the -X wall (USB side)\nzb = T + SH + BT - 0.5\nfor yc, w in ((USBY, USBW), (PWY, PWW)):\n    cut = cq.Workplane(\"XY\").box(T + 2 * C + 2, w, PH + PM + 0.5, centered=(False, True, False)).translate(\n        (-OL / 2 - 1, by + yc, zb)\n    )\n    box = box.cut(cut)\n\nresult = box\n\nEXPECTED_BBOX = (OL, OW, H)\nEXPECTED_HOLES = [(SHOLE, 4)]\n\nREFERENCE = (\n    cq.Workplane(\"XY\")\n    .box(BL, BW, BT, centered=(False, False, False))\n    .translate((bx, by, T + SH + 0.01))\n)\n\nLOAD_CASE = {\n    \"description\": \"Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB\",\n    \"fixed\": [{\"type\": \"side\", \"side\": \"-z\"}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [-OL / 2, 0, T + SH + BT + PH / 2], \"radius\": 6}, \"force\": [-10, 0, 0]}],\n}\n",
+   "params": {
+    "board_length": {
+     "value": 68.6,
+     "unit": "mm",
+     "min": 60,
+     "max": 80,
+     "label": "Llargada de la placa"
+    },
+    "board_width": {
+     "value": 53.4,
+     "unit": "mm",
+     "min": 45,
+     "max": 65,
+     "label": "Amplada de la placa"
+    },
+    "board_thickness": {
+     "value": 1.6,
+     "unit": "mm",
+     "min": 1,
+     "max": 2.5,
+     "label": "Gruix de la placa"
+    },
+    "clearance": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0,
+     "max": 3,
+     "label": "Joc placa-paret"
+    },
+    "wall": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 5,
+     "label": "Gruix de paret i fons"
+    },
+    "inner_height": {
+     "value": 30,
+     "unit": "mm",
+     "min": 20,
+     "max": 60,
+     "label": "Alçada interior"
+    },
+    "standoff_height": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Alçada de les torretes"
+    },
+    "standoff_diameter": {
+     "value": 6,
+     "unit": "mm",
+     "min": 5,
+     "max": 10,
+     "label": "Diàmetre de les torretes"
+    },
+    "standoff_hole": {
+     "value": 2.5,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 3.2,
+     "label": "Forat de les torretes"
+    },
+    "usb_y": {
+     "value": 38.5,
+     "unit": "mm",
+     "min": 5,
+     "max": 50,
+     "label": "Centre USB (Y des del cantó)"
+    },
+    "usb_width": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 20,
+     "label": "Amplada obertura USB"
+    },
+    "power_y": {
+     "value": 7.5,
+     "unit": "mm",
+     "min": 5,
+     "max": 50,
+     "label": "Centre alimentació (Y)"
+    },
+    "power_width": {
+     "value": 9,
+     "unit": "mm",
+     "min": 6,
+     "max": 16,
+     "label": "Amplada obertura alimentació"
+    },
+    "port_height": {
+     "value": 11,
+     "unit": "mm",
+     "min": 6,
+     "max": 16,
+     "label": "Alçada dels connectors"
+    },
+    "port_margin": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0,
+     "max": 2,
+     "label": "Joc de les obertures"
+    }
+   },
+   "values": {
+    "board_length": 68.6,
+    "board_width": 53.4,
+    "board_thickness": 1.6,
+    "clearance": 1,
+    "wall": 2,
+    "inner_height": 30,
+    "standoff_height": 5,
+    "standoff_diameter": 6,
+    "standoff_hole": 2.5,
+    "usb_y": 38.5,
+    "usb_width": 12,
+    "power_y": 7.5,
+    "power_width": 9,
+    "port_height": 11,
+    "port_margin": 1
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 24314.609384263946,
+    "area_mm2": 25091.842787842303,
+    "bbox": {
+     "xmin": -37.3,
+     "ymin": -29.7,
+     "zmin": 0.0,
+     "xmax": 37.3,
+     "ymax": 29.7,
+     "zmax": 32.0,
+     "size": [
+      74.6,
+      59.4,
+      32.0
+     ]
+    },
+    "expected_bbox": [
+     74.6,
+     59.4,
+     32.0
+    ],
+    "n_faces": 35,
+    "notes": [],
+    "center_of_mass": [
+     1.0508199371740463,
+     -0.0032329602025238722,
+     10.990047945363331
+    ],
+    "hole_list": [
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -20.3,
+       -24.2,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -19.1,
+       24.1,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       31.7,
+       -19.1,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       31.7,
+       8.9,
+       4.75
+      ],
+      "length": 4.5
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "count": 4
+     }
+    ],
+    "expected_holes": [
+     [
+      2.5,
+      4
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 5861.183999999998,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB",
+     "fixed": [
+      {
+       "type": "side",
+       "side": "-z",
+       "depth": 0.0
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         -37.3,
+         0.0,
+         14.1
+        ],
+        "radius": 6.0
+       },
+       "force": [
+        -10.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "caixa-arduino-uno",
+    "summary": "Caixa oberta per a un Arduino Uno R3 amb parets i fons de 2 mm, 30 mm d'alçada interior, quatre torretes de Ø6 mm als forats de la placa (forat de 2,5 mm per a M3 autoroscant) i dues obertures a la paret del costat USB: una pel USB i una pel connector d'alimentació.",
+    "changes": [],
+    "assumptions": [
+     "Les posicions dels forats i les mides de la placa són les de les dades de referència de l'Arduino Uno R3.",
+     "Les torretes fan 5 mm d'alçada, Ø6 mm, amb forat cec de 2,5 mm per a cargols M3 autoroscants.",
+     "Hi ha 1 mm de joc entre la placa i les parets interiors. La placa té 1,6 mm de gruix.",
+     "Les posicions i mides de les obertures són valors típics, no vénen de les dades de referència. Mesura-les a la teva placa:",
+     "USB: centre a 38,5 mm del cantó, 12 mm d'ample.",
+     "Alimentació: centre a 7,5 mm del cantó, 9 mm d'ample.",
+     "Cada obertura té 1 mm de joc, 11 mm d'alçada i comença sobre la cara superior de la placa.",
+     "Les obertures són a la paret del costat X mínim. Les 30 mm d'alçada interior es compten des de la cara superior del fons.",
+     "Impressió FDM amb la caixa a pla sobre el llit, sense suports."
+    ],
+    "questions": [
+     "Vols una tapa amb cargols o un tancament a pressió?",
+     "Necessites ventilació o accés als pins (capçaleres) amb obertures laterals?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 60.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "arduino-uno"
+   ],
+   "created": 1793927988.5329232
+  },
+  {
+   "number": 2,
+   "instruction": "Afegeix ranures de ventilació a les dues parets llargues.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\nimport math\n\nPARAMS = {\n    \"board_length\": {\"value\": 68.6, \"unit\": \"mm\", \"min\": 60, \"max\": 80, \"label\": \"Llargada de la placa\"},\n    \"board_width\": {\"value\": 53.4, \"unit\": \"mm\", \"min\": 45, \"max\": 65, \"label\": \"Amplada de la placa\"},\n    \"board_thickness\": {\"value\": 1.6, \"unit\": \"mm\", \"min\": 1, \"max\": 2.5, \"label\": \"Gruix de la placa\"},\n    \"clearance\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 3, \"label\": \"Joc placa-paret\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1.5, \"max\": 5, \"label\": \"Gruix de paret i fons\"},\n    \"inner_height\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 60, \"label\": \"Alçada interior\"},\n    \"standoff_height\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Alçada de les torretes\"},\n    \"standoff_diameter\": {\"value\": 6, \"unit\": \"mm\", \"min\": 5, \"max\": 10, \"label\": \"Diàmetre de les torretes\"},\n    \"standoff_hole\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 3.2, \"label\": \"Forat de les torretes\"},\n    \"usb_y\": {\"value\": 38.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre USB (Y des del cantó)\"},\n    \"usb_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Amplada obertura USB\"},\n    \"power_y\": {\"value\": 7.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre alimentació (Y)\"},\n    \"power_width\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Amplada obertura alimentació\"},\n    \"port_height\": {\"value\": 11, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Alçada dels connectors\"},\n    \"port_margin\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 2, \"label\": \"Joc de les obertures\"},\n    \"vent_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 0, \"max\": 8, \"label\": \"Nombre de ranures de ventilació\"},\n    \"vent_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 10, \"max\": 60, \"label\": \"Llargada de les ranures\"},\n    \"vent_width\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 6, \"label\": \"Amplada de les ranures\"},\n    \"vent_pitch\": {\"value\": 7, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Pas entre ranures\"},\n    \"vent_z\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 50, \"label\": \"Alçada de la primera ranura (des del fons)\"},\n}\n\nBL = PARAMS[\"board_length\"][\"value\"]\nBW = PARAMS[\"board_width\"][\"value\"]\nBT = PARAMS[\"board_thickness\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nIH = PARAMS[\"inner_height\"][\"value\"]\nSH = PARAMS[\"standoff_height\"][\"value\"]\nSD = PARAMS[\"standoff_diameter\"][\"value\"]\nSHOLE = PARAMS[\"standoff_hole\"][\"value\"]\nUSBY = PARAMS[\"usb_y\"][\"value\"]\nUSBW = PARAMS[\"usb_width\"][\"value\"]\nPWY = PARAMS[\"power_y\"][\"value\"]\nPWW = PARAMS[\"power_width\"][\"value\"]\nPH = PARAMS[\"port_height\"][\"value\"]\nPM = PARAMS[\"port_margin\"][\"value\"]\nVN = int(PARAMS[\"vent_count\"][\"value\"])\nVL = PARAMS[\"vent_length\"][\"value\"]\nVW = PARAMS[\"vent_width\"][\"value\"]\nVP = PARAMS[\"vent_pitch\"][\"value\"]\nVZ = PARAMS[\"vent_z\"][\"value\"]\n\nSHOLE = min(SHOLE, SD - 2)\nSH = min(SH, IH - BT - PH - 2)\nIL = BL + 2 * C\nIW = BW + 2 * C\nOL = IL + 2 * T\nOW = IW + 2 * T\nH = T + IH\nUSBW = min(USBW + 2 * PM, BW - 2)\nPWW = min(PWW + 2 * PM, BW - 2)\nUSBY = min(max(USBY, USBW / 2), BW - USBW / 2)\nPWY = min(max(PWY, PWW / 2), BW - PWW / 2)\n\n# Vent slots must stay above the standoffs and below the top rim.\nVW = min(VW, VP - 1)\nVL = min(VL, IL - 10)\nVZ = max(VZ, T + SH + BT + 1)\nVN = max(0, min(VN, int(math.floor((H - T - 1 - VZ - VW) / VP)) + 1))\n\n# Board corner (next to USB) in box coordinates\nbx = -IL / 2 + C\nby = -IW / 2 + C\n\n# Open box\nbox = cq.Workplane(\"XY\").box(OL, OW, H, centered=(True, True, False))\nbox = box.cut(\n    cq.Workplane(\"XY\").workplane(offset=T).box(IL, IW, IH + 1, centered=(True, True, False))\n)\n\n# Standoffs at the board holes\nholes_xy = [(14.0, 2.5), (15.2, 50.8), (66.0, 7.6), (66.0, 35.6)]\npts = [(bx + x, by + y) for x, y in holes_xy]\nposts = cq.Workplane(\"XY\").workplane(offset=T / 2).pushPoints(pts).circle(SD / 2).extrude(T / 2 + SH)\nbox = box.union(posts)\ndrill = cq.Workplane(\"XY\").workplane(offset=T + 0.5).pushPoints(pts).circle(SHOLE / 2).extrude(SH + 1)\nbox = box.cut(drill)\n\n# Openings in the -X wall (USB side)\nzb = T + SH + BT - 0.5\nfor yc, w in ((USBY, USBW), (PWY, PWW)):\n    cut = cq.Workplane(\"XY\").box(T + 2 * C + 2, w, PH + PM + 0.5, centered=(False, True, False)).translate(\n        (-OL / 2 - 1, by + yc, zb)\n    )\n    box = box.cut(cut)\n\n# Ventilation slots through both long walls (along X), cut along Y.\nfor i in range(VN):\n    zc = VZ + VW / 2 + i * VP\n    slot = (\n        cq.Workplane(\"XZ\")\n        .center(0, zc)\n        .slot2D(VL, VW, angle=0)\n        .extrude(OW / 2 + 1, both=True)\n    )\n    box = box.cut(slot)\n\nresult = box\n\nEXPECTED_BBOX = (OL, OW, H)\nEXPECTED_HOLES = [(SHOLE, 4)]\n\nREFERENCE = (\n    cq.Workplane(\"XY\")\n    .box(BL, BW, BT, centered=(False, False, False))\n    .translate((bx, by, T + SH + 0.01))\n)\n\nLOAD_CASE = {\n    \"description\": \"Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB\",\n    \"fixed\": [{\"type\": \"side\", \"side\": \"-z\"}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [-OL / 2, 0, T + SH + BT + PH / 2], \"radius\": 6}, \"force\": [-10, 0, 0]}],\n}\n",
+   "code": "import cadquery as cq\nimport math\n\nPARAMS = {\n    \"board_length\": {\"value\": 68.6, \"unit\": \"mm\", \"min\": 60, \"max\": 80, \"label\": \"Llargada de la placa\"},\n    \"board_width\": {\"value\": 53.4, \"unit\": \"mm\", \"min\": 45, \"max\": 65, \"label\": \"Amplada de la placa\"},\n    \"board_thickness\": {\"value\": 1.6, \"unit\": \"mm\", \"min\": 1, \"max\": 2.5, \"label\": \"Gruix de la placa\"},\n    \"clearance\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 3, \"label\": \"Joc placa-paret\"},\n    \"wall\": {\"value\": 2, \"unit\": \"mm\", \"min\": 1.5, \"max\": 5, \"label\": \"Gruix de paret i fons\"},\n    \"inner_height\": {\"value\": 30, \"unit\": \"mm\", \"min\": 20, \"max\": 60, \"label\": \"Alçada interior\"},\n    \"standoff_height\": {\"value\": 5, \"unit\": \"mm\", \"min\": 3, \"max\": 12, \"label\": \"Alçada de les torretes\"},\n    \"standoff_diameter\": {\"value\": 6, \"unit\": \"mm\", \"min\": 5, \"max\": 10, \"label\": \"Diàmetre de les torretes\"},\n    \"standoff_hole\": {\"value\": 2.5, \"unit\": \"mm\", \"min\": 1.5, \"max\": 3.2, \"label\": \"Forat de les torretes\"},\n    \"usb_y\": {\"value\": 38.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre USB (Y des del cantó)\"},\n    \"usb_width\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 20, \"label\": \"Amplada obertura USB\"},\n    \"power_y\": {\"value\": 7.5, \"unit\": \"mm\", \"min\": 5, \"max\": 50, \"label\": \"Centre alimentació (Y)\"},\n    \"power_width\": {\"value\": 9, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Amplada obertura alimentació\"},\n    \"port_height\": {\"value\": 11, \"unit\": \"mm\", \"min\": 6, \"max\": 16, \"label\": \"Alçada dels connectors\"},\n    \"port_margin\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0, \"max\": 2, \"label\": \"Joc de les obertures\"},\n    \"vent_count\": {\"value\": 3, \"unit\": \"count\", \"min\": 0, \"max\": 8, \"label\": \"Nombre de ranures de ventilació\"},\n    \"vent_length\": {\"value\": 40, \"unit\": \"mm\", \"min\": 10, \"max\": 60, \"label\": \"Llargada de les ranures\"},\n    \"vent_width\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 6, \"label\": \"Amplada de les ranures\"},\n    \"vent_pitch\": {\"value\": 7, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Pas entre ranures\"},\n    \"vent_z\": {\"value\": 12, \"unit\": \"mm\", \"min\": 8, \"max\": 50, \"label\": \"Alçada de la primera ranura (des del fons)\"},\n}\n\nBL = PARAMS[\"board_length\"][\"value\"]\nBW = PARAMS[\"board_width\"][\"value\"]\nBT = PARAMS[\"board_thickness\"][\"value\"]\nC = PARAMS[\"clearance\"][\"value\"]\nT = PARAMS[\"wall\"][\"value\"]\nIH = PARAMS[\"inner_height\"][\"value\"]\nSH = PARAMS[\"standoff_height\"][\"value\"]\nSD = PARAMS[\"standoff_diameter\"][\"value\"]\nSHOLE = PARAMS[\"standoff_hole\"][\"value\"]\nUSBY = PARAMS[\"usb_y\"][\"value\"]\nUSBW = PARAMS[\"usb_width\"][\"value\"]\nPWY = PARAMS[\"power_y\"][\"value\"]\nPWW = PARAMS[\"power_width\"][\"value\"]\nPH = PARAMS[\"port_height\"][\"value\"]\nPM = PARAMS[\"port_margin\"][\"value\"]\nVN = int(PARAMS[\"vent_count\"][\"value\"])\nVL = PARAMS[\"vent_length\"][\"value\"]\nVW = PARAMS[\"vent_width\"][\"value\"]\nVP = PARAMS[\"vent_pitch\"][\"value\"]\nVZ = PARAMS[\"vent_z\"][\"value\"]\n\nSHOLE = min(SHOLE, SD - 2)\nSH = min(SH, IH - BT - PH - 2)\nIL = BL + 2 * C\nIW = BW + 2 * C\nOL = IL + 2 * T\nOW = IW + 2 * T\nH = T + IH\nUSBW = min(USBW + 2 * PM, BW - 2)\nPWW = min(PWW + 2 * PM, BW - 2)\nUSBY = min(max(USBY, USBW / 2), BW - USBW / 2)\nPWY = min(max(PWY, PWW / 2), BW - PWW / 2)\n\n# Vent slots must stay above the standoffs and below the top rim.\nVW = min(VW, VP - 1)\nVL = min(VL, IL - 10)\nVZ = max(VZ, T + SH + BT + 1)\nVN = max(0, min(VN, int(math.floor((H - T - 1 - VZ - VW) / VP)) + 1))\n\n# Board corner (next to USB) in box coordinates\nbx = -IL / 2 + C\nby = -IW / 2 + C\n\n# Open box\nbox = cq.Workplane(\"XY\").box(OL, OW, H, centered=(True, True, False))\nbox = box.cut(\n    cq.Workplane(\"XY\").workplane(offset=T).box(IL, IW, IH + 1, centered=(True, True, False))\n)\n\n# Standoffs at the board holes\nholes_xy = [(14.0, 2.5), (15.2, 50.8), (66.0, 7.6), (66.0, 35.6)]\npts = [(bx + x, by + y) for x, y in holes_xy]\nposts = cq.Workplane(\"XY\").workplane(offset=T / 2).pushPoints(pts).circle(SD / 2).extrude(T / 2 + SH)\nbox = box.union(posts)\ndrill = cq.Workplane(\"XY\").workplane(offset=T + 0.5).pushPoints(pts).circle(SHOLE / 2).extrude(SH + 1)\nbox = box.cut(drill)\n\n# Openings in the -X wall (USB side)\nzb = T + SH + BT - 0.5\nfor yc, w in ((USBY, USBW), (PWY, PWW)):\n    cut = cq.Workplane(\"XY\").box(T + 2 * C + 2, w, PH + PM + 0.5, centered=(False, True, False)).translate(\n        (-OL / 2 - 1, by + yc, zb)\n    )\n    box = box.cut(cut)\n\n# Ventilation slots through both long walls (along X), cut along Y.\nfor i in range(VN):\n    zc = VZ + VW / 2 + i * VP\n    slot = (\n        cq.Workplane(\"XZ\")\n        .center(0, zc)\n        .slot2D(VL, VW, angle=0)\n        .extrude(OW / 2 + 1, both=True)\n    )\n    box = box.cut(slot)\n\nresult = box\n\nEXPECTED_BBOX = (OL, OW, H)\nEXPECTED_HOLES = [(SHOLE, 4)]\n\nREFERENCE = (\n    cq.Workplane(\"XY\")\n    .box(BL, BW, BT, centered=(False, False, False))\n    .translate((bx, by, T + SH + 0.01))\n)\n\nLOAD_CASE = {\n    \"description\": \"Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB\",\n    \"fixed\": [{\"type\": \"side\", \"side\": \"-z\"}],\n    \"loads\": [{\"region\": {\"type\": \"point\", \"center\": [-OL / 2, 0, T + SH + BT + PH / 2], \"radius\": 6}, \"force\": [-10, 0, 0]}],\n}\n",
+   "params": {
+    "board_length": {
+     "value": 68.6,
+     "unit": "mm",
+     "min": 60,
+     "max": 80,
+     "label": "Llargada de la placa"
+    },
+    "board_width": {
+     "value": 53.4,
+     "unit": "mm",
+     "min": 45,
+     "max": 65,
+     "label": "Amplada de la placa"
+    },
+    "board_thickness": {
+     "value": 1.6,
+     "unit": "mm",
+     "min": 1,
+     "max": 2.5,
+     "label": "Gruix de la placa"
+    },
+    "clearance": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0,
+     "max": 3,
+     "label": "Joc placa-paret"
+    },
+    "wall": {
+     "value": 2,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 5,
+     "label": "Gruix de paret i fons"
+    },
+    "inner_height": {
+     "value": 30,
+     "unit": "mm",
+     "min": 20,
+     "max": 60,
+     "label": "Alçada interior"
+    },
+    "standoff_height": {
+     "value": 5,
+     "unit": "mm",
+     "min": 3,
+     "max": 12,
+     "label": "Alçada de les torretes"
+    },
+    "standoff_diameter": {
+     "value": 6,
+     "unit": "mm",
+     "min": 5,
+     "max": 10,
+     "label": "Diàmetre de les torretes"
+    },
+    "standoff_hole": {
+     "value": 2.5,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 3.2,
+     "label": "Forat de les torretes"
+    },
+    "usb_y": {
+     "value": 38.5,
+     "unit": "mm",
+     "min": 5,
+     "max": 50,
+     "label": "Centre USB (Y des del cantó)"
+    },
+    "usb_width": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 20,
+     "label": "Amplada obertura USB"
+    },
+    "power_y": {
+     "value": 7.5,
+     "unit": "mm",
+     "min": 5,
+     "max": 50,
+     "label": "Centre alimentació (Y)"
+    },
+    "power_width": {
+     "value": 9,
+     "unit": "mm",
+     "min": 6,
+     "max": 16,
+     "label": "Amplada obertura alimentació"
+    },
+    "port_height": {
+     "value": 11,
+     "unit": "mm",
+     "min": 6,
+     "max": 16,
+     "label": "Alçada dels connectors"
+    },
+    "port_margin": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0,
+     "max": 2,
+     "label": "Joc de les obertures"
+    },
+    "vent_count": {
+     "value": 3,
+     "unit": "count",
+     "min": 0,
+     "max": 8,
+     "label": "Nombre de ranures de ventilació"
+    },
+    "vent_length": {
+     "value": 40,
+     "unit": "mm",
+     "min": 10,
+     "max": 60,
+     "label": "Llargada de les ranures"
+    },
+    "vent_width": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 6,
+     "label": "Amplada de les ranures"
+    },
+    "vent_pitch": {
+     "value": 7,
+     "unit": "mm",
+     "min": 4,
+     "max": 15,
+     "label": "Pas entre ranures"
+    },
+    "vent_z": {
+     "value": 12,
+     "unit": "mm",
+     "min": 8,
+     "max": 50,
+     "label": "Alçada de la primera ranura (des del fons)"
+    }
+   },
+   "values": {
+    "board_length": 68.6,
+    "board_width": 53.4,
+    "board_thickness": 1.6,
+    "clearance": 1,
+    "wall": 2,
+    "inner_height": 30,
+    "standoff_height": 5,
+    "standoff_diameter": 6,
+    "standoff_hole": 2.5,
+    "usb_y": 38.5,
+    "usb_width": 12,
+    "power_y": 7.5,
+    "power_width": 9,
+    "port_height": 11,
+    "port_margin": 1,
+    "vent_count": 3,
+    "vent_length": 40,
+    "vent_width": 3,
+    "vent_pitch": 7,
+    "vent_z": 12
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 22897.786382616974,
+    "area_mm2": 24676.117121724605,
+    "bbox": {
+     "xmin": -37.3,
+     "ymin": -29.7,
+     "zmin": 0.0,
+     "xmax": 37.3,
+     "ymax": 29.7,
+     "zmax": 32.0,
+     "size": [
+      74.6,
+      59.4,
+      32.0
+     ]
+    },
+    "expected_bbox": [
+     74.6,
+     59.4,
+     32.0
+    ],
+    "n_faces": 59,
+    "notes": [],
+    "center_of_mass": [
+     1.1158404519390823,
+     -0.003433002787522907,
+     10.401610330022628
+    ],
+    "hole_list": [
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -20.3,
+       -24.2,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -19.1,
+       24.1,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       31.7,
+       -19.1,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       31.7,
+       8.9,
+       4.75
+      ],
+      "length": 4.5
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "center": [
+       -18.5,
+       0.0,
+       13.5
+      ],
+      "length": 59.4
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "center": [
+       -18.5,
+       0.0,
+       20.5
+      ],
+      "length": 59.4
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "center": [
+       -18.5,
+       0.0,
+       27.5
+      ],
+      "length": 59.4
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "center": [
+       18.5,
+       0.0,
+       13.5
+      ],
+      "length": 59.4
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "center": [
+       18.5,
+       0.0,
+       20.5
+      ],
+      "length": 59.4
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "direction": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "center": [
+       18.5,
+       0.0,
+       27.5
+      ],
+      "length": 59.4
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 2.5,
+      "axis": "z",
+      "count": 4
+     },
+     {
+      "diameter": 3.0,
+      "axis": "y",
+      "count": 6
+     }
+    ],
+    "expected_holes": [
+     [
+      2.5,
+      4
+     ]
+    ],
+    "reference": {
+     "volume_mm3": 5861.183999999998,
+     "interference_mm3": 0.0
+    },
+    "load_case": {
+     "description": "Caixa fixada pels forats de la placa; pes de la placa i petits esforços de connexió USB",
+     "fixed": [
+      {
+       "type": "side",
+       "side": "-z",
+       "depth": 0.0
+      }
+     ],
+     "loads": [
+      {
+       "region": {
+        "type": "point",
+        "center": [
+         -37.3,
+         0.0,
+         14.1
+        ],
+        "radius": 6.0
+       },
+       "force": [
+        -10.0,
+        0.0,
+        0.0
+       ]
+      }
+     ],
+     "accel_g": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "has_3mf": true
+   },
+   "note": {
+    "title": "caixa-arduino-ventilacio",
+    "summary": "He afegit ranures de ventilació horitzontals amb extrems arrodonits a les dues parets llargues (les dels costats ±Y). La resta de la caixa no ha canviat.",
+    "changes": [
+     "Nova família de ranures passants a les dues parets llargues: 3 ranures de 40 × 3 mm, amb pas de 7 mm.",
+     "Noves variables: nombre de ranures, llargada, amplada, pas i alçada de la primera ranura."
+    ],
+    "assumptions": [
+     "Les ranures van centrades en X i la primera és a 12 mm del fons exterior, per sobre de les torretes i de la placa.",
+     "Les dues parets tenen les mateixes ranures. El nombre es limita automàticament perquè les ranures càpiguen sota el cantell superior.",
+     "Les ranures no toquen les obertures USB i d'alimentació de la paret -X."
+    ],
+    "questions": [
+     "Prefereixes ranures verticals o més ranures més curtes?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793927993.06171
+  }
+ ]
+}

@@ -1,0 +1,392 @@
+{
+ "id": "eval-placa-nom",
+ "title": "placa-motostudent",
+ "created": 1793928008.1115994,
+ "current": 2,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Placa identificativa de 80 x 30 x 3 mm amb el text MOTOSTUDENT en relleu d'1 mm i un forat de 3 mm a cada extrem.",
+   "time": 1793928008.1116078
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928012.495094,
+   "kind": "design",
+   "version": 1
+  },
+  {
+   "role": "user",
+   "text": "Canvia el text per EPSEVG RACING i fes-lo gravat cap endins en lloc de relleu.",
+   "time": 1793928014.1089678
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793928016.7311654,
+   "kind": "design",
+   "version": 2
+  }
+ ],
+ "versions": [
+  {
+   "number": 1,
+   "instruction": "Placa identificativa de 80 x 30 x 3 mm amb el text MOTOSTUDENT en relleu d'1 mm i un forat de 3 mm a cada extrem.",
+   "parent": null,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"length\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada (X)\"},\n    \"width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de la placa\"},\n    \"hole_diameter\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 8, \"label\": \"Diàmetre dels forats\"},\n    \"hole_edge\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Distància del forat a la vora\"},\n    \"text_height\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0.6, \"max\": 3, \"label\": \"Alçada del relleu\"},\n    \"text_size\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Mida del text\"},\n}\n\nL = PARAMS[\"length\"][\"value\"]\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\nTH = PARAMS[\"text_height\"][\"value\"]\nTS = PARAMS[\"text_size\"][\"value\"]\n\nHD = min(HD, W / 3)\nHE = min(max(HE, HD / 2 + 1.5), L / 4)\nTS = min(TS, W - 8)\n\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\n\n# Holes at both ends\nplate = plate.cut(\n    cq.Workplane(\"XY\").pushPoints([(-(L / 2 - HE), 0), (L / 2 - HE, 0)]).circle(HD / 2).extrude(T)\n)\n\n# Raised text, built apart and added letter by letter (starts 0.2 mm inside the plate)\nletters = (\n    cq.Workplane(\"XY\").workplane(offset=T - 0.2)\n    .text(\"MOTOSTUDENT\", TS, TH + 0.2, combine=False, halign=\"center\", valign=\"center\")\n)\nfor s in letters.val().Solids():\n    plate = plate.union(cq.Workplane(\"XY\").add(s))\n\nresult = plate\n\nEXPECTED_BBOX = (L, W, T + TH)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"length\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada (X)\"},\n    \"width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de la placa\"},\n    \"hole_diameter\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 8, \"label\": \"Diàmetre dels forats\"},\n    \"hole_edge\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Distància del forat a la vora\"},\n    \"text_height\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0.6, \"max\": 3, \"label\": \"Alçada del relleu\"},\n    \"text_size\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Mida del text\"},\n}\n\nL = PARAMS[\"length\"][\"value\"]\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\nTH = PARAMS[\"text_height\"][\"value\"]\nTS = PARAMS[\"text_size\"][\"value\"]\n\nHD = min(HD, W / 3)\nHE = min(max(HE, HD / 2 + 1.5), L / 4)\nTS = min(TS, W - 8)\n\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\n\n# Holes at both ends\nplate = plate.cut(\n    cq.Workplane(\"XY\").pushPoints([(-(L / 2 - HE), 0), (L / 2 - HE, 0)]).circle(HD / 2).extrude(T)\n)\n\n# Raised text, built apart and added letter by letter (starts 0.2 mm inside the plate)\nletters = (\n    cq.Workplane(\"XY\").workplane(offset=T - 0.2)\n    .text(\"MOTOSTUDENT\", TS, TH + 0.2, combine=False, halign=\"center\", valign=\"center\")\n)\nfor s in letters.val().Solids():\n    plate = plate.union(cq.Workplane(\"XY\").add(s))\n\nresult = plate\n\nEXPECTED_BBOX = (L, W, T + TH)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "params": {
+    "length": {
+     "value": 80,
+     "unit": "mm",
+     "min": 40,
+     "max": 200,
+     "label": "Llargada (X)"
+    },
+    "width": {
+     "value": 30,
+     "unit": "mm",
+     "min": 15,
+     "max": 100,
+     "label": "Amplada (Y)"
+    },
+    "thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gruix de la placa"
+    },
+    "hole_diameter": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 8,
+     "label": "Diàmetre dels forats"
+    },
+    "hole_edge": {
+     "value": 6,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Distància del forat a la vora"
+    },
+    "text_height": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0.6,
+     "max": 3,
+     "label": "Alçada del relleu"
+    },
+    "text_size": {
+     "value": 6,
+     "unit": "mm",
+     "min": 4,
+     "max": 15,
+     "label": "Mida del text"
+    }
+   },
+   "values": {
+    "length": 80,
+    "width": 30,
+    "thickness": 3,
+    "hole_diameter": 3,
+    "hole_edge": 6,
+    "text_height": 1,
+    "text_size": 6
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 7223.405648529311,
+    "area_mm2": 5734.936932261047,
+    "bbox": {
+     "xmin": -40.0000001,
+     "ymin": -15.0000001,
+     "zmin": 0.0,
+     "xmax": 40.0000001,
+     "ymax": 15.0000001,
+     "zmax": 4.0000001,
+     "size": [
+      80.0000002,
+      30.0000002,
+      4.0000001
+     ]
+    },
+    "expected_bbox": [
+     80.0,
+     30.0,
+     4.0
+    ],
+    "n_faces": 169,
+    "notes": [],
+    "center_of_mass": [
+     -0.0010632130712873767,
+     0.0022656220055745253,
+     1.51822330145022
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -34.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 3.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       34.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.0,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      3.0,
+      2
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "placa-motostudent",
+    "summary": "Placa de 80 × 30 × 3 mm amb el text MOTOSTUDENT en relleu d'1 mm a la cara superior i un forat de Ø3 mm a cada extrem.",
+    "changes": [],
+    "assumptions": [
+     "Els forats són a 6 mm de la vora curta (centre), centrats en l'amplada.",
+     "El text va centrat, en lletra per defecte, de 6 mm de mida; el text és curt per no tocar els forats.",
+     "Forats de Ø3 mm tal com s'ha indicat (sense joc extra); en FDM sortiran una mica petits.",
+     "Impressió en pla amb el relleu cap amunt."
+    ],
+    "questions": [
+     "Vols cantonades arrodonides o forats per a cargols M3 (Ø3,4 mm)?"
+    ],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [
+    "guide-fork-travel-sensor"
+   ],
+   "created": 1793928012.49283
+  },
+  {
+   "number": 2,
+   "instruction": "Canvia el text per EPSEVG RACING i fes-lo gravat cap endins en lloc de relleu.",
+   "parent": 1,
+   "base_code": "import cadquery as cq\n\nPARAMS = {\n    \"length\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada (X)\"},\n    \"width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de la placa\"},\n    \"hole_diameter\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 8, \"label\": \"Diàmetre dels forats\"},\n    \"hole_edge\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Distància del forat a la vora\"},\n    \"text_depth\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0.6, \"max\": 3, \"label\": \"Profunditat del gravat\"},\n    \"text_size\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Mida del text\"},\n}\n\nL = PARAMS[\"length\"][\"value\"]\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\nTD = PARAMS[\"text_depth\"][\"value\"]\nTS = PARAMS[\"text_size\"][\"value\"]\n\nHD = min(HD, W / 3)\nHE = min(max(HE, HD / 2 + 1.5), L / 4)\nTD = min(TD, T - 1)\navail = L - 2 * HE - HD - 4\nTS = max(min(TS, W - 8, avail / 9.1), 1)\n\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\n\n# Holes at both ends\nplate = plate.cut(\n    cq.Workplane(\"XY\").pushPoints([(-(L / 2 - HE), 0), (L / 2 - HE, 0)]).circle(HD / 2).extrude(T)\n)\n\n# Engraved text, built apart and cut letter by letter\nletters = (\n    cq.Workplane(\"XY\").workplane(offset=T - TD)\n    .text(\"EPSEVG RACING\", TS, TD + 0.5, combine=False, halign=\"center\", valign=\"center\")\n)\nfor s in letters.val().Solids():\n    plate = plate.cut(cq.Workplane(\"XY\").add(s))\n\nresult = plate\n\nEXPECTED_BBOX = (L, W, T)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "code": "import cadquery as cq\n\nPARAMS = {\n    \"length\": {\"value\": 80, \"unit\": \"mm\", \"min\": 40, \"max\": 200, \"label\": \"Llargada (X)\"},\n    \"width\": {\"value\": 30, \"unit\": \"mm\", \"min\": 15, \"max\": 100, \"label\": \"Amplada (Y)\"},\n    \"thickness\": {\"value\": 3, \"unit\": \"mm\", \"min\": 2, \"max\": 10, \"label\": \"Gruix de la placa\"},\n    \"hole_diameter\": {\"value\": 3, \"unit\": \"mm\", \"min\": 1.5, \"max\": 8, \"label\": \"Diàmetre dels forats\"},\n    \"hole_edge\": {\"value\": 6, \"unit\": \"mm\", \"min\": 3, \"max\": 20, \"label\": \"Distància del forat a la vora\"},\n    \"text_depth\": {\"value\": 1, \"unit\": \"mm\", \"min\": 0.6, \"max\": 3, \"label\": \"Profunditat del gravat\"},\n    \"text_size\": {\"value\": 6, \"unit\": \"mm\", \"min\": 4, \"max\": 15, \"label\": \"Mida del text\"},\n}\n\nL = PARAMS[\"length\"][\"value\"]\nW = PARAMS[\"width\"][\"value\"]\nT = PARAMS[\"thickness\"][\"value\"]\nHD = PARAMS[\"hole_diameter\"][\"value\"]\nHE = PARAMS[\"hole_edge\"][\"value\"]\nTD = PARAMS[\"text_depth\"][\"value\"]\nTS = PARAMS[\"text_size\"][\"value\"]\n\nHD = min(HD, W / 3)\nHE = min(max(HE, HD / 2 + 1.5), L / 4)\nTD = min(TD, T - 1)\navail = L - 2 * HE - HD - 4\nTS = max(min(TS, W - 8, avail / 9.1), 1)\n\nplate = cq.Workplane(\"XY\").box(L, W, T, centered=(True, True, False))\n\n# Holes at both ends\nplate = plate.cut(\n    cq.Workplane(\"XY\").pushPoints([(-(L / 2 - HE), 0), (L / 2 - HE, 0)]).circle(HD / 2).extrude(T)\n)\n\n# Engraved text, built apart and cut letter by letter\nletters = (\n    cq.Workplane(\"XY\").workplane(offset=T - TD)\n    .text(\"EPSEVG RACING\", TS, TD + 0.5, combine=False, halign=\"center\", valign=\"center\")\n)\nfor s in letters.val().Solids():\n    plate = plate.cut(cq.Workplane(\"XY\").add(s))\n\nresult = plate\n\nEXPECTED_BBOX = (L, W, T)\nEXPECTED_HOLES = [(HD, 2)]\n",
+   "params": {
+    "length": {
+     "value": 80,
+     "unit": "mm",
+     "min": 40,
+     "max": 200,
+     "label": "Llargada (X)"
+    },
+    "width": {
+     "value": 30,
+     "unit": "mm",
+     "min": 15,
+     "max": 100,
+     "label": "Amplada (Y)"
+    },
+    "thickness": {
+     "value": 3,
+     "unit": "mm",
+     "min": 2,
+     "max": 10,
+     "label": "Gruix de la placa"
+    },
+    "hole_diameter": {
+     "value": 3,
+     "unit": "mm",
+     "min": 1.5,
+     "max": 8,
+     "label": "Diàmetre dels forats"
+    },
+    "hole_edge": {
+     "value": 6,
+     "unit": "mm",
+     "min": 3,
+     "max": 20,
+     "label": "Distància del forat a la vora"
+    },
+    "text_depth": {
+     "value": 1,
+     "unit": "mm",
+     "min": 0.6,
+     "max": 3,
+     "label": "Profunditat del gravat"
+    },
+    "text_size": {
+     "value": 6,
+     "unit": "mm",
+     "min": 4,
+     "max": 15,
+     "label": "Mida del text"
+    }
+   },
+   "values": {
+    "length": 80,
+    "width": 30,
+    "thickness": 3,
+    "hole_diameter": 3,
+    "hole_edge": 6,
+    "text_depth": 1,
+    "text_size": 6
+   },
+   "info": {
+    "ok": true,
+    "is_valid": true,
+    "n_solids": 1,
+    "volume_mm3": 7089.622521001133,
+    "area_mm2": 5746.633927689781,
+    "bbox": {
+     "xmin": -40.0000001,
+     "ymin": -15.0000001,
+     "zmin": 0.0,
+     "xmax": 40.0000001,
+     "ymax": 15.0000001,
+     "zmax": 3.0000001,
+     "size": [
+      80.0000002,
+      30.0000002,
+      3.0000001
+     ]
+    },
+    "expected_bbox": [
+     80.0,
+     30.0,
+     3.0
+    ],
+    "n_faces": 206,
+    "notes": [],
+    "center_of_mass": [
+     0.0019128608886060123,
+     -0.0012298697415249146,
+     1.4904133143660545
+    ],
+    "hole_list": [
+     {
+      "diameter": 3.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       -34.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     },
+     {
+      "diameter": 3.0,
+      "axis": "z",
+      "direction": [
+       0.0,
+       0.0,
+       1.0
+      ],
+      "center": [
+       34.0,
+       0.0,
+       1.5
+      ],
+      "length": 3.0
+     }
+    ],
+    "holes": [
+     {
+      "diameter": 3.0,
+      "axis": "z",
+      "count": 2
+     }
+    ],
+    "expected_holes": [
+     [
+      3.0,
+      2
+     ]
+    ],
+    "reference": null,
+    "load_case": null,
+    "has_3mf": true
+   },
+   "note": {
+    "title": "placa-epsevg-racing",
+    "summary": "La placa de 80 × 30 × 3 mm ara porta el text EPSEVG RACING gravat 1 mm cap endins, en lloc de MOTOSTUDENT en relleu. Els dos forats d'extrem es mantenen.",
+    "changes": [
+     "Text: de MOTOSTUDENT a EPSEVG RACING.",
+     "El text passa de relleu a gravat: es talla dins la placa i ja no en sobresurt.",
+     "El paràmetre \"text_height\" es diu ara \"text_depth\" (profunditat del gravat), amb el mateix valor d'1 mm. La profunditat es limita a gruix − 1 mm.",
+     "La mida del text es limita perquè càpiga entre els dos forats.",
+     "L'alçada total és ara igual al gruix de la placa (3 mm)."
+    ],
+    "assumptions": [
+     "Profunditat del gravat d'1 mm, el mateix valor que tenia el relleu.",
+     "El text queda centrat a la placa i amb la mida de 6 mm que ja hi havia."
+    ],
+    "questions": [],
+    "use": {
+     "process": "fdm",
+     "max_temp_c": 40.0,
+     "outdoor": false,
+     "fluids": false,
+     "vibration": false,
+     "flexible": false
+    }
+   },
+   "attempts": [
+    {
+     "number": 1,
+     "error": null
+    }
+   ],
+   "components": [],
+   "created": 1793928016.7290187
+  }
+ ]
+}

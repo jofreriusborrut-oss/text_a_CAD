@@ -1,0 +1,32 @@
+{
+ "id": "eval-res-a-construir",
+ "title": "",
+ "created": 1793927993.2444475,
+ "current": null,
+ "messages": [
+  {
+   "role": "user",
+   "text": "Hola! Què pots fer?",
+   "time": 1793927993.2444577
+  },
+  {
+   "role": "assistant",
+   "text": "",
+   "time": 1793927993.2455194,
+   "kind": "questions",
+   "note": {
+    "title": "",
+    "summary": "Hola! Encara no hi ha cap peça descrita, així que no he construït res. Puc dissenyar peces mecàniques (suports, brides, caixes, abraçadores, eixos...) per a impressió 3D o mecanitzat, i anar-les modificant missatge a missatge.",
+    "changes": [],
+    "assumptions": [],
+    "questions": [
+     "Quina peça vols fer? Digues-me la forma i les mides principals (llargada, amplada, gruix).",
+     "Com la fabricaràs (impressió 3D FDM, SLS o CNC) i on anirà muntada?",
+     "Ha de subjectar o fixar algun component (tub, sensor, motor, coixinet, placa) amb cargols?"
+    ],
+    "use": {}
+   }
+  }
+ ],
+ "versions": []
+}
