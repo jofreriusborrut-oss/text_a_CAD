@@ -73,7 +73,9 @@ def _export_assembly_step(cq, shapes: dict, path: Path) -> str:
         assy = cq.Assembly(name="conjunt")
         for i, (name, shape) in enumerate(shapes.items()):
             try:
-                colour = cq.Color(*COLOURS[i % len(COLOURS)])
+                # The 4th value is the opacity. CadQuery's default is 0, which
+                # SolidWorks shows as a fully transparent (invisible) component.
+                colour = cq.Color(*COLOURS[i % len(COLOURS)], 1.0)
             except Exception:  # noqa: BLE001 - colours are only cosmetic
                 colour = None
             assy.add(shape, name=name, color=colour)
