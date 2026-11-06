@@ -33,6 +33,11 @@ runs it in a separate process, checks the result and shows it in an interactive
   ("make the wall 8 mm thick", "add a centre hole"). The app sends Claude the
   conversation and the current part's code, and Claude edits only what you ask.
   You can also ask questions (material, weight, how to print it).
+- **Assemblies of several parts**: ask for "an assembly", "with a separate lid" or
+  "split it into components" and the STEP is written as an assembly: SolidWorks
+  opens it with one component per part, each editable on its own. A ZIP with one
+  STEP and one STL per part is also available, and the app warns when two parts
+  interpenetrate.
 - **Version history**: every change saves a version and you can go back to any.
 
 ## Requirements

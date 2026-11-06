@@ -232,7 +232,8 @@ script that builds that part.
   4. The geometry, built ONLY from those variables. No hard-coded dimensions
      in the geometry (only 0, 1, 2, small tolerances like 0.01, and angles
      like 90/180/360 are allowed as literals).
-  5. A final variable `result` holding the solid (a cq.Workplane or cq.Shape).
+  5. A final variable `result` holding the solid (a cq.Workplane or cq.Shape),
+     or a dictionary of solids if the user wants an assembly (see below).
   6. A tuple `EXPECTED_BBOX = (size_x, size_y, size_z)`: the overall size of
      the part in mm as the user described it, written as expressions of the
      PARAMS variables (so it follows the sliders). It is used to check that
@@ -252,7 +253,32 @@ script that builds that part.
   smaller than the thinnest adjacent wall.
 - If something is not specified, choose sensible values for 3D printing
   (walls >= 2 mm) and expose them in PARAMS so the user can change them.
-- The result must be ONE closed, valid solid. Join all pieces with union().
+- A single part must be ONE closed, valid solid. Join all pieces with union().
+
+# Assemblies (several separate parts)
+Only when the user asks for it: several parts ("un conjunt", "assemblatge",
+"peces separades", "components", "amb la tapa a part", a housing plus its
+cover, a shaft plus its bushing...). Otherwise always make ONE solid.
+- `result` is then a dictionary, one entry per part, in a sensible order:
+      result = {"base": base, "tapa": lid, "eix": shaft}
+  Names: short, lowercase, only a-z, 0-9 and _ (no accents, no spaces). They
+  become the component names in SolidWorks.
+- Each part is ONE closed, valid solid, already placed where it sits in the
+  assembled product (same global coordinates for all; do not lay the parts
+  out side by side).
+- Parts may touch but must not interpenetrate. Where one part goes into
+  another (a pin in a hole, a bearing in its seat), the hole must really
+  exist in the outer part: cut it. Give sliding fits a small clearance
+  parameter (0.1 to 0.3 mm on the diameter).
+- Identical parts in several places (4 screws, 2 bushings) are separate
+  entries: "cargol_1", "cargol_2"...
+- PARAMS holds the dimensions of all the parts; shared dimensions appear once.
+- EXPECTED_BBOX is the overall size of the whole assembly.
+- Minimal shape of the end of such a script:
+      base = cq.Workplane("XY").box(L, W, H, centered=(True, True, False))
+      lid = cq.Workplane("XY").workplane(offset=H).box(L, W, T, centered=(True, True, False))
+      result = {"base": base, "tapa": lid}
+      EXPECTED_BBOX = (L, W, H + T)
 
 # CadQuery tips (common sources of errors)
 - `.hole(d)` drills through the whole part from the current workplane;
@@ -315,6 +341,10 @@ the user's new message. Decide which case applies:
 
 A) The user asks for a CHANGE to the current part ("fes la paret més gruixuda",
    "afegeix un forat", "treu els nervis", "que sigui el doble de llarg"...).
+   This includes splitting it into components ("separa la tapa com a peça a
+   part", "fes-ho per components") or adding a new part to it: follow the
+   assembly rules, keep the overall geometry and positions, and say in your
+   text which parts there are now.
    - Edit the CURRENT script. Change only what was asked.
    - Keep everything else exactly as it is: every other dimension, feature,
      position, orientation, variable name, PARAMS entry and their order.
@@ -356,11 +386,18 @@ def _describe_info(info: dict | None) -> str:
     if not info:
         return ""
     x, y, z = info["bbox"]["size"]
-    return (
+    text = (
         f"Measured by running that script: overall size {x:.2f} x {y:.2f} x {z:.2f} mm "
         f"(X x Y x Z), volume {info['volume_mm3'] / 1000:.2f} cm3, "
-        f"{info['n_solids']} solid(s), valid = {info['is_valid']}.\n\n"
+        f"{info['n_solids']} solid(s), valid = {info['is_valid']}.\n"
     )
+    if info.get("assembly"):
+        parts = "; ".join(
+            f"{p['name']} ({' x '.join(f'{v:.2f}' for v in p['bbox']['size'])} mm, "
+            f"{p['volume_mm3'] / 1000:.2f} cm3)" for p in info["parts"]
+        )
+        text += f"It is an assembly of {len(info['parts'])} parts: {parts}.\n"
+    return text + "\n"
 
 
 def chat_request(

@@ -70,11 +70,15 @@ def main() -> int:
 
     shutil.copy(res.step_path, out / f"{name}.step")
     shutil.copy(res.stl_path, out / f"{name}.stl")
+    if res.info.get("assembly"):                    # every part of the assembly on its own
+        shutil.copytree(res.job_dir / "parts", out / "peces", dirs_exist_ok=True)
     size = " x ".join(f"{v:.1f}" for v in res.info["bbox"]["size"])
     print(f"\nOK  ->  {out}")
     print(f"  Mida total: {size} mm")
     print(f"  Volum:      {res.info['volume_mm3'] / 1000:.2f} cm3")
     print(f"  Sòlid vàlid: {'sí' if res.info['is_valid'] else 'NO'}")
+    if res.info.get("assembly"):
+        print("  Peces:      " + ", ".join(p["name"] for p in res.info["parts"]) + "  (a la carpeta peces/)")
     return 0
 
 

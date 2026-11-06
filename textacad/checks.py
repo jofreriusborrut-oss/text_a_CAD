@@ -40,6 +40,39 @@ def load_mesh(stl_bytes: bytes) -> trimesh.Trimesh:
 # 1. Valid and closed
 # ---------------------------------------------------------------------------
 
+def check_assembly(info: dict) -> list[Check]:
+    """For an assembly: every part is one valid solid, and parts do not interpenetrate."""
+    parts = info["parts"]
+    problems = []
+    for p in parts:
+        if not p["is_valid"]:
+            problems.append(f"«{p['name']}» no és un sòlid vàlid (BRepCheck)")
+        if p["n_solids"] != 1:
+            problems.append(f"«{p['name']}» té {p['n_solids']} sòlids separats en lloc d'un")
+    names = ", ".join(
+        f"{p['name']} ({' × '.join(num(v) for v in p['bbox']['size'])} mm, "
+        f"{num(p['volume_mm3'] / 1000, 2)} cm³)" for p in parts
+    )
+    if problems:
+        checks = [Check("error", "Alguna peça del conjunt no és vàlida",
+                        "; ".join(problems).capitalize() + ".")]
+    else:
+        checks = [Check("ok", f"Conjunt de {len(parts)} peces, cadascuna un sòlid vàlid", names + ".")]
+    overlaps = info.get("overlaps", [])
+    if overlaps:
+        detail = "; ".join(f"«{o['a']}» i «{o['b']}» ({num(o['volume_mm3'] / 1000, 2)} cm³)"
+                           for o in overlaps)
+        checks.append(Check("warning", "Hi ha peces que es trepitgen",
+                            f"Ocupen el mateix espai: {detail}. No es podrien muntar tal com estan."))
+    else:
+        checks.append(Check("ok", "Cap peça en trepitja una altra"))
+    if info.get("step_kind") == "multibody":
+        checks.append(Check("info", "STEP exportat com a peça de diversos sòlids",
+                            "No s'ha pogut escriure com a assemblatge; a SolidWorks s'obrirà com "
+                            "una peça multicos. Al ZIP hi ha cada peça per separat."))
+    return checks
+
+
 def check_solid(info: dict, mesh: trimesh.Trimesh) -> Check:
     problems = []
     if not info.get("is_valid"):
@@ -130,12 +163,18 @@ def check_walls(mesh: trimesh.Trimesh, min_wall: float = MIN_WALL) -> Check:
 def check_weight(info: dict) -> Check:
     cm3 = info["volume_mm3"] / 1000
     grams = cm3 * PLA_DENSITY
+    what = "Totes les peces massisses" if info.get("assembly") else "Peça massissa"
     return Check("info", f"Volum: {num(cm3, 2)} cm³ · pes aproximat en PLA: {num(grams)} g",
-                 f"Peça massissa (100 % de farciment), densitat del PLA: {num(PLA_DENSITY, 2)} g/cm³. "
+                 f"{what} (100 % de farciment), densitat del PLA: {num(PLA_DENSITY, 2)} g/cm³. "
                  "Amb farciment parcial pesarà menys.")
 
 
 def run_checks(info: dict, stl_bytes: bytes) -> list[Check]:
+    if info.get("assembly"):
+        # The STL of an assembly holds several bodies with touching faces, so the
+        # mesh checks (closed surface, wall thickness) do not apply to it as a whole.
+        return [*check_assembly(info), check_bbox(info),
+                Check("info", "Gruix de paret no mesurat en conjunts"), check_weight(info)]
     mesh = load_mesh(stl_bytes)
     checks = [check_solid(info, mesh), check_bbox(info)]
     checks.append(check_walls(mesh) if mesh.is_watertight

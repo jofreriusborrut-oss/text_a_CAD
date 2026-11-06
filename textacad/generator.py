@@ -189,10 +189,31 @@ def _problems(code: str, run: RunResult) -> str | None:
     msgs = []
     if info.get("expected_bbox") is None:
         msgs.append("The variable EXPECTED_BBOX = (size_x, size_y, size_z) is missing.")
+    if info.get("assembly"):
+        for p in info["parts"]:
+            if p["n_solids"] != 1:
+                msgs.append(
+                    f"Part {p['name']!r} of the assembly contains {p['n_solids']} separate solids; "
+                    "each part must be ONE solid (join its pieces with union(), or make "
+                    "them different parts of the dictionary)."
+                )
+            if not p["is_valid"]:
+                msgs.append(
+                    f"Part {p['name']!r} is not a valid solid (OpenCascade BRepCheck failed). "
+                    "Avoid fillets/chamfers on tiny or tangent edges and coincident faces."
+                )
+        for o in info.get("overlaps", []):
+            msgs.append(
+                f"Parts {o['a']!r} and {o['b']!r} occupy the same space "
+                f"({o['volume_mm3']:.1f} mm3 of overlap). Parts of an assembly may touch "
+                "but not interpenetrate: cut one with the other or move it."
+            )
+        return "\n".join(msgs) or None
     if info["n_solids"] != 1:
         msgs.append(
             f"`result` contains {info['n_solids']} separate solids; it must be ONE solid. "
-            "Make sure all pieces touch/overlap and are joined with union()."
+            "Make sure all pieces touch/overlap and are joined with union(). (If the user "
+            "wants separate parts, make `result` a dictionary: see the assembly rules.)"
         )
     if not info["is_valid"]:
         msgs.append(
