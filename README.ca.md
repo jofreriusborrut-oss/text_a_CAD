@@ -29,7 +29,11 @@ interactiu.
   - la mida total (bounding box) coincideix amb la descripció;
   - parets de menys d'1,2 mm (risc en impressió 3D);
   - volum i pes aproximat en PLA.
-- **Historial de la sessió**: pots tornar a qualsevol peça generada.
+- **Xat amb memòria**: després de generar la peça, demana canvis amb frases curtes
+  («fes la paret de 8 mm», «afegeix un forat central»). L'app envia a Claude la
+  conversa i el codi de la peça actual, i Claude només toca el que li dius.
+  També li pots fer preguntes (material, pes, com imprimir-la).
+- **Historial de versions**: cada canvi desa una versió i pots tornar a qualsevol.
 
 ## Requisits
 
@@ -103,11 +107,12 @@ streamlit run app.py
 
 S'obre el navegador a `http://localhost:8501`.
 
-1. Escriu la descripció de la peça. Sigues precís: mida total, gruixos, forats
-   (diàmetre **i** posició), arrodoniments i xamfrans.
-2. Prem **Genera la peça** i segueix els intents.
-3. Mira la peça, llegeix les comprovacions, mou els controls i descarrega
+1. Escriu la descripció de la peça al xat. Sigues precís: mida total, gruixos,
+   forats (diàmetre **i** posició), arrodoniments i xamfrans.
+2. Mira la peça, llegeix les comprovacions, mou els controls i descarrega
    l'STEP o l'STL.
+3. Demana canvis al mateix xat («fes-la 10 mm més llarga», «treu els nervis»).
+   Cada canvi és una versió nova a l'historial; **Peça nova** comença de zero.
 4. Obre l'STEP a SolidWorks (*Fitxer → Obrir*, tipus *STEP*).
 
 <!-- Captura: generant una peça (intent 1/3, 2/3…) -->
