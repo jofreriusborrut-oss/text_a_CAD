@@ -29,7 +29,11 @@ runs it in a separate process, checks the result and shows it in an interactive
   - overall size (bounding box) matches the description;
   - walls thinner than 1.2 mm (risky for 3D printing);
   - volume and approximate weight in PLA.
-- **Session history**: go back to any part generated during the session.
+- **Chat with memory**: once the part exists, ask for changes in short sentences
+  ("make the wall 8 mm thick", "add a centre hole"). The app sends Claude the
+  conversation and the current part's code, and Claude edits only what you ask.
+  You can also ask questions (material, weight, how to print it).
+- **Version history**: every change saves a version and you can go back to any.
 
 ## Requirements
 
@@ -104,10 +108,11 @@ streamlit run app.py
 
 Your browser opens at `http://localhost:8501`.
 
-1. Write the description of the part. Be precise: overall size, thicknesses,
-   holes (diameter **and** position), fillets and chamfers.
-2. Click **Genera la peça** and watch the attempts.
-3. Look at the part, read the checks, move the sliders and download STEP/STL.
+1. Write the description of the part in the chat. Be precise: overall size,
+   thicknesses, holes (diameter **and** position), fillets and chamfers.
+2. Look at the part, read the checks, move the sliders and download STEP/STL.
+3. Ask for changes in the same chat ("make it 10 mm longer", "remove the ribs").
+   Each change is a new version in the history; **Peça nova** starts from scratch.
 4. Open the STEP in SolidWorks (*File → Open*, type *STEP*).
 
 <!-- Screenshot: generating a part (attempt 1/3, 2/3…) -->

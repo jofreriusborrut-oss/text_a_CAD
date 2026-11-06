@@ -11,7 +11,7 @@ import streamlit as st
 
 from textacad.checks import num, run_checks
 from textacad.config import get_settings
-from textacad.generator import ClaudeError, generate_part
+from textacad.generator import ClaudeError, chat_turn
 from textacad.regenerate import regenerate
 from textacad.viewer import show_stl
 
@@ -24,6 +24,7 @@ EXAMPLE = (
     "Placa de 60x80x5 mm amb 4 forats de 6,5 mm a 10 mm de les vores "
     "i cantonades arrodonides de radi 4."
 )
+EXAMPLE_CHANGES = "«fes-la de 8 mm de gruix», «afegeix un forat central de 20 mm», «quin material em recomanes?»"
 
 
 # ---------------------------------------------------------------------------
@@ -32,6 +33,9 @@ EXAMPLE = (
 # st.session_state survives between reruns of the script (every click reruns it).
 # "part" is the part currently shown: a plain dict, so it is easy to store in
 # the history later.
+# "messages" is the conversation: a list of {"role": "user" | "assistant",
+# "content": text}. Every change asked in the chat creates a NEW part (a new
+# version) in the history, so going back to an older version is one click.
 
 def _part_from_generation(gen) -> dict:
     part = {
@@ -93,38 +97,100 @@ def _file_name(description: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Generation
+# Conversation
 # ---------------------------------------------------------------------------
 
-def run_generation(description: str) -> None:
-    with st.status("Generant la peça…", expanded=True) as status:
+def _say(text: str, **extra) -> None:
+    st.session_state.setdefault("messages", []).append(
+        {"role": "assistant", "content": text, **extra})
+
+
+def run_turn(prompt: str) -> None:
+    """Send the user's message to Claude together with the current part.
+
+    Claude has no memory of its own: we give it the previous messages and the
+    script of the part on screen, and it answers with text, with a modified
+    script, or with both.
+    """
+    messages = st.session_state.setdefault("messages", [])
+    history = [(m["role"], m["content"]) for m in messages]
+    messages.append({"role": "user", "content": prompt})
+    parent = current_part()
+
+    with st.status("Pensant…", expanded=True) as status:
         def on_progress(n: int, total: int, msg: str) -> None:
             status.update(label=f"Intent {n} de {total}: {msg}")
             st.write(f"**Intent {n}/{total}** · {msg}")
 
         try:
-            gen = generate_part(description, on_progress=on_progress)
+            turn = chat_turn(
+                prompt,
+                current_code=parent["code"] if parent else None,   # with the slider values
+                current_info=parent["info"] if parent else None,
+                history=history,
+                on_progress=on_progress,
+            )
         except ClaudeError as exc:
             status.update(label="No s'ha pogut parlar amb Claude", state="error")
-            st.error(str(exc))
+            _say(f"No he pogut parlar amb Claude:\n\n```text\n{exc}\n```")
             return
+        status.update(label="Fet", state="complete", expanded=False)
 
-        if not gen.ok:
-            status.update(label=f"No s'ha aconseguit una peça vàlida en {len(gen.attempts)} intents",
-                          state="error")
-            st.error("Últim error:")
-            st.code(gen.last_error or "", language="text")
-            if gen.code:
-                with st.expander("Codi de l'últim intent"):
-                    st.code(gen.code, language="python")
-            return
+    gen = turn.generation
+    if gen is None:                         # Claude only talked (a question, advice...)
+        _say(turn.reply or "…")
+        return
 
-        label = "Peça generada" + (" a la primera" if len(gen.attempts) == 1
-                                   else f" en {len(gen.attempts)} intents")
-        status.update(label=label, state="complete", expanded=False)
+    if not gen.ok:
+        kept = " La peça que tenies no s'ha tocat." if parent else ""
+        _say(
+            f"No he aconseguit una peça vàlida en {len(gen.attempts)} intents.{kept} "
+            f"Prova de dir-ho d'una altra manera o amb més detall.\n\n"
+            f"Últim error:\n```text\n{(gen.last_error or '').strip()[-1500:]}\n```"
+        )
+        return
+
     part = _part_from_generation(gen)
     part["time"] = time.strftime("%H:%M")
+    part["version"] = parent.get("version", 1) + 1 if parent else 1
+    part["name"] = (parent.get("name") or _file_name(parent["description"])) if parent else _file_name(prompt)
     add_to_history(part)
+    default = "He aplicat el canvi." if parent else "Aquí tens la peça."
+    _say(turn.reply or default, part_id=part["id"])
+
+
+def new_conversation() -> None:
+    """Forget the conversation and the current part (the history is kept)."""
+    st.session_state.messages = []
+    st.session_state.current_id = None
+
+
+def show_chat() -> None:
+    st.subheader("Conversa")
+    messages = st.session_state.setdefault("messages", [])
+    part = current_part()
+
+    box = st.container(height=560)
+    with box:
+        if not messages:
+            st.caption(
+                "Descriu una peça amb mides en mm. Quan la tinguis, demana canvis "
+                f"amb frases curtes ({EXAMPLE_CHANGES}): recordo la peça i només "
+                "toco el que em dius."
+            )
+            st.caption(f"Exemple: {EXAMPLE}")
+        for m in messages:
+            with st.chat_message(m["role"]):
+                st.markdown(m["content"])
+
+    placeholder = "Demana un canvi o fes una pregunta…" if part else "Descriu la peça…"
+    prompt = st.chat_input(placeholder)
+    if prompt and prompt.strip():
+        with box:
+            with st.chat_message("user"):
+                st.markdown(prompt)
+            run_turn(prompt.strip())
+        st.rerun()          # redraw everything with the new message and the new part
 
 
 # ---------------------------------------------------------------------------
@@ -168,11 +234,12 @@ def parameter_panel(part: dict) -> None:
     st.rerun()       # redraw the viewer and the data with the new part
 
 
-def show_part(part: dict) -> None:
+def show_part(part: dict, col_view, col_params) -> None:
     info = part["info"]
-    name = _file_name(part["description"])
+    name = part.get("name") or _file_name(part["description"])
+    if part.get("version", 1) > 1:
+        name = f"{name}_v{part['version']}"
 
-    col_view, col_params = st.columns([5, 2], gap="large")
     with col_params:
         parameter_panel(part)
     with col_view:
@@ -194,15 +261,15 @@ def show_part(part: dict) -> None:
         c1.markdown(f"**Volum**  \n{num(info['volume_mm3'] / 1000, 2)} cm³")
         show_checks(part)
 
-    with st.expander("Codi CadQuery (amb els valors actuals)"):
-        st.code(part["code"], language="python")
+        with st.expander("Codi CadQuery (amb els valors actuals)"):
+            st.code(part["code"], language="python")
 
-    failed = [a for a in part["attempts"] if a["error"]]
-    if failed:
-        with st.expander(f"Errors corregits durant la generació ({len(failed)})"):
-            for a in failed:
-                st.markdown(f"**Intent {a['number']}**")
-                st.code(a["error"], language="text")
+        failed = [a for a in part["attempts"] if a["error"]]
+        if failed:
+            with st.expander(f"Errors corregits durant la generació ({len(failed)})"):
+                for a in failed:
+                    st.markdown(f"**Intent {a['number']}**")
+                    st.code(a["error"], language="text")
 
 
 # ---------------------------------------------------------------------------
@@ -215,9 +282,10 @@ def show_history() -> None:
     if not history:
         st.caption("Encara no has generat cap peça en aquesta sessió.")
         return
+    st.caption("Cada canvi desa una versió. Clica'n una per tornar-hi i seguir des d'allà.")
     for part in reversed(history):
         text = part["description"]
-        label = f"{part['time']} · {text[:45]}{'…' if len(text) > 45 else ''}"
+        label = f"{part['time']} · v{part.get('version', 1)} · {text[:40]}{'…' if len(text) > 40 else ''}"
         selected = part["id"] == st.session_state.get("current_id")
         if st.button(label, key=f"h_{part['id']}", use_container_width=True,
                      type="primary" if selected else "secondary"):
@@ -225,43 +293,39 @@ def show_history() -> None:
             st.rerun()
     if st.button("🗑️ Esborra l'historial", use_container_width=True):
         st.session_state.history = []
-        st.session_state.current_id = None
+        new_conversation()
         st.rerun()
 
 
 def main() -> None:
     settings = get_settings()
     st.title("⚙️ Text a CAD")
-    st.write("Descriu una peça mecànica amb mesures en mm i obtindràs el model 3D en STEP i STL.")
+    st.write("Descriu una peça mecànica amb mesures en mm i ves-la afinant parlant: "
+             "obtindràs el model 3D en STEP i STL.")
 
     with st.sidebar:
+        if st.button("➕ Peça nova", use_container_width=True, type="primary",
+                     help="Comença una conversa nova. Les peces fetes queden a l'historial."):
+            new_conversation()
+            st.rerun()
         st.header("Configuració")
         mode = "claude -p (subscripció)" if settings.backend == "cli" else "API d'Anthropic"
         st.write(f"**Connexió:** {mode}")
         st.write(f"**Model:** `{settings.model}`")
         st.caption("Es canvia al fitxer .env")
 
-    with st.form("description_form"):
-        description = st.text_area(
-            "Descripció de la peça",
-            height=120,
-            placeholder=EXAMPLE,
-            help="Com més detallada, millor: mides totals, gruixos, forats (diàmetre i posició), "
-                 "arrodoniments i xamfrans.",
-        )
-        submitted = st.form_submit_button("Genera la peça", type="primary")
-
-    if submitted:
-        if len(description.strip()) < 10:
-            st.warning("Escriu una descripció una mica més detallada.")
-        else:
-            run_generation(description.strip())
+    col_chat, col_view, col_params = st.columns([3, 5, 2], gap="large")
+    with col_chat:
+        show_chat()             # may create a new part and rerun the script
 
     part = current_part()
     if part:
-        st.divider()
-        st.markdown(f"**Peça:** {part['description']}")
-        show_part(part)
+        with col_view:
+            st.markdown(f"**Peça (versió {part.get('version', 1)}):** {part['description']}")
+        show_part(part, col_view, col_params)
+    else:
+        with col_view:
+            st.info("La peça apareixerà aquí quan la descriguis al xat.", icon="🧩")
 
     # Drawn last, so a part generated in this run already appears in the list.
     with st.sidebar:

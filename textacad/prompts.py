@@ -296,3 +296,115 @@ def fix_request(description: str, previous_code: str, error: str, attempt: int, 
         "failing (for example a fillet or a shell), use a simpler and more "
         "robust way to build the same geometry."
     )
+
+
+# ---------------------------------------------------------------------------
+# Conversation mode (the chat in the app)
+# ---------------------------------------------------------------------------
+# Claude has no memory between calls, so every message carries what it needs
+# to "remember": the conversation so far and the script of the current part.
+
+_CHAT_RULES = """
+# Conversation mode
+This section REPLACES the rule "reply with ONLY the Python code".
+
+You are chatting with the user about ONE part over several messages. Every
+message you receive contains: the conversation so far, the CURRENT script of
+the part the user is looking at (if there is one) with its measured size, and
+the user's new message. Decide which case applies:
+
+A) The user asks for a CHANGE to the current part ("fes la paret més gruixuda",
+   "afegeix un forat", "treu els nervis", "que sigui el doble de llarg"...).
+   - Edit the CURRENT script. Change only what was asked.
+   - Keep everything else exactly as it is: every other dimension, feature,
+     position, orientation, variable name, PARAMS entry and their order.
+     Never redesign the part and never rebuild it from scratch.
+   - New dimensions get new PARAMS entries. If a value moves outside its
+     min/max, widen min/max. Update the clamps and EXPECTED_BBOX if needed.
+   - The PARAMS values in the current script are the ones the user chose
+     (maybe with the sliders): keep them unless the change is about them.
+   - Reply with 1 to 3 short sentences saying what you changed, with the
+     values, and then the COMPLETE updated script in one ```python block.
+
+B) The user asks for a NEW part (there is no current script, or they clearly
+   describe a different part). Reply with one short sentence and then the
+   complete script in one ```python block.
+
+C) The user asks a QUESTION or wants advice about the part (what it is, how
+   it would be used, material, mass, how to print it, whether it is strong
+   enough...). Answer briefly in text, using the script and the measured
+   data. NO code block. Rough hand estimates are fine if you say they are
+   estimates; never present them as simulation results.
+
+If the request is ambiguous about something that matters (which hole? which
+face?), ask ONE short question instead of guessing, with no code block.
+
+Always:
+- Write the text in the language of the user's last message.
+- At most one ```python block per answer, and it is always the complete
+  script (all the format rules above still apply to it). Never send partial
+  snippets or diffs.
+"""
+
+CHAT_SYSTEM_PROMPT = SYSTEM_PROMPT + _CHAT_RULES
+
+MAX_CHAT_MESSAGES = 12      # previous messages sent back to Claude
+MAX_CHAT_CHARS = 1500       # per previous message
+
+
+def _describe_info(info: dict | None) -> str:
+    if not info:
+        return ""
+    x, y, z = info["bbox"]["size"]
+    return (
+        f"Measured by running that script: overall size {x:.2f} x {y:.2f} x {z:.2f} mm "
+        f"(X x Y x Z), volume {info['volume_mm3'] / 1000:.2f} cm3, "
+        f"{info['n_solids']} solid(s), valid = {info['is_valid']}.\n\n"
+    )
+
+
+def chat_request(
+    message: str,
+    current_code: str | None = None,
+    current_info: dict | None = None,
+    history: list[tuple[str, str]] | None = None,
+) -> str:
+    """Build one message with everything Claude needs for this turn.
+
+    history is a list of (role, text) with role "user" or "assistant".
+    """
+    parts = []
+    recent = (history or [])[-MAX_CHAT_MESSAGES:]
+    if recent:
+        parts.append("Conversation so far:\n")
+        for role, text in recent:
+            who = "User" if role == "user" else "Assistant"
+            text = text.strip()
+            if len(text) > MAX_CHAT_CHARS:
+                text = text[:MAX_CHAT_CHARS] + " [...]"
+            parts.append(f"{who}: {text}\n")
+        parts.append("\n")
+    if current_code:
+        parts.append(
+            "CURRENT script (the part the user is looking at now):\n"
+            f"```python\n{current_code.rstrip()}\n```\n\n"
+        )
+        parts.append(_describe_info(current_info))
+    else:
+        parts.append("There is no current part yet.\n\n")
+    parts.append(f"New user message:\n{message.strip()}")
+    return "".join(parts)
+
+
+def chat_fix_request(request: str, previous_code: str, error: str, attempt: int, max_attempts: int) -> str:
+    return (
+        f"{request}\n\n"
+        f"You already answered this message, but your script (attempt {attempt - 1} "
+        f"of {max_attempts}) failed.\n\n"
+        f"Your script:\n```python\n{previous_code}\n```\n\n"
+        f"Error:\n```\n{error.strip()[-3000:]}\n```\n\n"
+        "Find the cause and answer the user's message again in the same format: "
+        "short text, then the COMPLETE corrected script. Still change only what "
+        "the user asked for. If an operation keeps failing (for example a fillet "
+        "or a shell), build the same geometry in a simpler, more robust way."
+    )
