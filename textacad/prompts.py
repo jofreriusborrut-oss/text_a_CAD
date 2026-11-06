@@ -521,6 +521,17 @@ per DIN 974-1; tap drill; hex nut across flats x height per ISO 4032):
 - A chamfer or countersink on a round edge that is hard to select: cut a
   cone instead, `body.cut(cq.Solid.makeCone(r_big, r_small, height,
   pnt=cq.Vector(x, y, z)))` (the cone axis is +Z from `pnt`).
+- Text (labels, part numbers), only on flat faces. Never let `.text()`
+  combine with the part (`combine=True` or `combine="cut"`) and never
+  union or cut the whole text at once: the result is often not a valid
+  solid. Build the letters apart and add or remove them one by one:
+  `letters = cq.Workplane("XY").workplane(offset=top_z - depth).text("AB 12", size, depth + 0.5, combine=False)`
+  then `for s in letters.val().Solids(): body = body.cut(s)` (engraved).
+  Raised text starts 0.2 mm inside the part: `offset=top_z - 0.2`, distance
+  `height + 0.2`, and `body = body.union(s)` in the loop. On a side face
+  use the plane that looks at it, e.g. the front face at y = -w / 2:
+  `cq.Workplane("XZ").workplane(offset=w / 2 - depth).center(0, z_middle)`.
+  Printed letters need about 5 mm of size and 0.6 mm of depth or height.
 - Prefer simple, robust operations (box, circle, polyline + extrude,
   revolve, union, cut) over complex lofts and sweeps when possible.
 - If a fillet or chamfer fails, the radius is too big for one of the edges
