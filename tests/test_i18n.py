@@ -71,3 +71,14 @@ def test_interface_strings_have_the_same_keys_in_every_language():
     assert set(keys) == set(i18n.LANGS)
     assert keys["ca"] == keys["en"] and keys["es"] == keys["en"]
     assert len(keys["en"]) > 100
+
+
+def test_material_names_follow_the_language():
+    from textacad.materials import MATERIALS
+
+    assert i18n.material_name("pc", "Polycarbonate (PC)", "ca") == "Policarbonat (PC)"
+    assert i18n.material_name("al6061", "Aluminium 6061-T6", "es") == "Aluminio 6061-T6"
+    assert i18n.material_name("pc", "Polycarbonate (PC)", "en") == "Polycarbonate (PC)"
+    assert i18n.material_name("petg", "PETG", "ca") == "PETG"            # trade names do not change
+    assert set(i18n.MATERIAL_NAMES) <= set(MATERIALS)                    # no name for a material that does not exist
+

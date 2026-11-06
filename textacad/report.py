@@ -79,6 +79,7 @@ def build(title: str, version, history: list[str], checks: list[dict], material,
     n = lambda x, d=1: i18n.num(float(x), d, lang)        # noqa: E731
     info = version.info
     note = version.note or {}
+    mat_name = i18n.material_name(material.id, material.name, lang)
     parts: list[str] = []
 
     parts.append(f"<header><div class='kicker'>{_t('sheet', lang)} · Text a CAD</div>"
@@ -110,7 +111,7 @@ def build(title: str, version, history: list[str], checks: list[dict], material,
     measured = [
         (_t("size", lang), i18n.size_text(info["bbox"]["size"], lang, 2) + " mm"),
         (_t("volume", lang), n(info["volume_mm3"] / 1000, 2) + " cm³"),
-        (_t("mass", lang) + f" · {material.name}", n(info["volume_mm3"] / 1000 * material.density, 1) + " g"),
+        (_t("mass", lang) + f" · {mat_name}", n(info["volume_mm3"] / 1000 * material.density, 1) + " g"),
         (_t("com", lang), ("(" + "; ".join(n(v, 2) for v in com) + ") mm") if com else None),
         (_t("holes", lang), holes_text),
     ]
@@ -129,7 +130,7 @@ def build(title: str, version, history: list[str], checks: list[dict], material,
         (_t("max_temp", lang), f"{material.max_service_temp:g} °C"),
     ]
     mat_note = material.notes.get(lang) or material.notes.get("en", "")
-    parts.append(f"<section><h2>{_t('material', lang)}: {_e(material.name)}</h2><p>{_e(mat_note)}</p>"
+    parts.append(f"<section><h2>{_t('material', lang)}: {_e(mat_name)}</h2><p>{_e(mat_note)}</p>"
                  f"<table>{_rows(mat_rows)}</table></section>")
 
     if simulation:
@@ -140,7 +141,8 @@ def build(title: str, version, history: list[str], checks: list[dict], material,
             (_t("max_stress", lang), f"{n(s['max_stress_mpa'], 2)} MPa"),
             (_t("max_disp", lang), f"{n(s['max_displacement_mm'], 3)} mm"),
             (_t("sf", lang), f"{n(s['safety_factor'], 1)} / {n(s['safety_factor_in_plane'], 1)}"),
-            (_t("mesh", lang), f"{s['n_elements']} {_t('elements', lang)} · {n(s['pitch_mm'], 2)} mm · {s['material']['name']}"),
+            (_t("mesh", lang), f"{s['n_elements']} {_t('elements', lang)} · {n(s['pitch_mm'], 2)} mm · "
+                              + i18n.material_name(s["material"].get("id", ""), s["material"]["name"], lang)),
             (_t("convergence", lang),
              f"{n(conv['displacement_change_percent'], 1)} % · {n(conv['stress_change_percent'], 1)} %" if conv else None),
         ]

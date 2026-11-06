@@ -100,6 +100,8 @@ function fileUrl(v, name, download = false) {
 }
 function simKey(v) { return `${v.number}:${v.stamp}:${state.material}`; }
 function materialInfo(id = state.material) { return state.config.materials.find((m) => m.id === id); }
+// Name of a material in the language of the interface (results keep the English name).
+function materialName(m) { return (materialInfo(m.id) || m).name; }
 
 // ---------------------------------------------------------------------------
 // Static texts
@@ -652,7 +654,7 @@ function simResultsHtml(v, sim) {
       <div class="stat"><div class="k">${esc(t("maxStress"))}</div><div class="v">${sig(s.max_stress_mpa, 3)} <small>MPa</small></div>
         <div class="small muted">${esc(t("stressAt"))} (${s.max_stress_at.map((x) => trim(x, 1)).join("; ")})</div></div>
       <div class="stat"><div class="k">${esc(t("maxDisp"))}</div><div class="v">${sig(s.max_displacement_mm, 3)} <small>mm</small></div></div>
-      <div class="stat ${level}" style="grid-column: 1 / -1"><div class="k">${esc(t("safetyFactor"))} · ${esc(s.material.name)}</div>
+      <div class="stat ${level}" style="grid-column: 1 / -1"><div class="k">${esc(t("safetyFactor"))} · ${esc(materialName(s.material))}</div>
         <div class="v">${num(sf, 1)}</div><div class="small">${esc(sfText)}</div></div>
     </div>${warnings}
     <table class="kv">${rows.map(([k, val]) => `<tr><th>${esc(k)}</th><td>${esc(val)}</td></tr>`).join("")}</table>
@@ -741,7 +743,7 @@ async function printPanel(v) {
     <td>${p.fits ? `<span class="pill ok">${esc(t("yes"))}</span>` : `<span class="pill error">${esc(t("no"))}</span>`}</td></tr>`).join("");
   const e = d.estimate;
   const ps = d.material.print_settings || {};
-  const settings = ps.nozzle_c ? `<h3>${esc(t("settings", { m: d.material.name }))}</h3><table class="kv">
+  const settings = ps.nozzle_c ? `<h3>${esc(t("settings", { m: materialName(d.material) }))}</h3><table class="kv">
       <tr><th>${esc(t("nozzle"))}</th><td>${esc(ps.nozzle_c)} °C</td></tr><tr><th>${esc(t("bed"))}</th><td>${esc(ps.bed_c)} °C</td></tr>
       <tr><th>${esc(t("enclosure"))}</th><td>${esc(ps.enclosure ? t("needed") : t("notNeeded"))}</td></tr>
       ${ps.hardened_nozzle ? `<tr><th>${esc(t("hardened"))}</th><td>${esc(t("needed"))}</td></tr>` : ""}</table>` : "";

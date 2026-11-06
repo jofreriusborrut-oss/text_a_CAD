@@ -223,6 +223,25 @@ PRINT_NOTES = {
 }
 
 
+# Material names that change with the language (the others are trade names: PLA, PETG...).
+MATERIAL_NAMES = {
+    "pc": {"ca": "Policarbonat (PC)", "es": "Policarbonato (PC)"},
+    "pa12": {"ca": "Niló PA12 (FDM)", "es": "Nylon PA12 (FDM)"},
+    "pa-cf": {"ca": "Niló amb fibra de carboni (PA-CF)", "es": "Nylon con fibra de carbono (PA-CF)"},
+    "pa12-sls": {"ca": "Niló PA12 (SLS, servei d'impressió)", "es": "Nylon PA12 (SLS, servicio de impresión)"},
+    "al6061": {"ca": "Alumini 6061-T6", "es": "Aluminio 6061-T6"},
+    "al7075": {"ca": "Alumini 7075-T6", "es": "Aluminio 7075-T6"},
+    "s235": {"ca": "Acer S235", "es": "Acero S235"},
+    "ss304": {"ca": "Acer inoxidable 304", "es": "Acero inoxidable 304"},
+    "ti64": {"ca": "Titani Ti-6Al-4V", "es": "Titanio Ti-6Al-4V"},
+}
+
+
+def material_name(material_id: str, default: str, lang: str) -> str:
+    """Name of a material in `lang` (`default`, its English name, when it does not change)."""
+    return MATERIAL_NAMES.get(material_id, {}).get(lang_of(lang), default)
+
+
 def pick(table: dict, code: str, lang: str, **values) -> str:
     """Text of `code` in `lang` (English when a translation is missing)."""
     entry = table.get(code)

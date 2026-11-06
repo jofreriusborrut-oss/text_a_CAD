@@ -183,7 +183,8 @@ def api_config():
         "max_attempts": settings.max_attempts,
         "default_material": DEFAULT_MATERIAL,
         "resolutions": list(RESOLUTIONS),
-        "materials": [{**m.as_dict(), "note": m.notes.get(lang) or m.notes.get("en", "")}
+        "materials": [{**m.as_dict(), "name": i18n.material_name(m.id, m.name, lang),
+                       "note": m.notes.get(lang) or m.notes.get("en", "")}
                       for m in MATERIALS.values()],
     })
 
@@ -396,6 +397,7 @@ def api_materials(session_id: str, number: int):
         d = rec.as_dict()
         d["reasons"] = [i18n.pick(i18n.MATERIAL_REASONS, r, lang) for r in rec.reasons]
         d["warnings"] = [i18n.pick(i18n.MATERIAL_WARNINGS, w, lang) for w in rec.warnings]
+        d["name"] = i18n.material_name(rec.material.id, rec.material.name, lang)
         d["note"] = rec.material.notes.get(lang) or rec.material.notes.get("en", "")
         d["properties"] = rec.material.as_dict()
         d["mass_g"] = round(version.info["volume_mm3"] / 1000 * rec.material.density, 1)

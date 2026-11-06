@@ -65,7 +65,7 @@ class Check:
         if "share" in v:
             fmt["share"] = f"{v['share']:.0f}"
         if "material" in v:
-            fmt["material"] = v["material"]
+            fmt["material"] = i18n.material_name(v.get("material_id", ""), v["material"], lang)
         title, detail = (i18n.CHECKS[self.code].get(lang) or i18n.CHECKS[self.code]["en"])
         return title.format(**fmt), detail.format(**fmt)
 
@@ -197,7 +197,8 @@ def check_weight(info: dict, material: Material | str = "petg") -> Check:
         material = get_material(material)
     cm3 = info["volume_mm3"] / 1000
     return Check("info", "mass", {"volume": cm3, "grams": cm3 * material.density,
-                                  "density": material.density, "material": material.name})
+                                  "density": material.density, "material": material.name,
+                                  "material_id": material.id})
 
 
 def run_checks(info: dict, stl_bytes: bytes, material: Material | str = "petg") -> list[Check]:
