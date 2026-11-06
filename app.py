@@ -24,7 +24,8 @@ EXAMPLE = (
     "Placa de 60x80x5 mm amb 4 forats de 6,5 mm a 10 mm de les vores "
     "i cantonades arrodonides de radi 4."
 )
-EXAMPLE_CHANGES = "«fes-la de 8 mm de gruix», «afegeix un forat central de 20 mm», «quin material em recomanes?»"
+EXAMPLE_CHANGES = ("«fes-la de 8 mm de gruix», «afegeix un forat central de 20 mm», "
+                   "«separa la tapa com a peça a part», «quin material em recomanes?»")
 
 
 # ---------------------------------------------------------------------------
@@ -48,6 +49,7 @@ def _part_from_generation(gen) -> dict:
         "info": gen.run.info,
         "stl": gen.run.stl_path.read_bytes(),
         "step": gen.run.step_path.read_bytes(),
+        "zip": gen.run.parts_zip(),     # only for assemblies: every part on its own
         "attempts": [{"number": a.number, "error": a.error} for a in gen.attempts],
     }
     gen.run.cleanup()
@@ -227,7 +229,7 @@ def parameter_panel(part: dict) -> None:
         out = _regenerate_cached(part["base_code"], tuple(sorted(values.items())))
     if out["ok"]:
         part.update(values=values, code=out["code"], info=out["info"],
-                    stl=out["stl"], step=out["step"])
+                    stl=out["stl"], step=out["step"], zip=out.get("zip"))
         part.pop("regen_error", None)
     else:
         part["regen_error"] = out["error"]
@@ -254,11 +256,18 @@ def show_part(part: dict, col_view, col_params) -> None:
         c1, c2, c3 = st.columns(3)
         x, y, z = info["bbox"]["size"]
         c1.markdown(f"**Mida total (X × Y × Z)**  \n{num(x)} × {num(y)} × {num(z)} mm")
-        c2.download_button("⬇️ STEP (per a SolidWorks)", part["step"], f"{name}.step",
+        step_label = "⬇️ STEP (conjunt per a SolidWorks)" if info.get("assembly") else "⬇️ STEP (per a SolidWorks)"
+        c2.download_button(step_label, part["step"], f"{name}.step",
                            mime="application/step", use_container_width=True)
         c3.download_button("⬇️ STL (per imprimir)", part["stl"], f"{name}.stl",
                            mime="model/stl", use_container_width=True)
         c1.markdown(f"**Volum**  \n{num(info['volume_mm3'] / 1000, 2)} cm³")
+        if part.get("zip"):
+            c2.download_button("⬇️ ZIP (cada peça per separat)", part["zip"], f"{name}_peces.zip",
+                               mime="application/zip", use_container_width=True,
+                               help="El STEP del conjunt i un STEP + STL de cada peça.")
+            c3.caption(f"Conjunt de {len(info['parts'])} peces: "
+                       + ", ".join(p["name"] for p in info["parts"]))
         show_checks(part)
 
         with st.expander("Codi CadQuery (amb els valors actuals)"):

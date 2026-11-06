@@ -1,12 +1,14 @@
 """Run CadQuery code in a separate Python process with a time limit."""
 from __future__ import annotations
 
+import io
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -31,6 +33,18 @@ class RunResult:
     def stl_path(self) -> Path:
         return self.job_dir / "part.stl"
 
+    def parts_zip(self) -> bytes | None:
+        """For an assembly: a ZIP with the assembly STEP and one STEP + STL per part."""
+        parts_dir = self.job_dir / "parts"
+        if not self.info.get("assembly") or not parts_dir.is_dir():
+            return None
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as z:
+            z.write(self.step_path, "conjunt.step")
+            for f in sorted(parts_dir.iterdir()):
+                z.write(f, f"peces/{f.name}")
+        return buffer.getvalue()
+
     def cleanup(self) -> None:
         """Delete the temporary folder (call it after reading the files)."""
         if self.job_dir and self.job_dir.exists():
@@ -44,6 +58,7 @@ def run_code(code: str, timeout: int | None = None, job_dir: Path | None = None)
     job_dir.mkdir(parents=True, exist_ok=True)
     for old in ("part.step", "part.stl", "result.json", "ready", "log.txt"):
         (job_dir / old).unlink(missing_ok=True)
+    shutil.rmtree(job_dir / "parts", ignore_errors=True)
     (job_dir / "code.py").write_text(code, encoding="utf-8")
 
     ready_file = job_dir / "ready"

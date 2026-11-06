@@ -33,6 +33,11 @@ interactiu.
   («fes la paret de 8 mm», «afegeix un forat central»). L'app envia a Claude la
   conversa i el codi de la peça actual, i Claude només toca el que li dius.
   També li pots fer preguntes (material, pes, com imprimir-la).
+- **Conjunts de diverses peces**: demana «un conjunt», «amb la tapa a part» o
+  «separa-ho per components» i el STEP surt com un assemblatge: SolidWorks l'obre
+  amb un component per peça, que pots obrir i editar per separat. També es pot
+  baixar un ZIP amb un STEP i un STL de cada peça, i l'app avisa si dues peces
+  es trepitgen.
 - **Historial de versions**: cada canvi desa una versió i pots tornar a qualsevol.
 
 ## Requisits
